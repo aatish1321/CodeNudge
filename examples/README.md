@@ -2,7 +2,9 @@
 
 Open the robot icon, use its gear to choose an AI provider and add its key, then open a project file and run it in VS Code's terminal. Buddy follows runs across this folder. Save edits before rerunning.
 
-Start with these projects rather than repeatedly testing the same loop:
+For a simple presentation, open [demo/README.md](demo/README.md). Start with four-line `demo/expenses.py` (`python3 demo/expenses.py`), then four-line `demo/countdown.js` (`node demo/countdown.js`). The walkthrough lists exactly how to show clues, retry 3’s arrow, retry 6’s reviewed fix, rejection/acceptance, success, and file switching.
+
+For more advanced testing, use these projects:
 
 - `projects/python_invoices`: an invoice report with a helper module, nested data, and discounts. Run `python3 projects/python_invoices/main.py`.
 - `projects/javascript_accounts`: an asynchronous API client with valid, missing-account, and unavailable-service scenarios. Run `node projects/javascript_accounts/main.js valid`, then try `missing` and `unavailable`.

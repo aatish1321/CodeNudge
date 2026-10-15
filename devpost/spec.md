@@ -80,7 +80,7 @@ The examples must be saved before running. Exercise the learning loop using genu
 
 ```sh
 npm run package
-code --install-extension coding-buddy-0.0.6.vsix
+code --install-extension coding-buddy-0.0.7.vsix
 ```
 
 `npm run package` will compile and invoke `vsce package`; use the actual generated versioned filename if it differs. Inspect package contents so learner profiles, keys, local logs, course material, and development-only files do not ship.
@@ -357,3 +357,7 @@ The connection control, active session with per-file memories, explicit Share Ru
 ## Workspace Revision (0.0.6)
 
 The learner explicitly requested harder project tests, independent test-window launching, and folder context with progress across Python/JavaScript file switches. F5 opens the examples folder directly; Open Playground copies bundled examples to a fresh temporary folder in a new normal-profile window. The harder fixtures cover nested invoice data and percentage discounts, asynchronous API parsing, 404 and 503 behavior. Native tests use isolated folders under the opened test workspace; controller tests keep one activated instance across switches. These extend context and testing, not the deferred project-planning workflow.
+
+## Simple Demo Revision (0.0.7)
+
+Bundle `examples/demo/README.md` and tiny expenses/countdown/greeting fixtures for a rehearsable presentation. Separate full project-context revision (request cache and freshness) from effort revision (primary plus direct-import/error-referenced source). Unrelated-file edits may refresh project analysis but cannot advance attempts. Dependency detection follows import names and observed error paths; indirect-only dependencies with no error reference may need a full dependency graph later.

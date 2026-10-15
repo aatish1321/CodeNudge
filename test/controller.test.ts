@@ -311,3 +311,18 @@ test('accepting a helper fix rechecks the whole read context before invoking the
   assert.match(fixture.state().status, /Project code changed/);
   assert.equal(fixture.acceptCount(), 0);
 });
+
+test('editing an unrelated language example refreshes context without counting a retry on this problem', async t => {
+  const fixture = await controllerFixture(t);
+  const python = await fixture.add('main.py', '# Print the report.\nfrom helper import value\nprint(value)\n');
+  const helper = await fixture.add('helper.py', '# Supply the value.\nvalue = 1\n');
+  const js = await fixture.add('countdown.js', '// Count down\nconsole.log(3);\n');
+  await fixture.select(python); await fixture.run(python);
+  await fixture.change(js, '// Count down\nconsole.log(2);\n');
+  await fixture.run(python);
+  assert.equal(fixture.requests.length, 2, 'changed project context is rechecked');
+  assert.equal(fixture.state().retries, 0, 'an unrelated edit is not an attempt on this issue');
+  await fixture.change(helper, '# Supply the value.\nvalue = 2\n');
+  await fixture.run(python);
+  assert.equal(fixture.state().retries, 1, 'an imported helper edit still counts');
+});

@@ -86,7 +86,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (!allowed) { status('Choose a source file inside the opened project. Hidden, credential, dependency, and generated files are excluded.'); return; }
       const snapshot = await workspace.collect(linked, run.startedAt, run.output);
       if (mine !== requestGeneration) return;
-      run = { ...run, contextRevision: snapshot.revision };
+      run = { ...run, contextRevision: snapshot.revision, effortRevision: snapshot.effortRevision };
       latestRun = run;
       const config = configuration();
       const fingerprint = session.fingerprint(run, config.provider, config.model, attempt);

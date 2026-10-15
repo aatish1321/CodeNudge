@@ -16,6 +16,7 @@ export interface RunSnapshot {
   sourceConfirmed?: boolean;
   startedAt?: number;
   contextRevision?: string;
+  effortRevision?: string;
 }
 
 export interface TeachingReply {

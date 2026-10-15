@@ -10,7 +10,7 @@ export class LearningSession {
   private lastSource = '';
   private lastDiagnostic = '';
 
-  private sourceIdentity(run: RunSnapshot): string { return `${run.source}\0${run.contextRevision ?? ''}`; }
+  private sourceIdentity(run: RunSnapshot): string { return `${run.source}\0${run.effortRevision ?? run.contextRevision ?? ''}`; }
 
   private level(retries: number): Level { return retries >= 6 ? 'fix' : retries >= 3 ? 'inline' : 'clue'; }
 

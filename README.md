@@ -4,7 +4,7 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install `coding-buddy-0.0.6.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
+Install `coding-buddy-0.0.7.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
 
 1. Open a trusted project in **desktop VS Code 1.93 or newer** and click the Coding Buddy robot icon.
 2. Open the **⚙ settings menu** to select Gemini, OpenAI, or Groq and add its API key. Keys use VS Code secret storage. Provider/key/model options, pause/resume, celebrations, retry/reset, and advanced terminal tools live in this menu.
@@ -56,6 +56,8 @@ To launch the extension yourself:
 - **From this repository:** open it in VS Code, press **F5** (or **Run → Start Debugging**), and choose **Run Coding Buddy** if asked. The new **Extension Development Host** opens `examples` automatically. Close that window and press F5 again after changing extension source.
 - **From the installed extension:** press **Ctrl+Shift+P** and run **Coding Buddy: Open Playground**, also available under the buddy’s gear. It opens fresh practice copies in a new window, preserving your earlier work and configured provider key. Playground folders are temporary; copy work into your own project to keep it long-term.
 - **For your own project:** use **File → Open Folder**, open the robot, and run your code normally. No development window or terminal attachment is needed.
+
+For the presentation, start with the [simple demo walkthrough](examples/demo/README.md): four-line Python expenses, four-line JavaScript countdown, and an optional tiny helper-file example. It includes exact commands, six saved/run retries, and what to show at each stage.
 
 The harder [practice projects](examples/projects/README.md) include a multi-file Python invoice report and asynchronous JavaScript account client with success, missing-account, and service-failure cases. Their bugs are intentional; they are learning fixtures, not passing application tests.
 

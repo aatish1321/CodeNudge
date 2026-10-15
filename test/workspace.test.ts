@@ -206,3 +206,17 @@ test('a clean primary buffer cannot conceal an external disk edit or a save duri
   await utimes(main, new Date(startedAt + 10_000), new Date(startedAt + 10_000));
   await assert.rejects(fixture.context.collect(document, startedAt), /code changed/);
 });
+
+test('opening an unchanged helper cannot change context or effort identity just by reordering priority', async t => {
+  const fixture = await workspaceFixture(t);
+  const source = 'from alpha import a\nfrom beta import b\nprint(a + b)\n';
+  const main = await fixture.add('main.py', source);
+  await fixture.add('alpha.py', 'a = 1\n');
+  const beta = await fixture.add('beta.py', 'b = 2\n');
+  const document = fixture.asDocument(fixture.open(main, source));
+  const before = await fixture.context.collect(document);
+  fixture.open(beta, 'b = 2\n');
+  const after = await fixture.context.collect(document);
+  assert.equal(after.revision, before.revision);
+  assert.equal(after.effortRevision, before.effortRevision);
+});

@@ -47,3 +47,9 @@ Gemini and OpenAI live teaching remain unverified. A few passing Groq samples do
 Open this repository in VS Code → **F5** / **Run → Start Debugging** → **Run Coding Buddy**. It opens the examples folder in an Extension Development Host. For the installed extension, **Ctrl+Shift+P → Coding Buddy: Open Playground** opens a fresh practice folder in a new normal window; the same action is inside the gear menu.
 
 Hints and counts survive file switches within this window, not a VS Code restart. Context is bounded rather than a full repository upload. Browser/Postman/long-running server results still need explicit sharing. Multi-file patching and project-idea planning are deferred.
+
+## 0.0.7 simple-demo follow-up
+
+Added a presentation walkthrough and four tiny source fixtures. A Python subprocess self-check verifies the initial expenses failure and all six documented changed retries produce TypeError at line 3; a repair prints 18. Actual Node checks confirm countdown prints 3/2/1/0 before repair and 3/2/1 after. The greeting entry/helper pair raises NameError and prints Hello, Ada! after repair. All copies execute in disposable scratch folders, preserving learner files. These exact examples have not received new live-provider acceptance.
+
+A controller regression proves that changing unrelated JavaScript refreshes context but leaves Python retries unchanged; editing an imported Python helper still adds one retry. Source suite now has 62 tests, including stable identities when opening an unchanged helper reorders context priority. Existing live Groq evidence above concerns 0.0.6 fixed stage-probe samples; it is not a claim of live acceptance for the new demo.

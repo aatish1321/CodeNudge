@@ -30,6 +30,7 @@ export function referencedPaths(text: string, cwd?: string): string[] {
 
 export interface ProjectSnapshot {
   revision: string;
+  effortRevision: string;
   data: { files: string[]; relatedFiles: { path: string; source: string; truncated: boolean }[]; omitted: string[]; indexTruncated: boolean };
   sources: { path: string; digest: string }[];
 }
@@ -70,7 +71,7 @@ export class WorkspaceContext {
 
   async collect(document: vscode.TextDocument, startedAt?: number, output = ''): Promise<ProjectSnapshot> {
     const folder = vscode.workspace.getWorkspaceFolder(document.uri);
-    if (!folder) return { revision: '', data: { files: [], relatedFiles: [], omitted: [], indexTruncated: false }, sources: [] };
+    if (!folder) return { revision: '', effortRevision: '', data: { files: [], relatedFiles: [], omitted: [], indexTruncated: false }, sources: [] };
     const primaryBefore = await stat(document.fileName);
     const primary = await readFile(document.fileName, 'utf8');
     const primaryAfter = await stat(document.fileName);
@@ -79,8 +80,10 @@ export class WorkspaceContext {
     const inventory = await this.inventory(folder);
     const label = (path: string) => relative(folder.uri.fsPath, path).split(sep).join('/');
     const imports = [...document.getText().matchAll(/(?:from\s+|import\s+(?:[^'"\n]*?from\s+)?|require\s*\()\s*['"]?([\w./-]+)/g)].map(match => match[1]);
-    const score = (path: string) => (output.includes(path) || output.includes(basename(path)) ? 30 : 0) +
-      (imports.some(name => name.split(/[/.]/).filter(Boolean).includes(basename(path, extname(path)))) ? 20 : 0) +
+    const referenced = new Set(referencedPaths(output, folder.uri.fsPath));
+    const imported = (path: string) => imports.some(name => name.split(/[/.]/).filter(Boolean).includes(basename(path, extname(path))));
+    const score = (path: string) => (referenced.has(path) ? 30 : 0) +
+      (imported(path) ? 20 : 0) +
       (dirname(path) === dirname(document.fileName) ? 5 : 0) +
       (vscode.workspace.textDocuments.some(doc => doc.uri.fsPath === path) ? 2 : 0);
     const candidates = inventory.paths.filter(path => path !== document.fileName).sort((a, b) => score(b) - score(a) || a.localeCompare(b));
@@ -105,7 +108,11 @@ export class WorkspaceContext {
       sources.push({ path, digest: hash(source) });
     }
     const data = { files: inventory.paths.map(label), relatedFiles, omitted, indexTruncated: inventory.truncated };
-    return { revision: hash(JSON.stringify([data.files, sources.map(item => [label(item.path), item.digest])])), data, sources };
+    const revision = hash(JSON.stringify([data.files, sources.map(item => [label(item.path), item.digest]).sort(([a], [b]) => a.localeCompare(b))]));
+    // shortcut: effort follows direct import names and observed error paths; a full dependency graph is needed for indirect-only dependencies.
+    const effortRevision = hash(JSON.stringify(sources.filter(item => item.path === document.fileName || imported(item.path) || referenced.has(item.path))
+      .map(item => [label(item.path), item.digest]).sort(([a], [b]) => a.localeCompare(b))));
+    return { revision, effortRevision, data, sources };
   }
 
   async current(snapshot: ProjectSnapshot): Promise<boolean> {
