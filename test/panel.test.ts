@@ -6,6 +6,7 @@ import { runInNewContext } from 'node:vm';
 
 class Element {
   textContent = ''; value = ''; className = ''; hidden = false; disabled = false;
+  scrollTop = 0; scrollHeight = 600;
   dataset: Record<string, string> = {};
   children: Element[] = [];
   attributes: Record<string, string> = {};
@@ -74,4 +75,15 @@ test('the composer sends clarification and the gear opens settings without sendi
     assert.equal(message.text, action === 'clarify' ? 'expected five numbers' : undefined);
     assert.equal(ui.element('clarification').value, action === 'clarify' ? '' : '  expected five numbers  ');
   }
+});
+
+test('new clues scroll into view and status updates preserve the reading position', () => {
+  const ui = panel(); ui.render();
+  ui.state.messages = [{ role: 'buddy', text: 'Try following this value.' }]; ui.render();
+  assert.equal(ui.element('conversation').scrollTop, 600);
+  ui.element('conversation').scrollTop = 40;
+  ui.state.status = 'Checking your goal'; ui.render();
+  assert.equal(ui.element('conversation').scrollTop, 40);
+  ui.state.messages.push({ role: 'buddy', text: 'Which operation consumes it?' }); ui.render();
+  assert.equal(ui.element('conversation').scrollTop, 600);
 });

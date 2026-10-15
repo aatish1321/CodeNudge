@@ -1,0 +1,105 @@
+{
+  "version": "0.0.6",
+  "date": "2026-10-15",
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "method": "live teaching-stage probes with local counters set to stage boundaries",
+  "passed": true,
+  "checks": [
+    {
+      "case": "python-invoices",
+      "attempt": 0,
+      "allowed": "clue",
+      "returned": "clue",
+      "status": "issue",
+      "targetFile": "invoice.py",
+      "passed": true,
+      "earlyAnswerGuardApplied": true,
+      "replacementPresent": false
+    },
+    {
+      "case": "python-invoices",
+      "attempt": 3,
+      "allowed": "inline",
+      "returned": "inline",
+      "status": "issue",
+      "targetFile": "invoice.py",
+      "passed": true,
+      "earlyAnswerGuardApplied": true,
+      "replacementPresent": false
+    },
+    {
+      "case": "python-invoices",
+      "attempt": 6,
+      "allowed": "fix",
+      "returned": "fix",
+      "status": "issue",
+      "targetFile": "invoice.py",
+      "passed": true,
+      "earlyAnswerGuardApplied": false,
+      "replacementPresent": true
+    },
+    {
+      "case": "python-invoices",
+      "attempt": 7,
+      "allowed": "fix",
+      "returned": "none",
+      "status": "solved",
+      "targetFile": null,
+      "passed": true,
+      "earlyAnswerGuardApplied": false,
+      "replacementPresent": false
+    },
+    {
+      "case": "javascript-async",
+      "attempt": 0,
+      "allowed": "clue",
+      "returned": "clue",
+      "status": "issue",
+      "targetFile": null,
+      "passed": true,
+      "earlyAnswerGuardApplied": false,
+      "replacementPresent": false
+    },
+    {
+      "case": "javascript-async",
+      "attempt": 3,
+      "allowed": "inline",
+      "returned": "inline",
+      "status": "issue",
+      "targetFile": "service.js",
+      "passed": true,
+      "earlyAnswerGuardApplied": true,
+      "replacementPresent": false
+    },
+    {
+      "case": "javascript-async",
+      "attempt": 6,
+      "allowed": "fix",
+      "returned": "fix",
+      "status": "issue",
+      "targetFile": "service.js",
+      "passed": true,
+      "earlyAnswerGuardApplied": false,
+      "replacementPresent": true
+    },
+    {
+      "case": "javascript-async",
+      "attempt": 7,
+      "allowed": "fix",
+      "returned": "none",
+      "status": "solved",
+      "targetFile": null,
+      "passed": true,
+      "earlyAnswerGuardApplied": false,
+      "replacementPresent": false
+    }
+  ],
+  "limits": [
+    "Fixed nonsecret samples; the selected provider key stayed inside VS Code SecretStorage.",
+    "Local counters were placed at stage boundaries; these are stage probes rather than eight genuine edit/run events per case.",
+    "Generated replacement code was inspected and validated; it was not executed automatically.",
+    "The model initially labeled the JavaScript runtime exception as logic; category accuracy remains imperfect.",
+    "Gemini and OpenAI have HTTP-fixture coverage only."
+  ]
+}

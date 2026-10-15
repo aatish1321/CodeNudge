@@ -4,6 +4,7 @@
   const history = document.getElementById('messages');
   let proposalId = '';
   let seenCelebration = null;
+  let previousMessages = '';
   document.addEventListener('click', event => {
     const button = event.target.closest('button[data-action]');
     if (!button) return;
@@ -20,7 +21,7 @@
   window.addEventListener('message', event => {
     const state = event.data;
     if (state.type !== 'state') return;
-    document.body.classList.toggle('has-messages', state.messages.length > 0);
+    document.body.classList.toggle('has-messages', state.messages.length > 0 || !!state.file);
     document.getElementById('setup').hidden = state.keyConfigured;
     document.getElementById('file').textContent = state.file || '';
     document.getElementById('status').textContent = state.status;
@@ -37,13 +38,19 @@
     proposalId = state.proposalId;
     document.getElementById('fixActions').hidden = !proposalId;
     document.getElementById('progress').textContent = proposalId ? 'A fix is ready for you to review.' : state.retries >= 3 ? `${state.retries} attempts. Let’s narrow this down.` : '';
-    history.replaceChildren(...state.messages.map(message => {
+    const messages = JSON.stringify(state.messages);
+    if (messages !== previousMessages) {
+      previousMessages = messages;
+      history.replaceChildren(...state.messages.map(message => {
       const block = document.createElement('article'); block.className = `message ${message.role}`;
       const label = document.createElement('div'); label.className = 'message-label';
       label.textContent = message.role === 'learner' ? 'YOU' : `BUDDY${message.category && message.category !== 'unknown' ? ' · ' + message.category.toUpperCase() : ''}`;
       const text = document.createElement('p'); text.textContent = message.text;
       block.append(label, text); return block;
-    }));
+      }));
+      const conversation = document.getElementById('conversation');
+      conversation.scrollTop = conversation.scrollHeight;
+    }
   });
   vscode.postMessage({ action: 'ready' });
 })();

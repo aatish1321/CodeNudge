@@ -4,7 +4,7 @@ Date: 2026-10-15. Desktop VS Code 1.141 on Linux; Bash and zsh, Python 3.14, Nod
 
 ## Automated source checks
 
-`npm test`: 59 tests across seven files pass (Node 26's default reporter groups these as seven file suites).
+`npm test`: 60 tests across seven files pass (Node 26's default reporter groups these as seven file suites).
 
 | Area | Evidence |
 | --- | --- |
@@ -32,13 +32,13 @@ Controller tests run actual activation/session/context logic with provider, term
 | Shells | Automatic Bash and zsh capture without terminal attachment; unknown commands retain a confirmation fallback. |
 | Editor and preferences | Real arrow decorations, native colored diff, no mutation on review/reject, accepted edits left unsaved, undo, stale-source rejection, provider settings and confetti toggle. |
 
-Installed VSIX verification: pending final package run.
+Installed VSIX verification: the initial clean-built 27-file package passed the full native suite. The final readability/scrolling revision is being repackaged and rechecked before delivery.
 
 ## Live provider evidence
 
 Live checks use fixed, nonsecret two-module Python/JavaScript sample context and the selected Groq key already stored in the normal VS Code profile. The key is read inside VS Code only; it is not copied into a shell, report or source. Test instrumentation stays in a temporary extension copy and is not shipped.
 
-Early runs exposed overly explicit clue/inline answers and rejected replies; one reached Groq's quota. These led to locked stage-specific schemas, clearer policy examples and an obvious-answer guard. Final paced probes are pending. Stage probes set local counters to clue/inline/fix boundaries; genuine changed-run counting is covered separately by controller/session/native tests. Proposed model replacements are reviewed/validated, not executed automatically.
+Early runs exposed overly explicit clue/inline answers and rejected replies; one reached Groq's quota. These led to locked stage-specific schemas, clearer policy examples and an obvious-answer guard. Final paced probes passed **8/8**: clue, inline, helper-file fix, and solved result for each of the Python invoice and JavaScript async samples. Both fixes addressed the intended helper bug on inspection. The local guard removed early replacement text from three responses; the remaining early messages stayed conceptual. The model labeled the initial JavaScript runtime exception as logic, so category accuracy remains imperfect. See [sanitized evidence](groq-stage-checks.json). Stage probes set local counters to clue/inline/fix boundaries; genuine changed-run counting is covered separately by controller/session/native tests. Proposed model replacements are reviewed/validated, not executed automatically.
 
 Gemini and OpenAI live teaching remain unverified. A few passing Groq samples do not establish general teaching quality. No graphical automation surface was available for a visual polish review in the learner's exact theme.
 
