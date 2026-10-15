@@ -29,10 +29,10 @@ Controller tests run actual activation/session/context logic with provider, term
 | Multi-file invoice report | KeyError in helper → changed helper runs with wrong $63.90 total → corrected percentage calculation yields $61.00. Runtime success is distinguished from correct output. |
 | Async JavaScript account client | Initial asynchronous data-use failure → valid account prints 15 credits → missing-account failure → explicit 404 recovery → unavailable service remains an HTTP 503 error. No network is needed for this fixture. |
 | Cross-file/language routing | Python command resolves correctly while JavaScript is focused and vice versa; explicit entry-file ownership remains stable through helper failures/success; quoted paths contain spaces. |
-| Shells | Automatic Bash and zsh capture without terminal attachment; unknown commands retain a confirmation fallback. |
+| Shells | Automatic Bash and zsh capture without terminal attachment; unnamed multi-file Python traceback keeps its entry-file session; unknown commands retain a confirmation fallback. |
 | Editor and preferences | Real arrow decorations, native colored diff, no mutation on review/reject, accepted edits left unsaved, undo, stale-source rejection, provider settings and confetti toggle. |
 
-Installed VSIX verification: **passed** against the final clean-built 27-file VSIX. Its compiled runtime and media bytes match the source build. The full native suite passes after installation, including both hard multi-file projects. Private/course/test material and source maps are excluded. Package source snapshot: 0751ca9; later commits update excluded verification documents only.
+Installed VSIX verification: **passed** against the final clean-built 27-file VSIX. Its compiled runtime and media bytes match the source build. The full native suite passes after installation, including both hard multi-file projects. Private/course/test material and source maps are excluded. The final package is built from the committed feature branch, including the zsh multi-file entry-file regression fix; later commits update excluded verification documents only.
 
 ## Live provider evidence
 

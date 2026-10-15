@@ -192,6 +192,22 @@ export async function run(): Promise<void> {
       assert.match(result.output, /SyntaxError/);
       assert.equal(result.sourceConfirmed, true, 'filename in traceback must link the run without a prompt');
       console.log('HOST CHECK PASSED: automatic zsh capture without terminal attachment or command confirmation.');
+      capture?.dispose();
+      const project = join(fixtures, 'zsh invoice');
+      await cp(join(extension.extensionPath, 'examples/projects/python_invoices'), project, { recursive: true });
+      const entry = await vscode.workspace.openTextDocument(join(project, 'main.py'));
+      await vscode.window.showTextDocument(entry);
+      const observedProject = new Promise<RunSnapshot>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('zsh multi-file run was not captured')), 20_000);
+        capture = new TerminalCapture(result => { clearTimeout(timer); resolve(result); }, () => {}, resolveSource);
+      });
+      zsh.sendText(`python3 ${quote(entry.fileName)}`);
+      const projectRun = await observedProject;
+      assert.equal(projectRun.uri, entry.uri.toString(), 'a traceback must keep the entry-file session even when zsh omits the command');
+      assert.equal(projectRun.exitCode, 1);
+      assert.match(projectRun.output, /invoice.py[\s\S]*KeyError/);
+      assert.equal(projectRun.sourceConfirmed, true);
+      console.log('HOST CHECK PASSED: zsh multi-file Python traceback retains entry-file ownership.');
     } finally { capture?.dispose(); zsh.dispose(); }
   }
 
@@ -247,6 +263,6 @@ export async function run(): Promise<void> {
     console.log('HOST CHECK PASSED: three native provider settings and distinct secret names.');
   } finally { await config.update('provider', originalProvider, vscode.ConfigurationTarget.Global); }
   if (process.env.CODING_BUDDY_TEST_REPORT) {
-    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['activation', 'automatic-python-capture', 'automatic-javascript-capture', 'changed-retry-inline', 'successful-rerun-clears-errors', 'multi-file-invoice-runtime-logic-success', 'async-javascript-404-503', 'cross-language-execution-routing', 'helper-only-context-changes', 'quoted-paths', ...(existsSync('/bin/zsh') ? ['automatic-zsh-capture'] : []), 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'provider-settings'] }));
+    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['activation', 'automatic-python-capture', 'automatic-javascript-capture', 'changed-retry-inline', 'successful-rerun-clears-errors', 'multi-file-invoice-runtime-logic-success', 'async-javascript-404-503', 'cross-language-execution-routing', 'helper-only-context-changes', 'quoted-paths', ...(existsSync('/bin/zsh') ? ['automatic-zsh-capture', 'zsh-multi-file-entry'] : []), 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'provider-settings'] }));
   }
 }

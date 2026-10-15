@@ -47,7 +47,6 @@ export class WorkspaceContext {
 
   async resolveRun(command: string, output: string, cwd?: string): Promise<vscode.Uri | undefined> {
     const frames = referencedPaths(output, cwd);
-    if (/Traceback \(most recent call last\)/.test(output)) frames.reverse();
     // Keep an explicit entry file as the session owner when its helper fails or later succeeds.
     for (const path of [...referencedPaths(command, cwd), ...frames]) {
       if (await this.allowed(path)) return vscode.Uri.file(path);

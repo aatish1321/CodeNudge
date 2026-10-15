@@ -55,14 +55,14 @@ async function workspaceFixture(t: TestContext) {
   return { root, parent, context, add, open, asDocument: (document: ReturnType<typeof open>) => document as unknown as vscode.TextDocument };
 }
 
-test('keeps the explicit Python entry file across failures and success, and resolves unnamed tracebacks to helpers', async t => {
+test('keeps Python entry-file ownership across failures and success, including unnamed shell traceback runs', async t => {
   const fixture = await workspaceFixture(t);
   const main = await fixture.add('main.py', 'from invoice import total\nprint(total())\n');
   const helper = await fixture.add('invoice.py', 'def total():\n    return 1 / 0\n');
   fixture.open(main, 'from invoice import total\nprint(total())\n');
   const output = `Traceback (most recent call last):\n  File "${main}", line 2, in <module>\n    print(total())\n  File "${helper}", line 2, in total\n    return 1 / 0\nZeroDivisionError: division by zero`;
   assert.equal((await fixture.context.resolveRun('python3 main.py', output, fixture.root))?.fsPath, main);
-  assert.equal((await fixture.context.resolveRun('python3 -m app', output, fixture.root))?.fsPath, helper);
+  assert.equal((await fixture.context.resolveRun('', output, fixture.root))?.fsPath, main);
   assert.equal((await fixture.context.resolveRun('python3 main.py', '', fixture.root))?.fsPath, main);
 });
 
