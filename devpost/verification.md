@@ -32,7 +32,7 @@ Controller tests run actual activation/session/context logic with provider, term
 | Shells | Automatic Bash and zsh capture without terminal attachment; unknown commands retain a confirmation fallback. |
 | Editor and preferences | Real arrow decorations, native colored diff, no mutation on review/reject, accepted edits left unsaved, undo, stale-source rejection, provider settings and confetti toggle. |
 
-Installed VSIX verification: the initial clean-built 27-file package passed the full native suite. The final readability/scrolling revision is being repackaged and rechecked before delivery.
+Installed VSIX verification: **passed** against the final clean-built 27-file VSIX. Its compiled runtime and media bytes match the source build. The full native suite passes after installation, including both hard multi-file projects. Private/course/test material and source maps are excluded. Package source snapshot: 0751ca9; later commits update excluded verification documents only.
 
 ## Live provider evidence
 

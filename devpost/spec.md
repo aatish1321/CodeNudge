@@ -80,7 +80,7 @@ The examples must be saved before running. Exercise the learning loop using genu
 
 ```sh
 npm run package
-code --install-extension coding-buddy-0.0.1.vsix
+code --install-extension coding-buddy-0.0.6.vsix
 ```
 
 `npm run package` will compile and invoke `vsce package`; use the actual generated versioned filename if it differs. Inspect package contents so learner profiles, keys, local logs, course material, and development-only files do not ship.
@@ -201,7 +201,7 @@ Implements `prd.md > Screens and Layout`, `Look and Feel`, and `Provider Setting
 
 `src/editor.ts` manages a text decoration on the validated line, an in-memory original/proposed document pair, and the diff view. The first complete file replacement is adequate for the small-file proof of concept; no patch parser or multi-file editing system is needed.
 
-Before Accept Fix, check the linked URI, original version/content hash, proposal identity, and current pending status. Apply through `WorkspaceEdit` so the user can undo. Leave the accepted edit unsaved and show that the learner should save and rerun; do not silently execute the file. On rejection, discard the proposal without changing source. Source edits invalidate proposals and decorations tied to the old version. A model may select only an exact fully-read related-file path from the sent snapshot; validate its current content and root boundary. Acceptance also checks the whole selected context for changes. Only one file changes per reviewed proposal.
+Before Accept Fix, check the linked URI, original version/content hash, proposal identity, and current pending status. Apply through `TextEditor.edit` with undo stops so the user can undo. Leave the accepted edit unsaved and show that the learner should save and rerun; do not silently execute the file. On rejection, discard the proposal without changing source. Source edits invalidate proposals and decorations tied to the old version. A model may select only an exact fully-read related-file path from the sent snapshot; validate its current content and root boundary. Acceptance also checks the whole selected context for changes. Only one file changes per reviewed proposal.
 
 Implements `prd.md > Proposed Fix and Explanation` and `States and Boundaries`.
 
@@ -344,7 +344,7 @@ At review, the learner asked whether connecting the extension to VS Code should 
 
 ### Derived Implementation Details for Review
 
-The connection control, one linked file/session, explicit Share Run Result action for the manual fallback, local attempt controller, schema validation, file-size/output limits, model defaults, native key-entry commands, default enabled confetti with reduced-motion support, and stale-proposal checks are engineering recommendations that implement the agreed experience. They are included in this draft for approval rather than attributed as separate learner choices. The later workspace revision preserves per-file sessions across tab/file changes; hiding the panel does not reset them.
+The connection control, active session with per-file memories, explicit Share Run Result action for the manual fallback, local attempt controller, schema validation, file-size/output limits, model defaults, native key-entry commands, default enabled confetti with reduced-motion support, and stale-proposal checks are engineering recommendations that implement the agreed experience. They are included in this draft for approval rather than attributed as separate learner choices. The later workspace revision preserves per-file sessions across tab/file changes; hiding the panel does not reset them.
 
 ### Checks That Remain
 
