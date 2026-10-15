@@ -43,7 +43,7 @@ We will build in slices: small working steps the learner can try. Each step incl
   Learner check: Try code whose output disagrees with its top comment, then remove the comment and clarify through the text area. Share a result manually, solve the issue, and test celebration on/off. Describe what helped you understand the mistake.
   Commit: `feat: clarify outcomes and celebrate resolved issues`
 
-- [ ] **4. Switch the same teaching workflow between Gemini, OpenAI, and Groq**
+- [x] **4. Switch the same teaching workflow between Gemini, OpenAI, and Groq**
   Becomes usable: Settings expose all three working providers, each using its own stored key and model preference, while the learning rules remain consistent.
   Why now: Adds the required provider demonstration after the core teaching behavior is stable, reducing the number of moving parts during early debugging.
   PRD ref: `prd.md > Provider Settings and Open Source`, `prd.md > Attempts and Escalation`, `prd.md > Acceptance Criteria`
