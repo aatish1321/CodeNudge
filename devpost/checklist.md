@@ -33,7 +33,7 @@ We will build in slices: small working steps the learner can try. Each step incl
   Learner check: Work through a broken example until the arrow appears, then continue to a proposed fix. Reject one proposal, review another, accept it, and try undo. Report anything that feels too eager, too vague, or confusing.
   Commit: `feat: add progressive hints and reviewed fixes`
 
-- [ ] **3. Handle intended outcomes, external results, and solved-issue celebrations**
+- [x] **3. Handle intended outcomes, external results, and solved-issue celebrations**
   Becomes usable: The buddy uses a top-of-file comment or clarification to judge results, accepts explicitly shared external run results, and celebrates a solved issue with configurable confetti.
   Why now: Closes the complete learning journey and checks logic mistakes that do not produce terminal errors before expanding provider coverage.
   PRD ref: `prd.md > Context and First Clue`, `prd.md > Solved State and Celebration`, `prd.md > Look and Feel`, `prd.md > Acceptance Criteria`
