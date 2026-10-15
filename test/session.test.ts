@@ -104,3 +104,13 @@ test('clarified external results may solve an issue, ordinary clarification neve
   const solved = { ...clue, status: 'solved' as const, level: 'none' as const, relationship: 'none' as const, intentSource: 'clarified' as const };
   assert.equal(session.apply({ ...changed, output: '1\n2\n3\n4\n5' }, solved, 'solved', true), true);
 });
+
+test('provider switches invalidate cached guidance while preserving the teaching stage', () => {
+  const session = new LearningSession(); session.apply(run, clue, 'initial', true); session.retries = 4;
+  session.clearCache();
+  assert.equal(session.retries, 4);
+  assert.equal(session.allowedLevel(run, true), 'inline');
+  const gemini = session.fingerprint(run, 'gemini', 'model', true);
+  const groq = session.fingerprint(run, 'groq', 'model', true);
+  assert.notEqual(gemini, groq);
+});

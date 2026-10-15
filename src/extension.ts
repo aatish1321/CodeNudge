@@ -3,7 +3,7 @@ import { basename } from 'node:path';
 import { analyze } from './providers';
 import { BuddyPanel, PanelState } from './panel';
 import { LearningSession } from './session';
-import { configuration, keyName, setKey } from './settings';
+import { checkKnownKeys, chooseProvider, configuration, keyName, setKey } from './settings';
 import { checkSource, RunSnapshot, validateReply } from './teaching';
 import { TerminalCapture } from './terminal';
 import { EditorGuidance } from './editor';
@@ -15,14 +15,18 @@ export function activate(context: vscode.ExtensionContext): void {
   let pending: AbortController | undefined;
   let requestGeneration = 0;
   let requestCount = 0;
+  let refreshGeneration = 0;
   const state: PanelState = { provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Ready when you are.', working: false, retries: 0, messages: [], proposalId: '', confetti: true, celebration: 0 };
   const log = vscode.window.createOutputChannel('Coding Buddy');
 
   async function refresh(): Promise<void> {
+    const mine = ++refreshGeneration;
     try {
       const config = configuration();
+      const configured = !!await context.secrets.get(keyName(config.provider));
+      if (mine !== refreshGeneration) return;
       state.provider = config.provider; state.model = config.model;
-      state.keyConfigured = !!await context.secrets.get(keyName(config.provider));
+      state.keyConfigured = configured;
       state.retries = session.retries;
       state.proposalId = guidance.proposalId;
       state.confetti = vscode.workspace.getConfiguration('codingBuddy').get('confetti', true);
@@ -48,11 +52,13 @@ export function activate(context: vscode.ExtensionContext): void {
       if (state.working) return;
       const key = await context.secrets.get(keyName(config.provider));
       if (!key) { status('Add your provider API key with the Add key button, then retry.'); return; }
+      await checkKnownKeys(context, JSON.stringify(session.context(run, attempt)));
       if (state.working || mine !== requestGeneration) return;
       pending = new AbortController(); mine = ++requestGeneration; state.working = true;
       status('Looking for a useful clue…');
       log.appendLine(`Analysis request ${++requestCount}: provider=${config.provider}; source=${run.reported ? 'learner-reported' : 'terminal'}`);
       const result = await analyze(config.provider, config.model, key, session.context(run, attempt), pending.signal);
+      await checkKnownKeys(context, JSON.stringify(result));
       if (mine !== requestGeneration || !linked || linked.isClosed || linked.isDirty || linked.version !== run.version || linked.getText() !== run.source) return;
       const reply = validateReply(result, run, session.allowedLevel(run, attempt));
       const celebrate = session.apply(run, reply, fingerprint, attempt);
@@ -95,11 +101,10 @@ export function activate(context: vscode.ExtensionContext): void {
 
   async function action(name: string, text?: string, proposalId?: string): Promise<void> {
     try {
-      if (text) {
-        const key = await context.secrets.get(keyName(configuration().provider));
-        if (key && text.includes(key)) throw new Error('Use the Add key button for credentials. Do not include your API key in the conversation.');
-      }
-      if (name === 'settings') await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:aatish1321.coding-buddy');
+      if (text) await checkKnownKeys(context, text);
+      if (name === 'ready') log.appendLine('Sidebar scripts ready.');
+      else if (name === 'settings') await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:aatish1321.coding-buddy');
+      else if (name === 'provider') await chooseProvider();
       else if (name === 'setKey') { await setKey(context); await refresh(); }
       else if (name === 'connect') await connect();
       else if (name === 'disconnect') { cancel(); guidance.clear(); capture.disconnect(); linked = undefined; latestRun = undefined; session = new LearningSession(); state.file = ''; status('Disconnected.'); }
@@ -138,7 +143,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const register = (name: string, handler: () => unknown) => context.subscriptions.push(vscode.commands.registerCommand(`codingBuddy.${name}`, handler));
   for (const name of ['connect','disconnect','settings','reset','retry','acceptFix','rejectFix','toggleConfetti']) register(name, () => action(name));
   register('setKey', () => action('setKey'));
-  register('removeKey', async () => { await context.secrets.delete(keyName(configuration().provider)); status('API key removed.'); });
+  register('chooseProvider', () => action('provider'));
+  register('removeKey', async () => { cancel(); guidance.clear(); session.clearCache(); await context.secrets.delete(keyName(configuration().provider)); status('API key removed.'); });
   context.subscriptions.push(log, capture, guidance,
     vscode.window.registerWebviewViewProvider('codingBuddy.panel', panel),
     vscode.workspace.onDidChangeTextDocument(event => { if (linked && event.document.uri.toString() === linked.uri.toString() && event.contentChanges.length) { cancel(); status('Code changed. Save and run it again to check your idea.'); } }),

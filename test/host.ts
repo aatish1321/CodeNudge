@@ -7,6 +7,8 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { clue } from './fixtures';
+import { configuration, keyName } from '../src/settings';
+import { defaults, Provider } from '../src/providers';
 
 export async function run(): Promise<void> {
   const extension = vscode.extensions.getExtension('aatish1321.coding-buddy');
@@ -83,7 +85,18 @@ export async function run(): Promise<void> {
     assert.equal(vscode.workspace.getConfiguration('codingBuddy').get('confetti'), true);
     console.log('HOST CHECK PASSED: persistent confetti setting and native toggle command.');
   } finally { await config.update('confetti', originalConfetti, vscode.ConfigurationTarget.Global); }
+  const originalProvider = config.inspect<string>('provider')?.globalValue;
+  try {
+    const providers = Object.keys(defaults) as Provider[];
+    assert.equal(new Set(providers.map(keyName)).size, 3, 'provider keys must have separate storage names');
+    for (const provider of providers) {
+      await config.update('provider', provider, vscode.ConfigurationTarget.Global);
+      assert.equal(configuration().provider, provider);
+      assert.equal(configuration().model, defaults[provider]);
+    }
+    console.log('HOST CHECK PASSED: three native provider settings and distinct secret names.');
+  } finally { await config.update('provider', originalProvider, vscode.ConfigurationTarget.Global); }
   if (process.env.CODING_BUDDY_TEST_REPORT) {
-    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['activation', 'terminal-output', 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting'] }));
+    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['activation', 'terminal-output', 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'provider-settings'] }));
   }
 }

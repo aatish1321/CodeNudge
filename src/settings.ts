@@ -4,11 +4,26 @@ import { defaults, Provider } from './providers';
 export function configuration(): { provider: Provider; model: string } {
   const config = vscode.workspace.getConfiguration('codingBuddy');
   const provider = config.get<Provider>('provider', 'gemini');
-  if (!(provider in defaults)) throw new Error('Choose a supported Coding Buddy provider in settings.');
+  if (!Object.hasOwn(defaults, provider)) throw new Error('Choose a supported Coding Buddy provider in settings.');
   return { provider, model: config.get<string>(`models.${provider}`, defaults[provider]).trim() };
 }
 
 export function keyName(provider: Provider): string { return `codingBuddy.key.${provider}`; }
+
+export async function chooseProvider(): Promise<void> {
+  const choice = await vscode.window.showQuickPick((Object.keys(defaults) as Provider[]).map(provider => ({
+    label: provider === 'openai' ? 'OpenAI' : provider === 'groq' ? 'Groq' : 'Google Gemini',
+    description: defaults[provider], provider
+  })), { title: 'Choose your buddy’s AI provider', placeHolder: 'Only the selected provider receives coding context.' });
+  if (choice) await vscode.workspace.getConfiguration('codingBuddy').update('provider', choice.provider, vscode.ConfigurationTarget.Global);
+}
+
+export async function checkKnownKeys(context: vscode.ExtensionContext, text: string): Promise<void> {
+  for (const provider of Object.keys(defaults) as Provider[]) {
+    const key = await context.secrets.get(keyName(provider));
+    if (key && text.includes(key)) throw new Error('A saved API key appears in this context. Remove it and use the Add key button for credentials.');
+  }
+}
 
 export async function setKey(context: vscode.ExtensionContext): Promise<void> {
   const { provider } = configuration();

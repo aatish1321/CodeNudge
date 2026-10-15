@@ -11,6 +11,7 @@ h1 { font-size: 25px; letter-spacing: -.9px; margin: 0; font-weight: 750; }.acce
 .hero img { display: block; width: 100%; height: auto; }.hero-tag { display: block; padding: 7px 11px; color: #bcfff0; font-size: 8px; letter-spacing: 1.6px; background: #101c2a; }
 .provider-row { display: flex; align-items: center; gap: 7px; margin: 11px 1px 16px; font-size: 11px; }.provider-row .text-button { margin-left: auto; }
 .provider-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--warm); }
+.provider-row .provider-choice { margin-left: 0; font-weight: 600; }
 .text-button { background: none; border: none; padding: 3px; color: var(--vscode-textLink-foreground); font-size: 11px; }.text-button:hover { text-decoration: underline; }
 .connection { border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border)); border-radius: 8px; padding: 10px 11px; margin-bottom: 16px; }
 .connection-heading { display: flex; gap: 9px; align-items: start; justify-content: space-between; font-size: 11px; font-weight: 600; }#file { overflow-wrap: anywhere; }.connection-heading button { flex-shrink: 0; }

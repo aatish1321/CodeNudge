@@ -20,7 +20,7 @@
   window.addEventListener('message', event => {
     const state = event.data;
     if (state.type !== 'state') return;
-    document.getElementById('provider').textContent = state.provider.toUpperCase();
+    document.getElementById('provider').textContent = `${state.provider === 'openai' ? 'OpenAI' : state.provider === 'groq' ? 'Groq' : 'Gemini'} ▾`;
     document.getElementById('model').textContent = `${state.model} · Connected code and results go to ${state.provider}.`;
     document.getElementById('keyButton').textContent = state.keyConfigured ? 'Update key' : 'Add key';
     document.getElementById('file').textContent = state.file || 'No file connected';
