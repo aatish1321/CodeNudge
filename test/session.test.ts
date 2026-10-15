@@ -74,3 +74,33 @@ test('an unknown relationship cannot unlock the next help stage', () => {
   assert.throws(() => session.apply(changed, { ...clue, relationship: 'unknown', level: 'inline', line: 2, inlineHint: 'Look here' }, 'next', true));
   assert.equal(session.retries, 2);
 });
+
+test('success requires clear intended behavior and sufficient observed evidence', () => {
+  const solved = { ...clue, status: 'solved' as const, relationship: 'none' as const, level: 'none' as const, message: 'The output now matches the goal.' };
+  const goodRun = { ...run, source: 'print(1)\n', output: '1\n', exitCode: 0 };
+  for (const [observation, reply] of [
+    [{ ...goodRun, exitCode: 1 }, solved], [{ ...goodRun, truncated: true }, solved],
+    [{ ...goodRun, output: '' }, solved], [goodRun, { ...solved, intentSource: 'inferred' as const }],
+    [goodRun, { ...solved, intentSource: 'clarified' as const }], [goodRun, { ...solved, expectedOutcome: null }]
+  ] as const) {
+    const session = new LearningSession(); session.apply(run, clue, 'initial', true);
+    assert.throws(() => session.apply(observation, reply, 'solved', true));
+    assert.ok(session.issue);
+  }
+  const session = new LearningSession(); session.apply(run, clue, 'initial', true); session.retries = 4;
+  assert.equal(session.apply(goodRun, solved, 'solved', true), true);
+  assert.equal(session.retries, 0); assert.equal(session.issue, '');
+  assert.equal(session.apply(goodRun, solved, 'solved', true), false, 'do not celebrate the same solved issue again');
+});
+
+test('clarified external results may solve an issue, ordinary clarification never adds an attempt', () => {
+  const session = new LearningSession(); session.apply(run, clue, 'initial', true);
+  session.clarification = 'It should print all five numbers.';
+  const changed = { ...run, source: `${run.source}\n# new attempt`, reported: true, exitCode: null };
+  session.apply(changed, { ...clue, relationship: 'same' }, 'reported', true);
+  assert.equal(session.retries, 1);
+  session.apply(changed, { ...clue, relationship: 'same' }, 'clarified', false);
+  assert.equal(session.retries, 1);
+  const solved = { ...clue, status: 'solved' as const, level: 'none' as const, relationship: 'none' as const, intentSource: 'clarified' as const };
+  assert.equal(session.apply({ ...changed, output: '1\n2\n3\n4\n5' }, solved, 'solved', true), true);
+});

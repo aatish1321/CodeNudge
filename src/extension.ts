@@ -15,7 +15,7 @@ export function activate(context: vscode.ExtensionContext): void {
   let pending: AbortController | undefined;
   let requestGeneration = 0;
   let requestCount = 0;
-  const state: PanelState = { provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Ready when you are.', working: false, retries: 0, messages: [], proposalId: '' };
+  const state: PanelState = { provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Ready when you are.', working: false, retries: 0, messages: [], proposalId: '', confetti: true, celebration: 0 };
   const log = vscode.window.createOutputChannel('Coding Buddy');
 
   async function refresh(): Promise<void> {
@@ -25,6 +25,7 @@ export function activate(context: vscode.ExtensionContext): void {
       state.keyConfigured = !!await context.secrets.get(keyName(config.provider));
       state.retries = session.retries;
       state.proposalId = guidance.proposalId;
+      state.confetti = vscode.workspace.getConfiguration('codingBuddy').get('confetti', true);
       panel.update(state);
     } catch (error) { state.status = (error as Error).message; panel.update(state); }
   }
@@ -38,6 +39,9 @@ export function activate(context: vscode.ExtensionContext): void {
     let mine = requestGeneration;
     try {
       checkSource(run.source, vscode.Uri.parse(run.uri).fsPath);
+      if (!linked || linked.isClosed || linked.isDirty || linked.version !== run.version || linked.getText() !== run.source) {
+        status('Save and run the current code, or share its result, before asking for a new hint.'); return;
+      }
       const config = configuration();
       const fingerprint = session.fingerprint(run, config.provider, config.model, attempt);
       if (session.isDuplicate(fingerprint)) { status('Same code and result — your previous hint is still here.'); return; }
@@ -51,14 +55,17 @@ export function activate(context: vscode.ExtensionContext): void {
       const result = await analyze(config.provider, config.model, key, session.context(run, attempt), pending.signal);
       if (mine !== requestGeneration || !linked || linked.isClosed || linked.isDirty || linked.version !== run.version || linked.getText() !== run.source) return;
       const reply = validateReply(result, run, session.allowedLevel(run, attempt));
-      session.apply(run, reply, fingerprint, attempt);
+      const celebrate = session.apply(run, reply, fingerprint, attempt);
       message('buddy', reply.message, reply.category);
+      if (celebrate) { guidance.clear(); state.celebration++; }
       if (reply.level === 'inline') guidance.showHint(run, reply);
       if (reply.level === 'fix') {
         await guidance.showProposal(run, reply);
         message('buddy', reply.explanation ?? 'Review the proposed change before deciding.');
       }
-      state.status = reply.status === 'needs_clarification' ? 'Your turn — tell the buddy what you expected.' : 'Your turn. Try a change, save, and run again.';
+      state.status = reply.status === 'needs_clarification' ? 'Your turn — tell the buddy what you expected.'
+        : reply.status === 'solved' ? 'This result matches the stated goal. Nice work!'
+        : run.reported ? 'Learner-shared result checked. Try your next change.' : 'Your turn. Try a change, save, and run again.';
     } catch (error) {
       if (mine === requestGeneration) {
         const cause = error as Error;
@@ -88,14 +95,33 @@ export function activate(context: vscode.ExtensionContext): void {
 
   async function action(name: string, text?: string, proposalId?: string): Promise<void> {
     try {
+      if (text) {
+        const key = await context.secrets.get(keyName(configuration().provider));
+        if (key && text.includes(key)) throw new Error('Use the Add key button for credentials. Do not include your API key in the conversation.');
+      }
       if (name === 'settings') await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:aatish1321.coding-buddy');
       else if (name === 'setKey') { await setKey(context); await refresh(); }
       else if (name === 'connect') await connect();
       else if (name === 'disconnect') { cancel(); guidance.clear(); capture.disconnect(); linked = undefined; latestRun = undefined; session = new LearningSession(); state.file = ''; status('Disconnected.'); }
-      else if (name === 'reset') { cancel(); guidance.clear(); session = new LearningSession(); state.messages = []; status('Fresh start. Run your code when you are ready.'); }
+      else if (name === 'reset') { cancel(); guidance.clear(); session = new LearningSession(); latestRun = undefined; state.messages = []; status('Fresh start. Run your code when you are ready.'); }
+      else if (name === 'toggleConfetti') { const config = vscode.workspace.getConfiguration('codingBuddy'); await config.update('confetti', !config.get('confetti', true), vscode.ConfigurationTarget.Global); }
       else if (name === 'acceptFix') { await guidance.accept(proposalId ?? guidance.proposalId); status('Change accepted. Save your file and run it to check the result.'); }
       else if (name === 'rejectFix') { guidance.reject(proposalId ?? guidance.proposalId); status('Your code is unchanged. Try your own approach and run again.'); }
       else if (name === 'retry' && latestRun) await runAnalysis(latestRun, true);
+      else if (name === 'shareResult' && text?.trim()) {
+        if (state.working) return;
+        const document = linked && !linked.isClosed ? linked : vscode.window.activeTextEditor?.document;
+        if (!document || document.uri.scheme !== 'file') { status('Open and save the code file whose result you want to share.'); return; }
+        checkSource(document.getText(), document.fileName);
+        if (document.isDirty) { status('Save the code file before sharing its run result.'); return; }
+        if (!linked || linked.uri.toString() !== document.uri.toString()) {
+          cancel(); guidance.clear(); capture.disconnect(); session = new LearningSession(); linked = document; state.file = basename(document.fileName);
+        }
+        latestRun = { uri: document.uri.toString(), version: document.version, language: document.languageId, source: document.getText(),
+          command: 'Learner-shared run result', output: text.trim(), exitCode: null, truncated: false, reported: true };
+        message('learner', `Run result I observed:\n${text.trim()}`);
+        await runAnalysis(latestRun, true);
+      }
       else if (name === 'clarify' && text?.trim()) {
         if (state.working) return;
         session.clarification = `${session.clarification}\n${text.trim()}`.trim().slice(-2_000);
@@ -110,7 +136,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const guidance = new EditorGuidance(() => { void refresh(); });
   const capture = new TerminalCapture(run => { latestRun = run; void runAnalysis(run, true); }, status);
   const register = (name: string, handler: () => unknown) => context.subscriptions.push(vscode.commands.registerCommand(`codingBuddy.${name}`, handler));
-  for (const name of ['connect','disconnect','settings','reset','retry','acceptFix','rejectFix']) register(name, () => action(name));
+  for (const name of ['connect','disconnect','settings','reset','retry','acceptFix','rejectFix','toggleConfetti']) register(name, () => action(name));
   register('setKey', () => action('setKey'));
   register('removeKey', async () => { await context.secrets.delete(keyName(configuration().provider)); status('API key removed.'); });
   context.subscriptions.push(log, capture, guidance,

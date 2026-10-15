@@ -30,6 +30,17 @@ export class LearningSession {
   isDuplicate(fingerprint: string): boolean { return this.lastRequest === fingerprint; }
 
   apply(run: RunSnapshot, reply: TeachingReply, fingerprint: string, attempt: boolean): boolean {
+    let celebrate = false;
+    if (reply.status === 'solved') {
+      if (run.truncated || !run.output.trim() || (!run.reported && run.exitCode !== 0) ||
+        !reply.expectedOutcome?.trim() || !['comment', 'clarified'].includes(reply.intentSource) ||
+        (reply.intentSource === 'clarified' && !this.clarification.trim()) ||
+        ['new', 'unknown'].includes(reply.relationship)) {
+        throw new Error('I cannot confirm the result yet. Explain what you expected, then share or run the result again.');
+      }
+      celebrate = !!this.issue;
+      this.issue = ''; this.retries = 0; this.lastSource = run.source;
+    }
     if (reply.status === 'issue') {
       if (reply.relationship === 'unknown' && reply.level !== this.level(this.retries)) {
         throw new Error('I need to understand whether this is the same issue before giving more specific help. Clarify what happened.');
@@ -42,7 +53,7 @@ export class LearningSession {
     this.lastRequest = fingerprint;
     this.previousHint = reply.message;
     if (reply.expectedOutcome) this.expectedOutcome = reply.expectedOutcome;
-    return false;
+    return celebrate;
   }
 
   clearCache(): void { this.lastRequest = ''; }

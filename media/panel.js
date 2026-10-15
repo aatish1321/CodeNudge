@@ -3,11 +3,12 @@
   const input = document.getElementById('clarification');
   const history = document.getElementById('messages');
   let proposalId = '';
+  let seenCelebration = null;
   document.addEventListener('click', event => {
     const button = event.target.closest('button[data-action]');
     if (!button) return;
     const action = button.dataset.action;
-    if (action === 'clarify') {
+    if (action === 'clarify' || action === 'shareResult') {
       const text = input.value.trim();
       if (!text) return;
       vscode.postMessage({ action, text }); input.value = '';
@@ -26,6 +27,17 @@
     document.getElementById('status').textContent = state.status;
     document.getElementById('working').hidden = !state.working;
     document.getElementById('send').disabled = state.working;
+    document.getElementById('share').disabled = state.working;
+    document.getElementById('confettiToggle').textContent = state.confetti ? 'Confetti on' : 'Confetti off';
+    document.getElementById('confettiToggle').setAttribute('aria-pressed', String(state.confetti));
+    if (seenCelebration !== null && state.celebration > seenCelebration && state.confetti && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const celebration = document.getElementById('celebration');
+      celebration.replaceChildren(...Array.from({ length: 28 }, () => {
+        const piece = document.createElement('span'); piece.className = 'confetti-piece'; return piece;
+      }));
+      setTimeout(() => celebration.replaceChildren(), 2500);
+    }
+    seenCelebration = state.celebration;
     proposalId = state.proposalId;
     document.getElementById('fixActions').hidden = !proposalId;
     document.getElementById('progress').textContent = state.retries ? `${state.retries} attempts · ${state.retries >= 6 ? 'Review a fix' : state.retries >= 3 ? 'Line hint' : 'Thinking clues'}` : '';

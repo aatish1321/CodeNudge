@@ -25,13 +25,15 @@
       { "command": "codingBuddy.reset", "title": "Coding Buddy: Reset Current Issue" },
       { "command": "codingBuddy.retry", "title": "Coding Buddy: Retry Analysis" },
       { "command": "codingBuddy.acceptFix", "title": "Coding Buddy: Accept Reviewed Fix" },
-      { "command": "codingBuddy.rejectFix", "title": "Coding Buddy: Reject Reviewed Fix" }
+      { "command": "codingBuddy.rejectFix", "title": "Coding Buddy: Reject Reviewed Fix" },
+      { "command": "codingBuddy.toggleConfetti", "title": "Coding Buddy: Toggle Confetti" }
     ],
     "configuration": {
       "title": "Coding Buddy",
       "properties": {
         "codingBuddy.provider": { "type": "string", "enum": ["gemini"], "default": "gemini", "scope": "application", "description": "AI provider that receives your connected code and run output. Use Coding Buddy: Set API Key to store its key securely." },
-        "codingBuddy.models.gemini": { "type": "string", "default": "gemini-3.5-flash-lite", "scope": "application", "description": "Gemini model with structured-output support. Model availability depends on your account." }
+        "codingBuddy.models.gemini": { "type": "string", "default": "gemini-3.5-flash-lite", "scope": "application", "description": "Gemini model with structured-output support. Model availability depends on your account." },
+        "codingBuddy.confetti": { "type": "boolean", "default": true, "scope": "application", "description": "Celebrate a solved issue with confetti. Reduced-motion preferences are always respected." }
       }
     }
   },

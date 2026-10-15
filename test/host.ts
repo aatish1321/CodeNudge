@@ -74,7 +74,16 @@ export async function run(): Promise<void> {
     assert.match(editDocument.getText(), /^# my change/);
     console.log('HOST CHECK PASSED: arrow rendering, native colored diff, reject, accept, undo, and stale-edit protection.');
   } finally { review.dispose(); await editDocument.save(); }
+  const config = vscode.workspace.getConfiguration('codingBuddy');
+  const originalConfetti = config.inspect<boolean>('confetti')?.globalValue;
+  try {
+    await config.update('confetti', false, vscode.ConfigurationTarget.Global);
+    assert.equal(vscode.workspace.getConfiguration('codingBuddy').get('confetti'), false);
+    await vscode.commands.executeCommand('codingBuddy.toggleConfetti');
+    assert.equal(vscode.workspace.getConfiguration('codingBuddy').get('confetti'), true);
+    console.log('HOST CHECK PASSED: persistent confetti setting and native toggle command.');
+  } finally { await config.update('confetti', originalConfetti, vscode.ConfigurationTarget.Global); }
   if (process.env.CODING_BUDDY_TEST_REPORT) {
-    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['activation', 'terminal-output', 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit'] }));
+    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['activation', 'terminal-output', 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting'] }));
   }
 }
