@@ -4,7 +4,7 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install `coding-buddy-0.0.4.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
+Install `coding-buddy-0.0.5.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
 
 1. Open a trusted project in **desktop VS Code 1.93 or newer** and click the Coding Buddy robot icon.
 2. Open the **⚙ settings menu** to select Gemini, OpenAI, or Groq and add its API key. Keys use VS Code secret storage. Provider/key/model options, pause/resume, celebrations, retry/reset, and advanced terminal tools live in this menu.
@@ -12,7 +12,7 @@ Install `coding-buddy-0.0.4.vsix` using **Extensions → … → Install from VS
 4. Run your code normally in a VS Code terminal—for example, `python3 loop_syntax.py` in `examples`. **No terminal attachment or command-entry dialog is required.**
 5. Read the clue, try your own change, save, and run again.
 
-Buddy starts watching automatically. It snapshots the saved code file focused when a command starts and checks that version when the run finishes. A command or traceback naming that file links the result automatically, including zsh runs that omit their command name. If neither identifies the file, Buddy asks in the conversation whether this output came from the focused file. Reply **yes** to confirm, or open the correct file and rerun. Uncertain results do not spend an AI request, advance attempts, or trigger success celebrations. Recognized housekeeping commands such as `git status` and `ls` are ignored. Pause automatic hints in settings whenever you want.
+Buddy starts watching automatically. It snapshots the saved code file focused when a command starts and checks that version when the run finishes. A command or traceback identifying the same complete path links the result automatically, including zsh runs that omit their command name. If neither identifies the file, Buddy asks in the conversation whether this output came from the focused file. Reply **yes** to confirm, or open the correct file and rerun. Relative paths are resolved against the terminal’s working directory. A different copy with the same filename is ignored and clears stale guidance; matching the name alone is insufficient. Uncertain results do not spend an AI request, advance attempts, or trigger success celebrations. Recognized housekeeping commands such as `git status` and `ls` are ignored. Pause automatic hints in settings whenever you want.
 
 After the initial clue, three unsuccessful **changed-code retries for the same problem** unlock an inline arrow hint. Three more unlock a colored diff with an explanation. **Accept fix** applies that reviewed change; **Keep my code** rejects it. Accepted changes remain unsaved and support normal VS Code undo. Save and run again to check your result.
 

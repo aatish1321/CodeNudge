@@ -99,17 +99,21 @@ export function diagnostic(run: RunSnapshot): { key: string; line: number | null
   return { key: error && validLine ? `${error[1]}:${validLine}` : '', line: validLine };
 }
 
+export class GuidanceValidationError extends Error {
+  constructor(readonly reason: string) { super('Buddy couldn’t read that AI reply. Your code is unchanged. Use settings → Retry last result.'); }
+}
+
 export function validateReply(value: unknown, run: RunSnapshot, allowed: Level, sameDiagnostic = false): TeachingReply {
-  const invalid = () => new Error('The AI returned guidance I could not safely use. Try again or choose another model.');
+  const invalid = (reason = 'invalid_fields') => new GuidanceValidationError(reason);
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw invalid();
   const item = { ...value } as Record<string, unknown>;
-  if (Object.keys(item).length !== replySchema.required.length || replySchema.required.some(key => !(key in item))) throw invalid();
+  if (Object.keys(item).length !== replySchema.required.length || replySchema.required.some(key => !(key in item))) throw invalid('schema_fields');
   const enums: Record<string, readonly string[]> = {
     status: ['issue', 'solved', 'needs_clarification'], relationship: ['same', 'new', 'none', 'unknown'],
     category: ['syntax', 'runtime', 'logic', 'unknown'], intentSource: ['comment', 'clarified', 'inferred', 'unknown'],
     level: ['clue', 'inline', 'fix', 'none']
   };
-  for (const [key, options] of Object.entries(enums)) if (!options.includes(item[key] as string)) throw invalid();
+  for (const [key, options] of Object.entries(enums)) if (!options.includes(item[key] as string)) throw invalid(`enum_${key}`);
   if (sameDiagnostic && item.status === 'issue') item.relationship = 'same';
   if (typeof item.message !== 'string' || !item.message.trim() || item.message.length > 2_000) throw invalid();
   for (const [key, limit] of Object.entries({ expectedOutcome: 2_000, inlineHint: 240, replacement: 20_000, explanation: 3_000 })) {
@@ -124,18 +128,18 @@ export function validateReply(value: unknown, run: RunSnapshot, allowed: Level, 
       message: 'Your code runs now, so the earlier execution error is gone. Does this output match what you expected?',
       line: null, inlineHint: null, replacement: null, explanation: null });
   }
-  if (item.line !== null && (!Number.isInteger(item.line) || (item.line as number) < 1 || (item.line as number) > run.source.split('\n').length)) throw invalid();
+  if (item.line !== null && (!Number.isInteger(item.line) || (item.line as number) < 1 || (item.line as number) > run.source.split('\n').length)) throw invalid('line_out_of_range');
   const reply = item as unknown as TeachingReply;
   const ranks = { none: -1, clue: 0, inline: 1, fix: 2 };
-  if (ranks[reply.level] > ranks[allowed]) throw invalid();
+  if (ranks[reply.level] > ranks[allowed]) throw invalid('stage_exceeded');
   if (reply.relationship === 'new' && reply.level !== 'clue' && reply.status === 'issue') throw invalid();
   if (reply.status !== 'issue' && (reply.level !== 'none' || reply.replacement !== null || reply.inlineHint !== null)) throw invalid();
   if (reply.status === 'issue' && reply.level === 'none') throw invalid();
   if (reply.status === 'issue' && reply.relationship === 'none') throw invalid();
   if (reply.level !== 'fix' && (reply.replacement !== null || reply.explanation !== null)) throw invalid();
   if (reply.level === 'clue' && reply.inlineHint !== null) throw invalid();
-  if (reply.level === 'inline' && (!reply.inlineHint?.trim() || reply.line === null)) throw invalid();
-  if (reply.level === 'fix' && (!reply.replacement?.trim() || !reply.explanation?.trim())) throw invalid();
+  if (reply.level === 'inline' && (!reply.inlineHint?.trim() || reply.line === null)) throw invalid('missing_inline_hint');
+  if (reply.level === 'fix' && (!reply.replacement?.trim() || !reply.explanation?.trim())) throw invalid('missing_fix');
   if (reply.level === 'fix' && reply.relationship !== 'same') throw invalid();
   return reply;
 }

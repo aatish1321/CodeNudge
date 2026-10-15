@@ -4,7 +4,7 @@ import { analyze } from './providers';
 import { BuddyPanel, PanelState } from './panel';
 import { LearningSession } from './session';
 import { checkKnownKeys, chooseProvider, configuration, keyName, setKey } from './settings';
-import { checkSource, RunSnapshot, validateReply } from './teaching';
+import { checkSource, GuidanceValidationError, RunSnapshot, validateReply } from './teaching';
 import { TerminalCapture } from './terminal';
 import { EditorGuidance } from './editor';
 
@@ -80,6 +80,7 @@ export function activate(context: vscode.ExtensionContext): void {
     } catch (error) {
       if (mine === requestGeneration) {
         const cause = error as Error;
+        if (cause instanceof GuidanceValidationError) log.appendLine(`Rejected guidance: ${cause.reason}; provider=${configuration().provider}`);
         state.status = cause.name === 'AbortError' || cause.name === 'TimeoutError' ? 'The request took too long. Try again when you are ready.'
           : cause instanceof TypeError ? 'Could not reach the provider. Check your connection and retry.' : cause.message;
       }
@@ -195,7 +196,10 @@ export function activate(context: vscode.ExtensionContext): void {
       status('Reply “yes” if that result came from this file.'); return;
     }
     void runAnalysis(run, true);
-  }, status);
+  }, (message, clear) => {
+    if (clear) { cancel(); guidance.clear(); state.messages = []; session = new LearningSession(); latestRun = undefined; }
+    status(message);
+  });
   if (!vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true)) {
     capture.disconnect(); state.status = 'Automatic hints paused. Resume them in settings.';
   }

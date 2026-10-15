@@ -11,7 +11,7 @@ import type { RunSnapshot } from '../src/teaching';
 function terminalFixture() {
   let start!: (event: vscode.TerminalShellExecutionStartEvent) => void;
   let end!: (event: vscode.TerminalShellExecutionEndEvent) => void;
-  const runs: RunSnapshot[] = []; const statuses: string[] = [];
+  const runs: RunSnapshot[] = []; const statuses: string[] = []; const clears: boolean[] = [];
   const terminal = {} as vscode.Terminal;
   const document = { fileName: '/demo.py', uri: { scheme: 'file', toString: () => 'file:///demo.py' }, version: 1,
     languageId: 'python', isDirty: false, isClosed: false, getText: () => 'print(1)\n' };
@@ -28,16 +28,16 @@ function terminalFixture() {
   runInNewContext(readFileSync(filename, 'utf8'), { exports: moduleExports,
     require: (name: string) => name === 'vscode' ? { TerminalShellExecutionCommandLineConfidence: { Low: 0 }, window } : localRequire(name)
   });
-  const capture = new moduleExports.TerminalCapture(run => runs.push(run), status => statuses.push(status));
-  const run = async (command = 'python3 demo.py', output = '1\r\n', confidence = 2, duringRun?: () => void) => {
-    const execution = { cwd: undefined, commandLine: { value: command, confidence, isTrusted: false },
+  const capture = new moduleExports.TerminalCapture(run => runs.push(run), (status, clear) => { statuses.push(status); clears.push(!!clear); });
+  const run = async (command = 'python3 demo.py', output = '1\r\n', confidence = 2, duringRun?: () => void, cwd = '/') => {
+    const execution = { cwd: { fsPath: cwd } as vscode.Uri, commandLine: { value: command, confidence, isTrusted: false },
       read: async function* () { yield output; } } as vscode.TerminalShellExecution;
     start({ terminal, execution, shellIntegration: {} as vscode.TerminalShellIntegration });
     duringRun?.();
     end({ terminal, execution, exitCode: 0, shellIntegration: {} as vscode.TerminalShellIntegration });
     await new Promise(resolve => setImmediate(resolve));
   };
-  return { capture, document, terminal, runs, statuses, run };
+  return { capture, document, terminal, runs, statuses, clears, run };
 }
 
 test('automatically observes the active saved file without attaching a terminal or prompting', async () => {
@@ -46,6 +46,27 @@ test('automatically observes the active saved file without attaching a terminal 
   assert.equal(fixture.runs[0].command, 'python3 demo.py');
   assert.equal(fixture.runs[0].output, '1\n');
   assert.equal(fixture.runs[0].sourceConfirmed, true);
+  fixture.capture.dispose();
+});
+
+test('another absolute or relative copy with the same basename cannot be diagnosed as the active file', async () => {
+  const fixture = terminalFixture();
+  await fixture.run('python3 /tmp/other/demo.py', 'File "/tmp/other/demo.py", line 2\nSyntaxError: invalid syntax');
+  await fixture.run('', 'File "/tmp/other/demo.py", line 2\nSyntaxError: invalid syntax', 0);
+  await fixture.run('python3 demo.py', '1', 2, undefined, '/other');
+  assert.equal(fixture.runs.length, 0);
+  assert.equal(fixture.clears.filter(Boolean).length, 3);
+  assert.match(fixture.statuses.at(-1)!, /another copy/);
+  fixture.capture.dispose();
+});
+
+test('quoted paths with spaces and file URLs match the complete active file path', async () => {
+  const fixture = terminalFixture();
+  fixture.document.fileName = '/my project/demo.py';
+  await fixture.run('python3 "/my project/demo.py"');
+  await fixture.run('', 'at file:///my%20project/demo.py:2:1', 0);
+  assert.equal(fixture.runs.length, 2);
+  assert.ok(fixture.runs.every(run => run.sourceConfirmed));
   fixture.capture.dispose();
 });
 

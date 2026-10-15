@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
-import { basename } from 'node:path';
+import { basename, isAbsolute, normalize, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 import { checkSource, RunSnapshot } from './teaching';
 
 interface Captured {
-  document: vscode.TextDocument; terminal: vscode.Terminal; run: RunSnapshot;
+  document: vscode.TextDocument; terminal: vscode.Terminal; run: RunSnapshot; cwd?: string;
   output: Promise<{ output: string; truncated: boolean; failed?: boolean }>; generation: number;
 }
 
@@ -17,7 +18,7 @@ export class TerminalCapture implements vscode.Disposable {
   private pending = new Map<vscode.TerminalShellExecution, Captured>();
   private subscriptions: vscode.Disposable[];
 
-  constructor(private onRun: (run: RunSnapshot) => void, private onStatus: (message: string) => void) {
+  constructor(private onRun: (run: RunSnapshot) => void, private onStatus: (message: string, clear?: boolean) => void) {
     this.subscriptions = [
       vscode.window.onDidStartTerminalShellExecution(event => this.start(event)),
       vscode.window.onDidEndTerminalShellExecution(event => { void this.end(event).catch(() => this.onStatus('Could not read this run. You can share its output from settings.')); }),
@@ -58,7 +59,7 @@ export class TerminalCapture implements vscode.Disposable {
       const clean = stripVTControlCharacters(raw).replace(/\r\n/g, '\n').replace(/\r/g, '');
       return { output: clean.slice(-8_000), truncated: truncated || clean.length > 8_000 };
     })().catch(() => ({ output: '', truncated: true, failed: true }));
-    this.pending.set(event.execution, { document, terminal: event.terminal, generation, output,
+    this.pending.set(event.execution, { document, terminal: event.terminal, cwd: event.execution.cwd?.fsPath ?? event.shellIntegration.cwd?.fsPath, generation, output,
       run: { uri: document.uri.toString(), version: document.version, language: document.languageId,
         source, command, output: '', exitCode: null, truncated: false, reported: false } });
   }
@@ -77,10 +78,22 @@ export class TerminalCapture implements vscode.Disposable {
     }
     const command = event.execution.commandLine.value.trim();
     if (!this.automatic && this.command && command && command !== this.command) return;
-    const filename = basename(document.fileName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const mentionsFile = new RegExp(`(?:^|[\\s/\\\\"'(])${filename}(?=$|[\\s"':)])`);
-    const sourceConfirmed = mentionsFile.test(result.output) ||
-      (event.execution.commandLine.confidence !== vscode.TerminalShellExecutionCommandLineConfidence.Low && mentionsFile.test(command));
+    const references = (text: string): string[] => {
+      const paths: string[] = [];
+      for (const match of text.matchAll(/"([^"\r\n]+)"|'([^'\r\n]+)'|([^\s"'()]+)/g)) {
+        let path = (match[1] ?? match[2] ?? match[3]).replace(/:\d+(?::\d+)?[,:]?$/, '');
+        if (path.startsWith('file://')) { try { path = fileURLToPath(path); } catch { continue; } }
+        if (basename(path) !== basename(document.fileName)) continue;
+        if (isAbsolute(path)) paths.push(normalize(path));
+        else if (capture.cwd) paths.push(resolve(capture.cwd, path));
+      }
+      return paths;
+    };
+    const paths = [...references(result.output), ...(event.execution.commandLine.confidence !== vscode.TerminalShellExecutionCommandLineConfidence.Low ? references(command) : [])];
+    const sourceConfirmed = paths.includes(normalize(document.fileName));
+    if (paths.length && !sourceConfirmed) {
+      this.onStatus('That command ran another copy of this file. Run the file open in your editor.', true); return;
+    }
     // shortcut: unnamed shell runs use the focused file as a candidate; require clarification before escalating or celebrating when no filename links them.
     if (!this.automatic && command) this.command = command;
     this.onRun({ ...capture.run, ...result, command: command || 'Terminal run (command unavailable)',

@@ -9,6 +9,16 @@ import { join } from 'node:path';
 import { clue, run as fixtureRun } from './fixtures';
 import type { Provider } from '../src/providers';
 
+async function disableTestHistory(terminal: vscode.Terminal): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => { listener.dispose(); reject(new Error('Could not disable test terminal history')); }, 10_000);
+    const listener = vscode.window.onDidEndTerminalShellExecution(event => {
+      if (event.terminal === terminal) { clearTimeout(timer); listener.dispose(); resolve(); }
+    });
+    terminal.sendText('unset HISTFILE');
+  });
+}
+
 export async function run(): Promise<void> {
   const extension = vscode.extensions.getExtension('aatish1321.coding-buddy');
   assert.ok(extension, 'Development extension must be discovered');
@@ -31,7 +41,7 @@ export async function run(): Promise<void> {
   const syntaxCommand = `python3 ${syntaxPath}`;
   const document = await vscode.workspace.openTextDocument(syntaxPath);
   await vscode.window.showTextDocument(document);
-  const terminal = vscode.window.createTerminal({ name: 'Coding Buddy verification', shellPath: '/bin/bash', cwd: folder.uri });
+  const terminal = vscode.window.createTerminal({ name: 'Coding Buddy verification', shellPath: '/bin/bash', cwd: folder.uri, env: { HISTFILE: '/dev/null' } });
   let capture: CaptureType | undefined;
   try {
     await new Promise<void>((resolve, reject) => {
@@ -42,6 +52,7 @@ export async function run(): Promise<void> {
       if (terminal.shellIntegration) { clearTimeout(timer); listener.dispose(); resolve(); }
       terminal.show();
     });
+    await disableTestHistory(terminal);
     const observed = new Promise<RunSnapshot>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('No completed command was captured')), 20_000);
       capture = new TerminalCapture(result => { clearTimeout(timer); resolve(result); }, () => {});
@@ -110,7 +121,7 @@ export async function run(): Promise<void> {
 
   if (existsSync('/bin/zsh')) {
     await vscode.window.showTextDocument(document);
-    const zsh = vscode.window.createTerminal({ name: 'Buddy automatic zsh verification', shellPath: '/bin/zsh', cwd: folder.uri });
+    const zsh = vscode.window.createTerminal({ name: 'Buddy automatic zsh verification', shellPath: '/bin/zsh', cwd: folder.uri, env: { HISTFILE: '/dev/null' } });
     try {
       await new Promise<void>((resolve, reject) => {
         const timer = setTimeout(() => { listener.dispose(); reject(new Error('zsh shell integration did not activate')); }, 20_000);
@@ -120,6 +131,7 @@ export async function run(): Promise<void> {
         if (zsh.shellIntegration) { clearTimeout(timer); listener.dispose(); resolve(); }
         zsh.show();
       });
+      await disableTestHistory(zsh);
       const observed = new Promise<RunSnapshot>((resolve, reject) => {
         const timer = setTimeout(() => reject(new Error('Automatic zsh run was not captured')), 20_000);
         capture = new TerminalCapture(result => { clearTimeout(timer); resolve(result); }, () => {});

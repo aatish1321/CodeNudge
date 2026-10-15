@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LearningSession } from '../src/session';
-import { checkSource, validateReply } from '../src/teaching';
+import { checkSource, GuidanceValidationError, validateReply } from '../src/teaching';
 import { clue, run } from './fixtures';
 
 test('first clue is validated without a premature fix', () => {
@@ -11,6 +11,15 @@ test('first clue is validated without a premature fix', () => {
     { ...clue, level: 'inline', inlineHint: 'add something', line: 2 }]) {
     assert.throws(() => validateReply(invalid, run, 'clue'));
   }
+});
+
+test('rejected guidance supplies a safe diagnostic code without echoing model text', () => {
+  assert.throws(() => validateReply({ ...clue, line: 999, message: 'private model content' }, run, 'clue'), error => {
+    assert.ok(error instanceof GuidanceValidationError);
+    assert.equal(error.reason, 'line_out_of_range');
+    assert.ok(!error.message.includes('private model content'));
+    return true;
+  });
 });
 
 test('source checks stop credential files, blank and oversized context', () => {
