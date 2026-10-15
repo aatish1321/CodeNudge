@@ -1,18 +1,20 @@
 import * as vscode from 'vscode';
 import assert from 'node:assert/strict';
-import { TerminalCapture } from '../src/terminal';
+import type { TerminalCapture as CaptureType } from '../src/terminal';
 import { RunSnapshot } from '../src/teaching';
-import { EditorGuidance } from '../src/editor';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { clue } from './fixtures';
-import { configuration, keyName } from '../src/settings';
-import { defaults, Provider } from '../src/providers';
+import type { Provider } from '../src/providers';
 
 export async function run(): Promise<void> {
   const extension = vscode.extensions.getExtension('aatish1321.coding-buddy');
   assert.ok(extension, 'Development extension must be discovered');
+  const { TerminalCapture } = require(join(extension.extensionPath, 'out/src/terminal.js')) as typeof import('../src/terminal');
+  const { EditorGuidance } = require(join(extension.extensionPath, 'out/src/editor.js')) as typeof import('../src/editor');
+  const { configuration, keyName } = require(join(extension.extensionPath, 'out/src/settings.js')) as typeof import('../src/settings');
+  const { defaults } = require(join(extension.extensionPath, 'out/src/providers.js')) as typeof import('../src/providers');
   await vscode.commands.executeCommand('codingBuddy.panel.focus');
   await extension.activate();
   assert.ok(extension.isActive);
@@ -21,7 +23,7 @@ export async function run(): Promise<void> {
   const document = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(folder.uri, 'loop_syntax.py'));
   await vscode.window.showTextDocument(document);
   const terminal = vscode.window.createTerminal({ name: 'Coding Buddy verification', shellPath: '/bin/bash', cwd: folder.uri });
-  let capture: TerminalCapture | undefined;
+  let capture: CaptureType | undefined;
   try {
     await new Promise<void>((resolve, reject) => {
       const timer = setTimeout(() => { listener.dispose(); reject(new Error('Shell integration did not activate')); }, 20_000);
@@ -43,6 +45,20 @@ export async function run(): Promise<void> {
     assert.equal(result.source, document.getText());
     assert.equal(result.command, 'python3 loop_syntax.py');
     console.log('HOST CHECK PASSED: extension activation, robot webview registration, actual terminal output and exit code.');
+    capture?.dispose();
+    const javascript = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(folder.uri, 'loop_logic.js'));
+    await vscode.window.showTextDocument(javascript);
+    const observedJavascript = new Promise<RunSnapshot>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('JavaScript run was not captured')), 20_000);
+      capture = new TerminalCapture(result => { clearTimeout(timer); resolve(result); }, () => {});
+      capture.connect(javascript, terminal);
+    });
+    terminal.sendText('node loop_logic.js');
+    const javascriptResult = await observedJavascript;
+    assert.equal(javascriptResult.exitCode, 0);
+    assert.equal(javascriptResult.language, 'javascript');
+    assert.equal(javascriptResult.output.trim(), '1\n2\n3\n4');
+    console.log('HOST CHECK PASSED: JavaScript source/output capture without Python-specific assumptions.');
   } finally { capture?.dispose(); terminal.dispose(); }
 
   const directory = await mkdtemp(join(tmpdir(), 'coding-buddy-edits-'));
@@ -97,6 +113,6 @@ export async function run(): Promise<void> {
     console.log('HOST CHECK PASSED: three native provider settings and distinct secret names.');
   } finally { await config.update('provider', originalProvider, vscode.ConfigurationTarget.Global); }
   if (process.env.CODING_BUDDY_TEST_REPORT) {
-    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['activation', 'terminal-output', 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'provider-settings'] }));
+    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['activation', 'python-capture', 'javascript-capture', 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'provider-settings'] }));
   }
 }

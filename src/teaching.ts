@@ -102,9 +102,11 @@ export function validateReply(value: unknown, run: RunSnapshot, allowed: Level):
   if (reply.relationship === 'new' && reply.level !== 'clue' && reply.status === 'issue') throw invalid();
   if (reply.status !== 'issue' && (reply.level !== 'none' || reply.replacement !== null || reply.inlineHint !== null)) throw invalid();
   if (reply.status === 'issue' && reply.level === 'none') throw invalid();
+  if (reply.status === 'issue' && reply.relationship === 'none') throw invalid();
   if (reply.level !== 'fix' && (reply.replacement !== null || reply.explanation !== null)) throw invalid();
   if (reply.level === 'clue' && reply.inlineHint !== null) throw invalid();
   if (reply.level === 'inline' && (!reply.inlineHint?.trim() || reply.line === null)) throw invalid();
   if (reply.level === 'fix' && (!reply.replacement?.trim() || !reply.explanation?.trim())) throw invalid();
+  if (reply.level === 'fix' && reply.relationship !== 'same') throw invalid();
   return reply;
 }

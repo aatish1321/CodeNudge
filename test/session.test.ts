@@ -7,7 +7,7 @@ import { clue, run } from './fixtures';
 test('first clue is validated without a premature fix', () => {
   assert.deepEqual(validateReply(clue, run, 'clue'), clue);
   for (const invalid of [{ ...clue, replacement: 'fixed code' }, { ...clue, extra: true },
-    { ...clue, line: 0 }, { ...clue, line: 99 }, { ...clue, message: '' },
+    { ...clue, line: 0 }, { ...clue, line: 99 }, { ...clue, message: '' }, { ...clue, relationship: 'none' },
     { ...clue, level: 'inline', inlineHint: 'add something', line: 2 }]) {
     assert.throws(() => validateReply(invalid, run, 'clue'));
   }

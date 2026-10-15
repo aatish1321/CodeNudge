@@ -1,0 +1,77 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { runInNewContext } from 'node:vm';
+
+class Element {
+  textContent = ''; value = ''; className = ''; hidden = false; disabled = false;
+  dataset: Record<string, string> = {};
+  children: Element[] = [];
+  attributes: Record<string, string> = {};
+  addEventListener(): void {}
+  replaceChildren(...children: Element[]): void { this.children = children; }
+  append(...children: Element[]): void { this.children.push(...children); }
+  setAttribute(key: string, value: string): void { this.attributes[key] = value; }
+}
+
+function panel() {
+  const elements = new Map<string, Element>();
+  const listeners: Record<string, (event: unknown) => void> = {};
+  const sent: unknown[] = []; const timers: (() => void)[] = [];
+  let reducedMotion = false;
+  const element = (id: string) => {
+    if (!elements.has(id)) elements.set(id, new Element());
+    return elements.get(id)!;
+  };
+  runInNewContext(readFileSync(resolve(__dirname, '../../media/panel.js'), 'utf8'), {
+    acquireVsCodeApi: () => ({ postMessage: (value: unknown) => sent.push(value) }),
+    document: { getElementById: element, createElement: () => new Element(), addEventListener: (name: string, callback: (event: unknown) => void) => { listeners[name] = callback; } },
+    window: { addEventListener: (name: string, callback: (event: unknown) => void) => { listeners[name] = callback; } },
+    matchMedia: () => ({ matches: reducedMotion }), setTimeout: (callback: () => void) => timers.push(callback)
+  });
+  const state = { type: 'state', provider: 'gemini', model: 'fixture-model', keyConfigured: false, file: 'example.py', status: 'Ready', working: false,
+    retries: 0, messages: [] as { role: string; text: string }[], proposalId: '', confetti: true, celebration: 0 };
+  const render = () => listeners.message({ data: state });
+  return { element, state, render, sent, timers, listeners, reduce: () => { reducedMotion = true; } };
+}
+
+test('shipped panel renders model text literally and preserves review controls', () => {
+  const ui = panel();
+  ui.state.messages = [{ role: 'buddy', text: '<script>do not execute</script>' }];
+  ui.state.proposalId = 'proposal-1'; ui.state.working = true;
+  ui.render();
+  assert.equal(ui.element('messages').children[0].children[1].textContent, '<script>do not execute</script>');
+  assert.equal(ui.element('fixActions').hidden, false);
+  assert.equal(ui.element('send').disabled, true);
+  assert.equal(ui.element('share').disabled, true);
+  ui.state.proposalId = ''; ui.render();
+  assert.equal(ui.element('fixActions').hidden, true);
+});
+
+test('confetti fires once, obeys its setting and reduced motion, and does not replay on first render', () => {
+  const ui = panel(); ui.render();
+  assert.equal(ui.element('celebration').children.length, 0);
+  ui.state.celebration = 1; ui.render();
+  assert.equal(ui.element('celebration').children.length, 28);
+  ui.timers.splice(0).forEach(callback => callback()); ui.render();
+  assert.equal(ui.element('celebration').children.length, 0);
+  ui.state.confetti = false; ui.state.celebration = 2; ui.render();
+  assert.equal(ui.element('celebration').children.length, 0);
+  ui.state.confetti = true; ui.reduce(); ui.state.celebration = 3; ui.render();
+  assert.equal(ui.element('celebration').children.length, 0);
+  const reopened = panel(); reopened.state.celebration = 9; reopened.render();
+  assert.equal(reopened.element('celebration').children.length, 0);
+});
+
+test('clarification and reported results use distinct actions and clear the composer', () => {
+  const ui = panel(); ui.render();
+  for (const action of ['clarify', 'shareResult']) {
+    const button = new Element(); button.dataset.action = action;
+    ui.element('clarification').value = '  expected five numbers  ';
+    ui.listeners.click({ target: { closest: () => button } });
+    const message = ui.sent.at(-1) as { action: string; text: string };
+    assert.equal(message.action, action); assert.equal(message.text, 'expected five numbers');
+    assert.equal(ui.element('clarification').value, '');
+  }
+});

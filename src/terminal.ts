@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { stripVTControlCharacters } from 'node:util';
 import { checkSource, RunSnapshot } from './teaching';
 
-interface Captured { run: RunSnapshot; output: Promise<{ output: string; truncated: boolean }>; generation: number }
+interface Captured { run: RunSnapshot; output: Promise<{ output: string; truncated: boolean; failed?: boolean }>; generation: number }
 
 export class TerminalCapture implements vscode.Disposable {
   private document?: vscode.TextDocument;
@@ -36,15 +36,17 @@ export class TerminalCapture implements vscode.Disposable {
     const source = this.document.getText();
     try { checkSource(source, this.document.fileName); } catch (error) { this.onStatus((error as Error).message); return; }
     const stream = event.execution.read();
+    const generation = this.generation;
     const output = (async () => {
       let raw = ''; let truncated = false;
       for await (const chunk of stream) {
+        if (generation !== this.generation) break;
         raw += chunk;
         if (raw.length > 16_000) { raw = raw.slice(-16_000); truncated = true; }
       }
       const clean = stripVTControlCharacters(raw).replace(/\r\n/g, '\n').replace(/\r/g, '');
       return { output: clean.slice(-8_000), truncated: truncated || clean.length > 8_000 };
-    })();
+    })().catch(() => ({ output: '', truncated: true, failed: true }));
     this.pending.set(event.execution, { generation: this.generation, output,
       run: { uri: this.document.uri.toString(), version: this.document.version, language: this.document.languageId,
         source, command: event.execution.commandLine.value.trim(), output: '', exitCode: null, truncated: false, reported: false } });
@@ -56,6 +58,7 @@ export class TerminalCapture implements vscode.Disposable {
     if (!capture) return;
     const result = await capture.output;
     if (capture.generation !== this.generation || !this.document) return;
+    if (result.failed) { this.onStatus('Could not read this command’s output. Share the result manually or reconnect.'); return; }
     const command = event.execution.commandLine.value.trim();
     if (event.execution.commandLine.confidence === vscode.TerminalShellExecutionCommandLineConfidence.Low || !command) {
       this.onStatus('VS Code could not identify this command. Share the result manually or reconnect.'); return;

@@ -11,6 +11,8 @@ Git workflow: Keep verified checkpoints on `main`. Create a separate `build/NN-d
 
 We will build in slices: small working steps the learner can try. Each step includes its own checks and Git checkpoint. The first step proves real terminal capture and real hint generation before further interface polish.
 
+Checked slices record completed implementation and available agent verification. Live model acceptance is tracked separately under Final Review and has not been passed without credentials.
+
 ## Slices
 
 - [x] **1. Run broken code and receive a real first clue in VS Code**
@@ -74,6 +76,7 @@ The learner explicitly waived these hands-on sessions. Keep their boxes unchecke
 ## Final Review
 
 - [ ] Live provider acceptance — configure real keys locally and exercise the full teaching loop with Gemini, OpenAI, and Groq. HTTP fixtures are not live model validation.
+- [x] Agent review — 21 behavior tests plus the installed VSIX host suite pass; package contents were inspected. Learner exploration was explicitly waived rather than performed.
 - [ ] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
@@ -96,3 +99,5 @@ Activity mode: Not established; default to the running extension and editor.
 - Slice 2 agent checks passed: seven session tests plus provider tests; real VS Code host verified arrows, native diff, no source mutation on review/reject, accepted edits, undo, and stale-edit rejection. Request fingerprints exclude the help level because resetting a new issue must not make an unchanged rerun billable. Live-model escalation remains pending.
 - Slice 3 agent checks passed: nine session tests verify outcome evidence, no false celebration on errors/truncation/inferred intent, explicit manual-run attempts versus clarification, and one celebration per resolved issue. Real VS Code verifies the persistent confetti toggle and retains all capture/editor checks. Hands-on learner checks remain waived; live model judgments remain unverified.
 - Slice 4 agent checks passed: eight provider tests exercise the three documented HTTP contracts, authentication/schema mapping, refusal/truncation/quota/timeout failures, and no automatic retry/failover. Ten session tests cover progression and provider-switch count preservation. The real VS Code host verifies all provider settings; sidebar scripts report ready. Live access/teaching quality for the three accounts remains pending. The TypeScript config is included in this checkpoint so a clean checkout has the full build configuration.
+- Slice 5 agent checks passed: 21 tests across session, provider, and shipped-panel behavior; a 19-file VSIX with no private/development material; actual isolated installation; and real packaged-code activation, Python/JavaScript capture, inline hints, diff acceptance/rejection, undo, stale-edit protection, and preferences. Package/runtime bytes match compiled source. Browser visual inspection was unavailable; the real webview reported its script ready.
+- The packager's dependency discovery omitted the root when there were no production dependencies. Packaging now uses `--no-dependencies`, matching the extension's empty runtime-dependency set; the installed package test confirms the entrypoint is included and usable.

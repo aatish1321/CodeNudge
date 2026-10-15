@@ -1,4 +1,5 @@
 .git/**
+.gitignore
 .agents/**
 .claude/**
 .codex/**
@@ -18,5 +19,9 @@ out/test/**
 **/*.log
 .env
 .env.*
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
 tsconfig.json
 package-lock.json

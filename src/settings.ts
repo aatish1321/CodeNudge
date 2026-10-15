@@ -5,7 +5,9 @@ export function configuration(): { provider: Provider; model: string } {
   const config = vscode.workspace.getConfiguration('codingBuddy');
   const provider = config.get<Provider>('provider', 'gemini');
   if (!Object.hasOwn(defaults, provider)) throw new Error('Choose a supported Coding Buddy provider in settings.');
-  return { provider, model: config.get<string>(`models.${provider}`, defaults[provider]).trim() };
+  const model = config.get<unknown>(`models.${provider}`, defaults[provider]);
+  if (typeof model !== 'string' || !/^[a-zA-Z0-9._/-]{1,100}$/.test(model.trim())) throw new Error('Check the model name in Coding Buddy settings.');
+  return { provider, model: model.trim() };
 }
 
 export function keyName(provider: Provider): string { return `codingBuddy.key.${provider}`; }

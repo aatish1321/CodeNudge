@@ -45,8 +45,9 @@
     "watch": "tsc -watch -p .",
     "test": "npm run compile && node --test out/test/*.test.js",
     "test:host": "npm run compile && node scripts/test-host.cjs",
+    "test:package": "node scripts/test-host.cjs --package",
     "vscode:prepublish": "npm run compile",
-    "package": "vsce package --allow-missing-repository --skip-license --out coding-buddy-0.0.1.vsix"
+    "package": "vsce package --no-dependencies --skip-license --out coding-buddy-0.0.1.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
