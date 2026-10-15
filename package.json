@@ -2,7 +2,7 @@
   "name": "coding-buddy",
   "displayName": "Coding Buddy",
   "description": "A patient coding companion: clues first, answers when you need them.",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "publisher": "aatish1321",
   "license": "UNLICENSED",
   "repository": { "type": "git", "url": "https://github.com/aatish1321/coding-buddy.git" },
@@ -11,7 +11,7 @@
   "keywords": ["learning", "hints", "beginner", "coding", "ai"],
   "main": "./out/src/extension.js",
   "extensionKind": ["ui"],
-  "capabilities": { "untrustedWorkspaces": { "supported": false }, "virtualWorkspaces": false },
+  "capabilities": { "untrustedWorkspaces": { "supported": "limited", "description": "The buddy panel and settings are available in Restricted Mode. Terminal watching and AI analysis require trusting the folder." }, "virtualWorkspaces": false },
   "activationEvents": ["onStartupFinished", "onView:codingBuddy.panel"],
   "contributes": {
     "viewsContainers": { "activitybar": [{ "id": "codingBuddy", "title": "Coding Buddy", "icon": "media/buddy-icon.svg" }] },
@@ -47,9 +47,10 @@
     "watch": "tsc -watch -p .",
     "test": "npm run compile && node --test out/test/*.test.js",
     "test:host": "npm run compile && node scripts/test-host.cjs",
+    "test:trust": "npm run compile && node scripts/test-host.cjs --restricted",
     "test:package": "node scripts/test-host.cjs --package",
     "vscode:prepublish": "npm run compile",
-    "package": "vsce package --no-dependencies --skip-license --out coding-buddy-0.0.7.vsix"
+    "package": "vsce package --no-dependencies --skip-license --out coding-buddy-0.0.8.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

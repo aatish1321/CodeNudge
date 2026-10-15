@@ -80,7 +80,7 @@ The examples must be saved before running. Exercise the learning loop using genu
 
 ```sh
 npm run package
-code --install-extension coding-buddy-0.0.7.vsix
+code --install-extension coding-buddy-0.0.8.vsix
 ```
 
 `npm run package` will compile and invoke `vsce package`; use the actual generated versioned filename if it differs. Inspect package contents so learner profiles, keys, local logs, course material, and development-only files do not ship.
@@ -361,3 +361,7 @@ The learner explicitly requested harder project tests, independent test-window l
 ## Simple Demo Revision (0.0.7)
 
 Bundle `examples/demo/README.md` and tiny expenses/countdown/greeting fixtures for a rehearsable presentation. Separate full project-context revision (request cache and freshness) from effort revision (primary plus direct-import/error-referenced source). Unrelated-file edits may refresh project analysis but cannot advance attempts. Dependency detection follows import names and observed error paths; indirect-only dependencies with no error reference may need a full dependency graph later.
+
+## Restricted Mode Onboarding (0.0.8)
+
+Declare limited untrusted-workspace support so Buddy is discoverable in fresh, untrusted playgrounds. The panel offers a Trust this folder action opening `workbench.trust.manage`; only the user grants trust. Keep terminal capture disconnected and analysis/manual-result/editor actions blocked before trust. On `workspace.onDidGrantWorkspaceTrust`, refresh the panel and resume watching only if the automatic-hints preference is enabled. Keep the existing analysis trust guard. Test native restricted activation with trust enabled in an isolated profile; the usual terminal suite disables trust for its separate capture checks.

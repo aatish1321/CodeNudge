@@ -22,11 +22,13 @@
     const state = event.data;
     if (state.type !== 'state') return;
     document.body.classList.toggle('has-messages', state.messages.length > 0 || !!state.file);
-    document.getElementById('setup').hidden = state.keyConfigured;
+    document.getElementById('setup').hidden = state.keyConfigured || !state.trusted;
+    document.getElementById('trustPrompt').hidden = state.trusted;
     document.getElementById('file').textContent = state.file || '';
     document.getElementById('status').textContent = state.status;
     document.getElementById('working').hidden = !state.working;
-    document.getElementById('send').disabled = state.working;
+    document.getElementById('send').disabled = state.working || !state.trusted;
+    input.disabled = !state.trusted;
     if (seenCelebration !== null && state.celebration > seenCelebration && state.confetti && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const celebration = document.getElementById('celebration');
       celebration.replaceChildren(...Array.from({ length: 28 }, () => {

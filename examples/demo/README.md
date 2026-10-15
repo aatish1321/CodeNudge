@@ -4,7 +4,7 @@ Use these tiny examples for the presentation. The invoice/API projects are optio
 
 ## Prepare before recording
 
-1. Install the latest local VSIX, then use **Ctrl+Shift+P → Coding Buddy: Open Playground**. This opens fresh copies. Your old playground does not update automatically.
+1. Install the latest local VSIX, run **Developer: Reload Window** once, then use **Ctrl+Shift+P → Coding Buddy: Open Playground**. This opens fresh copies. If it opens in **Restricted Mode**, click Buddy’s **Trust this folder…** button (or the top banner’s **Manage**), then grant trust for this playground. The robot is visible before trust, but hints wait for that choice. Your old playground does not update automatically.
 2. Click the robot icon. In its gear menu, select your already-tested provider (Groq), check that its key is configured, enable automatic hints and celebrations.
 3. Use the terminal dropdown's **Bash** profile for this demo. Bash passed automatic command capture. No manual terminal attachment is needed. Keep the terminal at the playground root, where `demo` and `projects` are visible in Explorer.
 4. Open `demo/expenses.py`. Save before every run. Keep the code, terminal output and buddy visible together. Rehearse once, then open a fresh playground for the recording.

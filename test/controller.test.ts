@@ -24,7 +24,7 @@ async function until(check: () => boolean, description: string): Promise<void> {
 }
 const flush = () => new Promise<void>(resolve => setImmediate(resolve));
 
-async function controllerFixture(t: TestContext) {
+async function controllerFixture(t: TestContext, trusted = true) {
   const root = await mkdtemp(join(tmpdir(), 'coding-buddy-controller-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const documents: Document[] = [];
@@ -36,6 +36,9 @@ async function controllerFixture(t: TestContext) {
   let action!: (name: string, text?: string) => Promise<void>;
   let state!: PanelState;
   let collected = 0;
+  let granted: (() => void) | undefined;
+  let watching = true;
+  const executed: string[] = [];
   const hints: { run: RunSnapshot; reply: unknown }[] = [];
   const proposals: { run: RunSnapshot; reply: unknown }[] = [];
   let acceptCount = 0;
@@ -47,7 +50,7 @@ async function controllerFixture(t: TestContext) {
       ? sourceFiles(join(path, entry.name)) : [join(path, entry.name)]))).flat();
   }
   const workspace = {
-    isTrusted: true, textDocuments: documents,
+    isTrusted: trusted, textDocuments: documents,
     asRelativePath: (target: ReturnType<typeof uri>) => relative(root, target.fsPath).split(sep).join('/'),
     getWorkspaceFolder: (target: ReturnType<typeof uri>) => {
       const part = relative(root, target.fsPath);
@@ -58,6 +61,7 @@ async function controllerFixture(t: TestContext) {
     openTextDocument: async (target: ReturnType<typeof uri>) => documents.find(document => document.uri.fsPath === target.fsPath)!,
     onDidChangeTextDocument: (callback: typeof changedDocument) => { changedDocument = callback; return disposable(); },
     onDidChangeConfiguration: () => disposable(),
+    onDidGrantWorkspaceTrust: (callback: () => void) => { granted = callback; return disposable(); },
   };
   const window = {
     activeTextEditor: undefined as { document: Document } | undefined,
@@ -69,7 +73,7 @@ async function controllerFixture(t: TestContext) {
   const vscode = {
     workspace, window, Uri: { file: uri, parse: (value: string) => uri(fileURLToPath(value)) },
     RelativePattern: class {},
-    commands: { registerCommand: (name: string, handler: () => unknown) => { commands.set(name, handler); return disposable(); } },
+    commands: { executeCommand: async (command: string) => { executed.push(command); }, registerCommand: (name: string, handler: () => unknown) => { commands.set(name, handler); return disposable(); } },
   };
   const filename = resolve(__dirname, '../src/extension.js');
   const localRequire = createRequire(filename);
@@ -100,7 +104,7 @@ async function controllerFixture(t: TestContext) {
     } },
     './terminal': { TerminalCapture: class {
       constructor(callback: typeof emit) { emit = callback; }
-      disconnect() {} watch() {} connect() {} dispose() {}
+      disconnect() { watching = false; } watch() { watching = true; } connect() { watching = true; } dispose() {}
     } },
     './providers': { analyze: async (_provider: string, _model: string, _key: string, input: Input, signal: AbortSignal) => {
       requests.push({ input: JSON.parse(JSON.stringify(input)), signal });
@@ -141,11 +145,14 @@ async function controllerFixture(t: TestContext) {
     emit({ uri: document.uri.toString(), version: document.version, language: document.languageId, source: document.getText(),
       command: `${document.languageId === 'python' ? 'python3' : 'node'} ${document.fileName}`, output: 'TypeError: invalid data\n', exitCode: 1,
       sourceConfirmed: true, reported: false, truncated: false });
+    if (!workspace.isTrusted) { await flush(); return; }
     await until(() => collected > before, 'workspace collection');
     await flush(); await flush();
     if (!pending) await until(() => !state.working, 'analysis completion');
   }
   return { root, add, select, change, run, action: (name: string, text?: string) => action(name, text), requests, hints, proposals,
+    executed, watching: () => watching, collected: () => collected,
+    grantTrust: async () => { workspace.isTrusted = true; granted?.(); await flush(); },
     state: () => state, acceptCount: () => acceptCount, respond: (handler: typeof respond) => { respond = handler; } };
 }
 
@@ -325,4 +332,28 @@ test('editing an unrelated language example refreshes context without counting a
   await fixture.change(helper, '# Supply the value.\nvalue = 2\n');
   await fixture.run(python);
   assert.equal(fixture.state().retries, 1, 'an imported helper edit still counts');
+});
+
+test('Restricted Mode keeps the panel visible but blocks watching, context and AI until trust is granted', async t => {
+  const fixture = await controllerFixture(t, false);
+  const python = await fixture.add('main.py', '# Print a value.\nx = None\nprint(x.value)\n');
+  assert.equal(fixture.state().trusted, false);
+  assert.match(fixture.state().status, /Trust this folder/);
+  assert.equal(fixture.watching(), false);
+  await fixture.select(python);
+  await fixture.run(python);
+  await fixture.action('shareResult', 'TypeError: invalid data');
+  await fixture.action('clarify', 'The expected output is 1');
+  await fixture.action('connect');
+  assert.equal(fixture.collected(), 0);
+  assert.equal(fixture.requests.length, 0);
+  await fixture.action('trust');
+  assert.deepEqual(fixture.executed, ['workbench.trust.manage']);
+  assert.equal(fixture.state().trusted, false, 'opening trust management does not grant trust');
+  await fixture.grantTrust();
+  await until(() => fixture.state().trusted, 'trusted panel state');
+  assert.equal(fixture.watching(), true);
+  await fixture.select(python);
+  await fixture.run(python);
+  assert.equal(fixture.requests.length, 1);
 });

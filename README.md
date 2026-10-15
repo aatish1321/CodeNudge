@@ -4,7 +4,9 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install `coding-buddy-0.0.7.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
+Install `coding-buddy-0.0.8.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
+
+A fresh playground can open in **Restricted Mode**. Buddy remains visible with a **Trust this folder…** button that opens VS Code’s trust screen. Choose Trust for the playground, or use the top banner’s **Manage** link. Terminal watching and AI analysis stay disabled until you grant trust. After updating the extension, use **Developer: Reload Window** once.
 
 1. Open a trusted project in **desktop VS Code 1.93 or newer** and click the Coding Buddy robot icon.
 2. Open the **⚙ settings menu** to select Gemini, OpenAI, or Groq and add its API key. Keys use VS Code secret storage. Provider/key/model options, pause/resume, celebrations, retry/reset, and advanced terminal tools live in this menu.
@@ -63,11 +65,12 @@ The harder [practice projects](examples/projects/README.md) include a multi-file
 
 ```sh
 npm run test:host
+npm run test:trust
 npm run package
 npm run test:package
 ```
 
-`test:host` opens an isolated VS Code profile and verifies actual extension activation, automatic Python/JavaScript/Bash/zsh capture, multi-file invoice runtime/logic/correct results, asynchronous JavaScript and 404/503 cases, cross-language execution routing, quoted paths, helper changes, editor arrows, native diffs, accept/reject, undo, stale-edit protection, and preferences. `test:package` repeats those checks against the installed VSIX. The automated terminal checks use Bash/Python/Node on Linux and also check zsh when installed; the extension itself is intended for desktop VS Code with supported shells. The normal `code` command must be available on PATH.
+`test:host` opens an isolated VS Code profile and verifies actual extension activation, automatic Python/JavaScript/Bash/zsh capture, multi-file invoice runtime/logic/correct results, asynchronous JavaScript and 404/503 cases, cross-language execution routing, quoted paths, helper changes, editor arrows, native diffs, accept/reject, undo, stale-edit protection, and preferences. `test:package` repeats those checks against the installed VSIX. `test:trust` separately starts a truly untrusted window with trust enabled and verifies pre-trust activation/view access and the native trust screen without auto-trusting. Run `node scripts/test-host.cjs --package --restricted` for that check against the installed VSIX. The automated terminal checks use Bash/Python/Node on Linux and also check zsh when installed; the extension itself is intended for desktop VS Code with supported shells. The normal `code` command must be available on PATH.
 
 Unit tests exercise the activated controller across language switches, workspace boundaries/freshness, fresh playground copies, attempt rules, early-answer guards, and HTTP fixtures for all three provider contracts. Live Groq checks now use the key already stored in VS Code without exposing it. They found early-answer leakage, prompting stricter stage schemas and a local hint guard. See the [verification report](devpost/verification.md) for the exact live and automated coverage. Gemini/OpenAI teaching quality and account access remain unverified; HTTP fixtures alone do not establish them.
 

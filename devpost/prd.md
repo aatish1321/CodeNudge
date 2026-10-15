@@ -95,6 +95,7 @@ Source: `scope.md > The POC Boundary`, expanded by the learner's explicit open-s
 
 ## States and Boundaries
 
+- **Restricted Mode:** keep the buddy visible with a clear route to VS Code’s folder-trust screen. Watching and AI analysis wait for the learner to grant trust; opening that screen alone does not grant it.
 - **First use:** quiet panel with the text area and buddy identity; provider setup must be discoverable before help is requested.
 - **No code available:** explain that the learner needs a code file open; do not fabricate a diagnosis.
 - **Working:** show that the buddy is considering the problem. Repeated triggering while the same response is pending must not duplicate requests or counts.

@@ -23,7 +23,7 @@ export function activate(context: vscode.ExtensionContext): void {
   let activeHint: { run: RunSnapshot; reply: Pick<TeachingReply, 'line' | 'inlineHint'> } | undefined;
   let suppressEditorSwitch = false;
   const memories = new Map<string, { session: LearningSession; run?: RunSnapshot; messages: PanelState['messages']; status: string; snapshot?: ProjectSnapshot; hint?: typeof activeHint }>();
-  const state: PanelState = { provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Run your code. I’m right here if you get stuck.', working: false, retries: 0, messages: [], proposalId: '', confetti: true, celebration: 0 };
+  const state: PanelState = { trusted: vscode.workspace.isTrusted, provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Run your code. I’m right here if you get stuck.', working: false, retries: 0, messages: [], proposalId: '', confetti: true, celebration: 0 };
   const log = vscode.window.createOutputChannel('Coding Buddy');
 
   async function refresh(): Promise<void> {
@@ -34,6 +34,8 @@ export function activate(context: vscode.ExtensionContext): void {
       if (mine !== refreshGeneration) return;
       state.provider = config.provider; state.model = config.model;
       state.keyConfigured = configured;
+      state.trusted = vscode.workspace.isTrusted;
+      if (!state.trusted) state.status = 'Trust this folder to enable code hints. Nothing is sent to AI until you do.';
       state.retries = session.retries;
       state.proposalId = guidance.proposalId;
       state.confetti = vscode.workspace.getConfiguration('codingBuddy').get('confetti', true);
@@ -173,8 +175,12 @@ export function activate(context: vscode.ExtensionContext): void {
 
   async function action(name: string, text?: string, proposalId?: string): Promise<void> {
     try {
+      if (!vscode.workspace.isTrusted && ['connect', 'retry', 'pasteResult', 'shareResult', 'clarify', 'acceptFix', 'rejectFix'].includes(name)) {
+        status('Trust this folder to enable code hints.'); return;
+      }
       if (text) await checkKnownKeys(context, text);
       if (name === 'ready') log.appendLine('Sidebar scripts ready.');
+      else if (name === 'trust') await vscode.commands.executeCommand('workbench.trust.manage');
       else if (name === 'settings') {
         const config = configuration();
         const automatic = vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true);
@@ -251,6 +257,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const panel = new BuddyPanel(context.extensionUri, action);
   const guidance = new EditorGuidance(() => { void refresh(); });
   const capture = new TerminalCapture(run => {
+    if (!vscode.workspace.isTrusted) { status('Trust this folder to enable code hints.'); return; }
     const document = vscode.workspace.textDocuments.find(document => document.uri.toString() === run.uri);
     if (!document) return;
     selectFile(document);
@@ -268,7 +275,7 @@ export function activate(context: vscode.ExtensionContext): void {
     if (clear) { cancel(); guidance.clear(); activeHint = undefined; state.messages = []; latestRun = undefined; }
     status(message);
   }, (command, output, cwd) => workspace.resolveRun(command, output, cwd));
-  if (!vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true)) {
+  if (!vscode.workspace.isTrusted || !vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true)) {
     capture.disconnect(); state.status = 'Automatic hints paused. Resume them in settings.';
   }
   const register = (name: string, handler: () => unknown) => context.subscriptions.push(vscode.commands.registerCommand(`codingBuddy.${name}`, handler));
@@ -280,7 +287,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(log, capture, guidance,
     vscode.window.registerWebviewViewProvider('codingBuddy.panel', panel),
     vscode.window.onDidChangeActiveTextEditor(editor => {
-      if (!suppressEditorSwitch && editor?.document.uri.scheme === 'file' && sourcePath(vscode.workspace.asRelativePath(editor.document.uri, false)) && vscode.workspace.getWorkspaceFolder(editor.document.uri)) selectFile(editor.document);
+      if (vscode.workspace.isTrusted && !suppressEditorSwitch && editor?.document.uri.scheme === 'file' && sourcePath(vscode.workspace.asRelativePath(editor.document.uri, false)) && vscode.workspace.getWorkspaceFolder(editor.document.uri)) selectFile(editor.document);
     }),
     vscode.workspace.onDidChangeTextDocument(event => { if (event.contentChanges.length && (linked?.uri.toString() === event.document.uri.toString() || activeSnapshot?.sources.some(source => source.path === event.document.uri.fsPath))) { if (state.working) session.clearCache(); cancel(); guidance.clear(); activeHint = undefined; status('Code changed. Save and run it again to check your idea.'); } }),
     vscode.workspace.onDidChangeConfiguration(event => {
@@ -288,7 +295,7 @@ export function activate(context: vscode.ExtensionContext): void {
       cancel(); guidance.clear(); activeHint = undefined; session.clearCache();
       for (const saved of memories.values()) { saved.session.clearCache(); saved.hint = undefined; }
       if (event.affectsConfiguration('codingBuddy.autoWatch')) {
-        if (vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true)) capture.watch();
+        if (vscode.workspace.isTrusted && vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true)) capture.watch();
         else capture.disconnect();
         status(vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true) ? 'Run your code. I’ll watch for a result automatically.' : 'Automatic hints paused.');
       } else status('Settings updated. Run your code when you’re ready.');
@@ -297,6 +304,10 @@ export function activate(context: vscode.ExtensionContext): void {
       cancel(); guidance.clear(); activeHint = undefined; session.clearCache();
       for (const saved of memories.values()) { saved.session.clearCache(); saved.hint = undefined; }
       void refresh();
+    }),
+    vscode.workspace.onDidGrantWorkspaceTrust(() => {
+      if (vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true)) { capture.watch(); status('Run your code. I’ll watch for a result automatically.'); }
+      else status('Automatic hints paused. Resume them in settings.');
     }),
     { dispose: cancel });
   void refresh();

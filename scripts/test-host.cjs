@@ -1,4 +1,4 @@
-const { mkdtempSync, mkdirSync, existsSync, readFileSync, readdirSync } = require('node:fs');
+const { mkdtempSync, mkdirSync, existsSync, readFileSync, readdirSync, writeFileSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join, resolve } = require('node:path');
 const { spawnSync } = require('node:child_process');
@@ -8,6 +8,13 @@ const temporary = mkdtempSync(join(tmpdir(), 'coding-buddy-host-'));
 const report = join(temporary, 'report.json');
 const workspace = join(temporary, 'workspace');
 mkdirSync(workspace);
+const restricted = process.argv.includes('--restricted');
+if (restricted) {
+  mkdirSync(join(temporary, 'user/User'), { recursive: true });
+  writeFileSync(join(temporary, 'user/User/settings.json'), JSON.stringify({
+    'security.workspace.trust.enabled': true, 'security.workspace.trust.startupPrompt': 'never'
+  }));
+}
 let extensionPath = root;
 if (process.argv.includes('--package')) {
   const installed = spawnSync('code', [`--user-data-dir=${join(temporary, 'user')}`, `--extensions-dir=${join(temporary, 'extensions')}`,
@@ -19,7 +26,7 @@ if (process.argv.includes('--package')) {
 }
 const result = spawnSync('code', ['--new-window', '--wait', `--user-data-dir=${join(temporary, 'user')}`,
   `--extensions-dir=${join(temporary, 'extensions')}`, `--extensionDevelopmentPath=${extensionPath}`,
-  `--extensionTestsPath=${join(root, 'out/test/host.js')}`, '--disable-workspace-trust', '--skip-welcome',
+  `--extensionTestsPath=${join(root, restricted ? 'out/test/trust-host.js' : 'out/test/host.js')}`, ...(!restricted ? ['--disable-workspace-trust'] : []), '--skip-welcome',
   '--skip-release-notes', '--disable-gpu', workspace],
   { stdio: 'inherit', timeout: 120_000, env: { ...process.env, CODING_BUDDY_TEST_REPORT: report, CODING_BUDDY_NODE: process.execPath } });
 if (result.error || result.status !== 0 || !existsSync(report)) {

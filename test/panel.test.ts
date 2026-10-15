@@ -31,7 +31,7 @@ function panel() {
     window: { addEventListener: (name: string, callback: (event: unknown) => void) => { listeners[name] = callback; } },
     matchMedia: () => ({ matches: reducedMotion }), setTimeout: (callback: () => void) => timers.push(callback)
   });
-  const state = { type: 'state', provider: 'gemini', model: 'fixture-model', keyConfigured: false, file: 'example.py', status: 'Ready', working: false,
+  const state = { type: 'state', trusted: true, provider: 'gemini', model: 'fixture-model', keyConfigured: false, file: 'example.py', status: 'Ready', working: false,
     retries: 0, messages: [] as { role: string; text: string }[], proposalId: '', confetti: true, celebration: 0 };
   const render = () => listeners.message({ data: state });
   return { element, state, render, sent, timers, listeners, reduce: () => { reducedMotion = true; } };
@@ -86,4 +86,20 @@ test('new clues scroll into view and status updates preserve the reading positio
   assert.equal(ui.element('conversation').scrollTop, 40);
   ui.state.messages.push({ role: 'buddy', text: 'Which operation consumes it?' }); ui.render();
   assert.equal(ui.element('conversation').scrollTop, 600);
+});
+
+test('Restricted Mode shows a trust action and disables the composer until trust is granted', () => {
+  const ui = panel();
+  ui.state.trusted = false; ui.render();
+  assert.equal(ui.element('trustPrompt').hidden, false);
+  assert.equal(ui.element('send').disabled, true);
+  assert.equal(ui.element('clarification').disabled, true);
+  assert.equal(ui.element('setup').hidden, true);
+  const button = new Element(); button.dataset.action = 'trust';
+  ui.listeners.click({ target: { closest: () => button } });
+  assert.equal((ui.sent.at(-1) as {action: string}).action, 'trust');
+  ui.state.trusted = true; ui.render();
+  assert.equal(ui.element('trustPrompt').hidden, true);
+  assert.equal(ui.element('send').disabled, false);
+  assert.equal(ui.element('clarification').disabled, false);
 });
