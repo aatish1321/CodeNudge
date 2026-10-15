@@ -49,7 +49,7 @@ Source: `scope.md > Inspiration & Identity`, expanded by the learner's character
 
 Use the code being worked on and the relevant run result to provide help automatically after a run reveals a problem. Start with a likely category, such as syntax or logic, and a clue that leaves the learner room to think. Do not reveal the complete fix in the first clue.
 
-Watch completed integrated-terminal runs automatically using the saved code file focused when each run starts. If the terminal cannot identify the command and the output does not link to that file, ask a plain-language question in the panel before diagnosing it. Do not show command-entry dialogs. Automatic hints can be paused from the settings gear.
+Watch completed integrated-terminal runs automatically across the opened folder. Follow the source identified by the command or error, retaining separate progress when switching files or languages. Include relevant helper files and folder structure within documented limits. If the terminal cannot identify the command and the output does not link to that file, ask a plain-language question in the panel before diagnosing it. Do not show command-entry dialogs. Automatic hints can be paused from the settings gear.
 
 Read the top-of-file comment describing what the code should do. If the learner omits it, analyze the code for a tentative interpretation, presented as a guess. If intent is still unclear, ask what the learner expected; their answer in the text area becomes context. Use this same expected-outcome context for diagnosis and recognizing success. Successful execution alone does not prove that the logic is correct.
 
@@ -140,7 +140,7 @@ One error-help workflow in a VS Code extension: character-led side panel, coding
 ## Deferred From the POC
 
 - **Project idea to mini tasks:** a separate teaching workflow; consider only after the error-help loop is complete and if time remains.
-- **Harder Python demonstration:** optional after the small examples work; it must not delay the required loop or provider demonstration.
+- **Additional language/toolchain coverage:** the included multi-file Python and JavaScript projects extend verification without claiming every toolchain works.
 - **Universal provider compatibility:** a named supported list is required; additional connections can follow.
 
 Source: `scope.md > Later` and `Explicitly Cut`, with the later provider requirement reflected above.
@@ -158,3 +158,7 @@ Source: `scope.md > Later` and `Explicitly Cut`, with the later provider require
 - **During 4-spec, before its approval:** choose the providers and confirm how the extension obtains code-run results across languages, including behavior when a run cannot be observed. Preserve the cross-language product intent rather than silently narrowing it to Python.
 - **During 4-spec:** define code-context limits, credential setup/storage, reset behavior across files or new issues, and session lifetime. Explain resulting user-visible limits before approval.
 - **During 4-spec and shipping planning:** decide how to install and demonstrate the extension, and whether Marketplace publication is feasible within the hackathon. The learner imagines Marketplace installation; actual public Marketplace release must not be promised without checking its requirements.
+
+## Workspace Revision
+
+Requested during learner testing: keep hints, clarification, and attempt progress when moving between files/languages in the same window; investigate relevant code across the opened folder rather than pinning normal use to one file/terminal. Provide a self-service way to open fresh practice projects. Verify harder multi-file Python and JavaScript work, including runtime failures and wrong-but-successful output. Context is bounded and secret/generated files excluded; fixes remain reviewed one-file changes. The project-idea-to-tasks workflow stays deferred.

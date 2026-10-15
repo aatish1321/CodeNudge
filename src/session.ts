@@ -10,11 +10,13 @@ export class LearningSession {
   private lastSource = '';
   private lastDiagnostic = '';
 
+  private sourceIdentity(run: RunSnapshot): string { return `${run.source}\0${run.contextRevision ?? ''}`; }
+
   private level(retries: number): Level { return retries >= 6 ? 'fix' : retries >= 3 ? 'inline' : 'clue'; }
 
   allowedLevel(run: RunSnapshot, attempt: boolean): Level {
     if (run.sourceConfirmed === false) return 'clue';
-    const changedRetry = !!this.issue && attempt && run.source !== this.lastSource;
+    const changedRetry = !!this.issue && attempt && this.sourceIdentity(run) !== this.lastSource;
     return this.level(this.retries + (changedRetry ? 1 : 0));
   }
 
@@ -26,7 +28,7 @@ export class LearningSession {
 
   fingerprint(run: RunSnapshot, provider: string, model: string, _attempt: boolean): string {
     return hash(JSON.stringify([run.uri, run.source, run.command, run.output, run.exitCode, run.truncated,
-      run.sourceConfirmed, this.clarification, provider, model]));
+      run.sourceConfirmed, run.contextRevision, this.clarification, provider, model]));
   }
 
   isDuplicate(fingerprint: string): boolean { return this.lastRequest === fingerprint; }
@@ -40,10 +42,10 @@ export class LearningSession {
 
   begin(run: RunSnapshot, fingerprint: string, attempt: boolean): void {
     this.lastRequest = fingerprint;
-    if (this.issue && attempt && run.sourceConfirmed !== false && run.source !== this.lastSource &&
+    if (this.issue && attempt && run.sourceConfirmed !== false && this.sourceIdentity(run) !== this.lastSource &&
       this.sameDiagnostic(run)) {
       this.retries = Math.min(6, this.retries + 1);
-      this.lastSource = run.source;
+      this.lastSource = this.sourceIdentity(run);
     }
   }
 
@@ -57,7 +59,7 @@ export class LearningSession {
         throw new Error('I cannot confirm the result yet. Explain what you expected, then share or run the result again.');
       }
       celebrate = !!this.issue;
-      this.issue = ''; this.retries = 0; this.lastSource = run.source; this.lastDiagnostic = '';
+      this.issue = ''; this.retries = 0; this.lastSource = this.sourceIdentity(run); this.lastDiagnostic = '';
     }
     if (reply.status === 'issue') {
       const key = diagnostic(run).key;
@@ -67,9 +69,9 @@ export class LearningSession {
       }
       const newIssue = !this.issue || (reply.relationship === 'new' && !sameDiagnostic);
       if (newIssue) this.retries = 0;
-      else if ((reply.relationship === 'same' || sameDiagnostic) && attempt && run.sourceConfirmed !== false && run.source !== this.lastSource) this.retries = Math.min(6, this.retries + 1);
+      else if ((reply.relationship === 'same' || sameDiagnostic) && attempt && run.sourceConfirmed !== false && this.sourceIdentity(run) !== this.lastSource) this.retries = Math.min(6, this.retries + 1);
       if (newIssue) this.issue = `${reply.category}: ${reply.message}`;
-      this.lastSource = run.source;
+      this.lastSource = this.sourceIdentity(run);
       this.lastDiagnostic = key;
     }
     this.lastRequest = fingerprint;

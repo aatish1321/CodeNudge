@@ -1,11 +1,14 @@
 import * as vscode from 'vscode';
 import { basename, isAbsolute, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { stat } from 'node:fs/promises';
+import { referencedPaths } from './workspace';
 import { stripVTControlCharacters } from 'node:util';
 import { checkSource, RunSnapshot } from './teaching';
 
 interface Captured {
-  document: vscode.TextDocument; terminal: vscode.Terminal; run: RunSnapshot; cwd?: string;
+  document?: vscode.TextDocument; terminal: vscode.Terminal; run?: RunSnapshot; cwd?: string; startedAt: number;
+  snapshots: Map<string, { source: string; version: number }>;
   output: Promise<{ output: string; truncated: boolean; failed?: boolean }>; generation: number;
 }
 
@@ -18,7 +21,8 @@ export class TerminalCapture implements vscode.Disposable {
   private pending = new Map<vscode.TerminalShellExecution, Captured>();
   private subscriptions: vscode.Disposable[];
 
-  constructor(private onRun: (run: RunSnapshot) => void, private onStatus: (message: string, clear?: boolean) => void) {
+  constructor(private onRun: (run: RunSnapshot) => void, private onStatus: (message: string, clear?: boolean) => void,
+    private resolveSource?: (command: string, output: string, cwd?: string) => Promise<vscode.Uri | undefined>) {
     this.subscriptions = [
       vscode.window.onDidStartTerminalShellExecution(event => this.start(event)),
       vscode.window.onDidEndTerminalShellExecution(event => { void this.end(event).catch(() => this.onStatus('Could not read this run. You can share its output from settings.')); }),
@@ -39,15 +43,20 @@ export class TerminalCapture implements vscode.Disposable {
 
   private start(event: vscode.TerminalShellExecutionStartEvent): void {
     const document = this.automatic ? vscode.window.activeTextEditor?.document : this.document;
-    if (!document || (!this.automatic && event.terminal !== this.terminal)) return;
-    if (document.uri.scheme !== 'file' || ['plaintext', 'markdown', 'json', 'jsonc', 'yaml', 'toml', 'log'].includes(document.languageId)) return;
+    if ((!document && !this.resolveSource) || (!this.automatic && event.terminal !== this.terminal)) return;
+    if (!this.resolveSource && document && (document.uri.scheme !== 'file' || ['plaintext', 'markdown', 'json', 'jsonc', 'yaml', 'toml', 'log'].includes(document.languageId))) return;
     const command = event.execution.commandLine.value.trim();
     if (/^(?:git|ls|pwd|cd|clear|echo|printf|cat|less|man|history|which|whoami)(?:\s|$)/.test(command)) return;
     if (!this.automatic && this.command && command && command !== this.command) return;
-    if (document.isClosed || document.isDirty) { this.onStatus('Save your code, then run it again.'); return; }
-    const source = document.getText();
-    try { checkSource(source, document.fileName); } catch (error) { this.onStatus((error as Error).message); return; }
+    if (!this.resolveSource && document && (document.isClosed || document.isDirty)) { this.onStatus('Save your code, then run it again.'); return; }
+    const source = document?.getText() ?? '';
+    if (!this.resolveSource && document) { try { checkSource(source, document.fileName); } catch (error) { this.onStatus((error as Error).message); return; } }
     const stream = event.execution.read();
+    const startedAt = Date.now();
+    const snapshots = new Map<string, { source: string; version: number }>();
+    if (this.resolveSource) for (const doc of vscode.workspace.textDocuments) {
+      if (doc.uri.scheme === 'file' && !doc.isDirty && doc.getText().length <= 12_000) snapshots.set(doc.uri.toString(), { source: doc.getText(), version: doc.version });
+    }
     const generation = this.generation;
     const output = (async () => {
       let raw = ''; let truncated = false;
@@ -59,9 +68,9 @@ export class TerminalCapture implements vscode.Disposable {
       const clean = stripVTControlCharacters(raw).replace(/\r\n/g, '\n').replace(/\r/g, '');
       return { output: clean.slice(-8_000), truncated: truncated || clean.length > 8_000 };
     })().catch(() => ({ output: '', truncated: true, failed: true }));
-    this.pending.set(event.execution, { document, terminal: event.terminal, cwd: event.execution.cwd?.fsPath ?? event.shellIntegration.cwd?.fsPath, generation, output,
-      run: { uri: document.uri.toString(), version: document.version, language: document.languageId,
-        source, command, output: '', exitCode: null, truncated: false, reported: false } });
+    this.pending.set(event.execution, { document, snapshots, startedAt, terminal: event.terminal, cwd: event.execution.cwd?.fsPath ?? event.shellIntegration.cwd?.fsPath, generation, output,
+      run: document ? { uri: document.uri.toString(), version: document.version, language: document.languageId,
+        source, command, output: '', exitCode: null, truncated: false, reported: false, startedAt } : undefined });
   }
 
   private async end(event: vscode.TerminalShellExecutionEndEvent): Promise<void> {
@@ -72,11 +81,35 @@ export class TerminalCapture implements vscode.Disposable {
     if (capture.generation !== this.generation) return;
     if (result.failed) { this.onStatus('Could not read this result. You can share the output from settings.'); return; }
     if (event.exitCode === undefined) { this.onStatus('This run has not reported a result I can check yet.'); return; }
-    const document = capture.document;
-    if (document.isClosed || document.isDirty || document.version !== capture.run.version || document.getText() !== capture.run.source) {
+    const command = event.execution.commandLine.value.trim();
+    let document = capture.document;
+    let run = capture.run;
+    if (this.resolveSource && this.automatic) {
+      const target = await this.resolveSource(command, result.output, capture.cwd);
+      if (target) {
+        document = await vscode.workspace.openTextDocument(target);
+        const original = capture.snapshots.get(target.toString());
+        if (!original && (await stat(document.fileName)).mtimeMs > capture.startedAt) {
+          this.onStatus('Project code changed after the run started. Save and run it again.'); return;
+        }
+        run = { uri: target.toString(), source: original?.source ?? document.getText(), version: original?.version ?? document.version,
+          language: document.languageId, command, output: '', exitCode: null, truncated: false, reported: false, startedAt: capture.startedAt };
+      } else if (referencedPaths(command, capture.cwd).length || referencedPaths(result.output, capture.cwd).length) {
+        this.onStatus('That run refers to a file outside this opened folder. Open its project folder to get help.', true); return;
+      }
+      if (!document || !run || document.uri.scheme !== 'file') return;
+      if (document.isDirty || document.isClosed || document.version !== run.version || document.getText() !== run.source) {
+        this.onStatus('Project code changed while it ran. Save and run again.'); return;
+      }
+      checkSource(run.source, document.fileName);
+      if (capture.generation !== this.generation) return;
+      this.onRun({ ...run, ...result, command: command || 'Terminal run (command unavailable)', exitCode: event.exitCode, sourceConfirmed: !!target });
+      return;
+    }
+    if (!document || !run) return;
+    if (document.isClosed || document.isDirty || document.version !== run.version || document.getText() !== run.source) {
       this.onStatus('The code changed while it ran. Save and run the current version again.'); return;
     }
-    const command = event.execution.commandLine.value.trim();
     if (!this.automatic && this.command && command && command !== this.command) return;
     const references = (text: string): string[] => {
       const paths: string[] = [];
@@ -96,7 +129,7 @@ export class TerminalCapture implements vscode.Disposable {
     }
     // shortcut: unnamed shell runs use the focused file as a candidate; require clarification before escalating or celebrating when no filename links them.
     if (!this.automatic && command) this.command = command;
-    this.onRun({ ...capture.run, ...result, command: command || 'Terminal run (command unavailable)',
+    this.onRun({ ...run, ...result, command: command || 'Terminal run (command unavailable)',
       exitCode: event.exitCode, sourceConfirmed });
   }
 

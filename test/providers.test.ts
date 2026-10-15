@@ -133,3 +133,25 @@ test('a locally confirmed continuing error requires the unlocked stage in every 
     }
   }
 });
+
+test('each provider schema prevents locked edit fields before the fix stage', async () => {
+  for (const provider of ['gemini', 'openai', 'groq'] as const) {
+    for (const level of ['clue', 'inline'] as const) {
+      const fetchMock = mock.method(globalThis, 'fetch', async (_url: string, options: RequestInit) => {
+        const body = JSON.parse(options.body as string);
+        const schema = provider === 'gemini' ? body.generationConfig.responseJsonSchema
+          : provider === 'openai' ? body.text.format.schema : body.response_format.json_schema.schema;
+        assert.equal(schema.properties.replacement.type, 'null');
+        assert.equal(schema.properties.explanation.type, 'null');
+        assert.ok(!schema.properties.level.enum.includes('fix'));
+        if (level === 'clue') {
+          assert.equal(schema.properties.inlineHint.type, 'null');
+          assert.ok(!schema.properties.level.enum.includes('inline'));
+        }
+        return Response.json(responseFor(provider, clue));
+      });
+      try { await analyze(provider, 'fixture-model', key, { allowedLevel: level }, signal()); }
+      finally { fetchMock.mock.restore(); }
+    }
+  }
+});

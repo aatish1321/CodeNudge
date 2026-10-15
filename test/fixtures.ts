@@ -7,6 +7,7 @@ export const run: RunSnapshot = {
 };
 
 export const clue: TeachingReply = {
+  targetFile: null,
   status: 'issue', relationship: 'new', category: 'syntax', intentSource: 'comment',
   expectedOutcome: 'Print 1 through 5', level: 'clue', message: 'This looks like a syntax issue. What marks the start of a loop body?',
   line: null, inlineHint: null, replacement: null, explanation: null

@@ -52,8 +52,12 @@ Detailed run behavior, how run results reach the buddy across languages, what co
 ## Later
 
 - Project-building workflow: the learner describes an idea and the buddy breaks it into small tasks with deliberately light guidance. Consider only after the error-help loop works, if time remains; it is not required for this proof of concept.
-- A harder Python example to explore the same loop after the basic demonstration works. Do not claim broader capability before verifying it.
+- Harder Python and JavaScript multi-file examples are now included and verified as requested during testing; broader language/toolchain coverage still needs evidence.
 
 ## Explicitly Cut
 
 - Project breakdown from the required first version: it adds a second teaching workflow and would dilute the small error-help demonstration. Retained above as a possible later extension.
+
+## Workspace Revision
+
+Requested during learner testing: keep hints, clarification, and attempt progress when moving between files/languages in the same window; investigate relevant code across the opened folder rather than pinning normal use to one file/terminal. Provide a self-service way to open fresh practice projects. Verify harder multi-file Python and JavaScript work, including runtime failures and wrong-but-successful output. Context is bounded and secret/generated files excluded; fixes remain reviewed one-file changes. The project-idea-to-tasks workflow stays deferred.

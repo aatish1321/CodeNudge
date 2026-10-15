@@ -26,7 +26,7 @@ function terminalFixture() {
   const filename = resolve(__dirname, '../src/terminal.js');
   const localRequire = createRequire(filename);
   runInNewContext(readFileSync(filename, 'utf8'), { exports: moduleExports,
-    require: (name: string) => name === 'vscode' ? { TerminalShellExecutionCommandLineConfidence: { Low: 0 }, window } : localRequire(name)
+    require: (name: string) => name === './workspace' ? { referencedPaths: () => [] } : name === 'vscode' ? { TerminalShellExecutionCommandLineConfidence: { Low: 0 }, window } : localRequire(name)
   });
   const capture = new moduleExports.TerminalCapture(run => runs.push(run), (status, clear) => { statuses.push(status); clears.push(!!clear); });
   const run = async (command = 'python3 demo.py', output = '1\r\n', confidence = 2, duringRun?: () => void, cwd = '/') => {

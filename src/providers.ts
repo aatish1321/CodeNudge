@@ -8,9 +8,12 @@ export async function analyze(provider: Provider, model: string, key: string, co
   if (!/^[a-zA-Z0-9._/-]{1,100}$/.test(model)) throw new Error('Check the model name in Coding Buddy settings.');
   const input = JSON.stringify(context);
   const { allowedLevel, sameDiagnostic } = context as { allowedLevel?: unknown; sameDiagnostic?: unknown };
-  const schema = sameDiagnostic === true && (allowedLevel === 'inline' || allowedLevel === 'fix')
-    ? { ...replySchema, properties: { ...replySchema.properties, level: { type: 'string', enum: [allowedLevel, 'none'] } } }
-    : replySchema;
+  const level = allowedLevel === 'inline' || allowedLevel === 'fix' ? allowedLevel : 'clue';
+  const schema = { ...replySchema, properties: { ...replySchema.properties,
+    level: { type: 'string', enum: sameDiagnostic === true ? [level, 'none'] : level === 'fix' ? ['clue', 'inline', 'fix', 'none'] : level === 'inline' ? ['clue', 'inline', 'none'] : ['clue', 'none'] },
+    ...(level !== 'fix' ? { replacement: { type: 'null' }, explanation: { type: 'null' } } : {}),
+    ...(level === 'clue' ? { inlineHint: { type: 'null' } } : {})
+  } };
   if (key.length >= 8 && input.includes(key)) throw new Error('Your provider key appears in the code or output. Remove it before asking the buddy to read it.');
   let url: string;
   let headers: Record<string, string> = { 'Content-Type': 'application/json' };

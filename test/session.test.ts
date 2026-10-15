@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LearningSession } from '../src/session';
-import { checkSource, GuidanceValidationError, validateReply } from '../src/teaching';
+import { checkSource, diagnostic, GuidanceValidationError, validateReply } from '../src/teaching';
 import { clue, run } from './fixtures';
 
 test('first clue is validated without a premature fix', () => {
@@ -138,7 +138,7 @@ test('a result with an uncertain source cannot escalate or celebrate', () => {
 
 test('same terminal diagnostic survives model new labels and produces an arrow on the third changed retry', () => {
   const session = new LearningSession();
-  const failed = { ...run, output: 'File "example.py", line 2\nSyntaxError: invalid syntax' };
+  const failed = { ...run, output: 'File "/example.py", line 2\nSyntaxError: invalid syntax' };
   session.begin(failed, 'initial', true);
   session.apply(failed, clue, 'initial', true);
   for (let retry = 1; retry <= 3; retry++) {
@@ -160,7 +160,7 @@ test('same terminal diagnostic survives model new labels and produces an arrow o
 
 test('failed analysis is cached and explicit retry does not count the same edit twice', () => {
   const session = new LearningSession();
-  const failed = { ...run, output: 'File "example.py", line 2\nSyntaxError: invalid syntax' };
+  const failed = { ...run, output: 'File "/example.py", line 2\nSyntaxError: invalid syntax' };
   session.apply(failed, clue, 'initial', true);
   const changed = { ...failed, source: `${run.source}\n# retry` };
   session.begin(changed, 'failed-request', true);
@@ -194,4 +194,48 @@ test('running successfully does not turn a logic error into success or hide erro
   const current = { ...run, exitCode: 0, output: '1\n2\n3\n4' };
   assert.equal(validateReply(logic, current, 'clue').status, 'issue');
   assert.equal(validateReply(clue, { ...current, output: 'SyntaxError: recorded error' }, 'clue').status, 'issue');
+});
+
+test('helper-only content changes count attempts while identical saved content does not', () => {
+  const session = new LearningSession();
+  const first = { ...run, contextRevision: 'helper-v1', output: 'Traceback (most recent call last):\n  File "/example.py", line 2\n  File "/helper.py", line 10\nKeyError: qty' };
+  session.begin(first, 'initial', true); session.apply(first, { ...clue, category: 'runtime' }, 'initial', true);
+  assert.equal(diagnostic(first).line, null, 'a helper line must not decorate the entry file');
+  for (let index = 1; index <= 3; index++) {
+    const changed = { ...first, contextRevision: `helper-v${index + 1}` };
+    session.begin(changed, `attempt-${index}`, true);
+    assert.equal(session.retries, index);
+    session.apply(changed, { ...clue, category: 'runtime', relationship: 'same' }, `attempt-${index}`, true);
+    session.begin({ ...changed, version: 99 }, `saved-${index}`, true);
+    assert.equal(session.retries, index);
+  }
+});
+
+test('diagnostic identity follows the throwing frame, not the entry-point call site', () => {
+  const python = { ...run, output: 'Traceback (most recent call last):\n  File "/example.py", line 2\n  File "/helper.py", line 20\nValueError: invalid' };
+  assert.match(diagnostic(python).key, /ValueError:\/helper.py:20$/);
+  assert.equal(diagnostic(python).line, null);
+  const js = { ...run, uri: 'file:///example.js', output: 'TypeError: invalid\n    at load (file:///service.js:20:7)\n    at main (/example.js:2:3)' };
+  assert.match(diagnostic(js).key, /TypeError:\/service.js:20$/);
+  assert.equal(diagnostic(js).line, null);
+});
+
+test('live-model early answers become thinking prompts without another provider request', () => {
+  const early = validateReply({ ...clue, category: 'runtime', message: 'The data uses the key "qty". Which name should be used?' }, run, 'clue');
+  assert.doesNotMatch(early.message, /qty/);
+  assert.match(early.message, /Runtime clue/);
+  const inline = validateReply({ ...clue, relationship: 'same', category: 'runtime', level: 'inline', line: 2,
+    message: 'Look at the input.', inlineHint: '→ replace item["quantity"] with item["qty"]' }, run, 'inline');
+  assert.doesNotMatch(inline.inlineHint!, /replace|qty/);
+  assert.equal(inline.line, 2);
+  const syntax = validateReply({ ...clue, message: 'Use a colon instead of a semicolon.' }, run, 'clue');
+  assert.doesNotMatch(syntax.message, /colon/);
+  const fixed = { ...clue, relationship: 'same' as const, level: 'fix' as const,
+    replacement: 'print(1)\n', explanation: 'Replace the bad statement.', message: 'Replace the statement.' };
+  assert.equal(validateReply(fixed, run, 'fix').message, fixed.message);
+});
+
+test('a useful conceptual question is preserved even with an apostrophe', () => {
+  const message = "Check the key used for each item's quantity. Does it match the field name in the orders data?";
+  assert.equal(validateReply({ ...clue, category: 'runtime', message }, run, 'clue').message, message);
 });

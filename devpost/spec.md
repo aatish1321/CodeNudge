@@ -7,7 +7,7 @@ status: approved
 
 ## How This Works, In Plain Language
 
-Coding Buddy is one extension running inside desktop VS Code. Its robot panel shows hints and asks questions. The extension watches completed integrated-terminal runs using the saved code file focused at run start, reads their results, and sends the relevant context directly to the chosen AI provider.
+Coding Buddy is one extension running inside desktop VS Code. Its robot panel shows hints and asks questions. The extension watches completed integrated-terminal runs using source files identified by commands or errors in the opened folder, reads their results, and sends the relevant context directly to the chosen AI provider.
 
 The AI identifies the likely issue and writes teaching guidance. Ordinary extension code counts attempts and controls which level of help is allowed, so switching providers does not bypass the three-plus-three rule. Editor arrows are visual annotations, not extra text inserted into the learner's file. Proposed fixes open in VS Code's change-review view and apply only after acceptance.
 
@@ -25,8 +25,8 @@ Implements `prd.md > The Core Journey` and `Context and First Clue`.
 
 1. Opening the sidebar icon creates the quiet robot panel with a transparent cutout character, a reply box, and a gear icon. Extra controls are tucked into the gear menu without preloading a conversation.
 2. Provider setup saves the selected provider/model as preferences and its key through a masked VS Code input into secret storage.
-3. Watching starts automatically on extension startup. At a terminal command start, use the focused saved code file as the candidate; no manual terminal attachment is required. Settings allow pausing/resuming or optionally pinning a specific file and terminal.
-4. At command start, capture the candidate file's contents, version, and language, and immediately begin reading output. Ignore recognized housekeeping commands. Wait for command completion and link the result by its command or output filename. If neither confirms the candidate, ask in the conversation before spending an AI request or advancing attempts.
+3. Watching starts automatically on extension startup. At a terminal command start, snapshot open saved source files and begin reading output; no manual terminal attachment is required. Settings allow pausing/resuming or optionally pinning a specific file and terminal.
+4. At command start, capture open source contents/versions and the working directory, and immediately begin reading output. Ignore recognized housekeeping commands. Wait for command completion and link the result by its command or output filename. If neither confirms the candidate, ask in the conversation before spending an AI request or advancing attempts.
 5. At completion, check that source and run still match, bound the output, and suppress duplicate requests. Ask the selected provider to analyze the code, expected outcome, run result, and current allowed help level.
 6. Validate the response before updating the learning session. Show a first clue, inline guidance, clarification question, or proposed fix according to the approved progression.
 7. A clarification reply can request another response without counting as a code attempt. For external results, a Share Run Result action in the settings menu labels the text as a learner-reported run; a changed-code retry can then follow the same attempt rules, without claiming automatic observation.
@@ -113,9 +113,9 @@ Implements `prd.md > Screens and Layout` and `States and Boundaries`.
 
 `src/terminal.ts` listens to `onDidStartTerminalShellExecution` and `onDidEndTerminalShellExecution` automatically. Call `execution.read()` immediately at the start; reading only after completion misses output according to the [API contract](https://code.visualstudio.com/api/references/vscode-api#TerminalShellExecution).
 
-Snapshot the saved code file focused at command start rather than choosing a tab at completion. Reject dirty, missing, unsupported, or changed-during-run snapshots. Strip control sequences and cap output. Ignore recognized housekeeping commands. A reliable command or output mentioning the file confirms its source. For missing/uncertain command names without filename evidence, mark `sourceConfirmed: false`, ask the learner whether this result came from that file, and send nothing to the provider until confirmed. A yes reply makes it learner-reported context without counting as a changed-code retry. Never guess a solved state or unlock a more specific stage from an unconfirmed result.
+Resolve a source path from the command first; otherwise use a workspace traceback/stack frame. This keeps an explicit entry-file session intact when a helper fails and later succeeds. Snapshot open files at command start; unopened files must predate the run. The active tab is only an unconfirmed fallback when no filename evidence exists. Reject dirty, missing, unsupported, or changed-during-run snapshots. Strip control sequences and cap output. Ignore recognized housekeeping commands. A reliable command or output mentioning the file confirms its source. For missing/uncertain command names without filename evidence, mark `sourceConfirmed: false`, ask the learner whether this result came from that file, and send nothing to the provider until confirmed. A yes reply makes it learner-reported context without counting as a changed-code retry. Never guess a solved state or unlock a more specific stage from an unconfirmed result.
 
-File confirmation compares complete normalized paths, resolving relative references against the working directory captured at run start. A basename match alone never confirms the source. If references identify another copy of the same-named file, ignore the run and clear its stale guidance/session instead of spending tokens or pointing at the active editor. Quoted paths with spaces and file URLs are supported. Rejected model guidance logs only a validation reason code/provider in the Coding Buddy output channel, never its raw response or credentials. Automated shell checks disable history before fixture commands, and demo windows use fresh workspace identities to avoid restoring test terminals.
+File confirmation compares complete normalized paths, resolving relative references against the working directory captured at run start. A basename match alone never confirms the source. If references identify only source files outside the opened workspace, ignore the run and clear stale guidance while retaining per-file learning progress instead of spending tokens or pointing at the active editor. Quoted paths with spaces and file URLs are supported. Rejected model guidance logs only a validation reason code/provider in the Coding Buddy output channel, never its raw response or credentials. Automated shell checks disable history before fixture commands, and demo windows use fresh workspace identities to avoid restoring test terminals.
 
 No attachment or native command-entry dialog is part of the normal flow. The gear menu can pause/resume automatic watching or optionally pin a specific file/terminal. Source and connection freshness guards remain in place. Absent shell integration, interrupted commands, and unknown exit statuses produce a limitation message and the manual-result fallback in settings. Manual sharing can pin the current saved file without requiring a terminal connection. Long-running commands do not create repeated attempts as output streams in.
 
@@ -144,7 +144,7 @@ For a retry, compute the maximum level that would be allowed if the issue is the
 
 Fingerprint requests using source, expected-outcome clarification, watched command, meaningful run result, and provider/model. Ignore transport metadata such as execution IDs and the locally computed level when comparing duplicates; a new-issue reset must not generate a second request for unchanged input. Source-identical reruns never advance attempts. A materially changed input/result is new context, not proof of a code-edit attempt. Coalesce pending identical requests and retain the latest successful response for duplicate suppression.
 
-Keep one learning session active at a time. Reconnecting to a different file/command, choosing Reset Issue, or restarting the extension starts fresh. Switching tabs alone does not change the linked file or its count.
+Keep one active learning session and an in-memory map keyed by source URI. Switching source tabs restores that file’s session, clarification, latest run, and messages; cancel pending work and clear decorations/proposals. Markdown, virtual/diff, and untitled tabs do not erase progress. Reset Issue resets only the current session; restarting the extension clears all sessions. Include related-content revision in fingerprints and changed-source identity, so helper-only edits count without counting same-content saves.
 
 Implements `prd.md > Attempts and Escalation`, `Solved State and Celebration`, and `States and Boundaries`.
 
@@ -152,13 +152,14 @@ Implements `prd.md > Attempts and Escalation`, `Solved State and Celebration`, a
 
 `src/teaching.ts` builds the common teaching instructions, response schema, and runtime validation shared by the provider calls. Treat file comments and run output as learning material, not instructions that can override the teaching policy. The AI receives no command-execution or file-write tools.
 
-Send the linked file's language and contents, its top-of-file comment, bounded run output and exit status when known, learner clarification, previous issue summary, previous hint, and the locally allowed help level. Do not scan the repository or read other source files automatically. Avoid credential files such as `.env`, private-key files, and extension secrets. Known key values must never enter prompts, panel messages, logs, or error details.
+Send the linked file's language and contents, its top-of-file comment, bounded run output and exit status when known, learner clarification, previous issue summary, previous hint, and the locally allowed help level. Include a bounded workspace source index and relevant source excerpts via `src/workspace.ts`. Use Git’s tracked/nonignored file list or a built-in excluded-directory fallback. Prioritize imports, error references, nearby and open code. Exclude hidden files, credentials, dependencies/generated files, and symlinks escaping the workspace root. Index at most 500 source paths; read at most eight related files, 6,000 characters each and 30,000 total. Skip files over 100 KB; label omissions/truncation. Compare clean open buffers with disk, refuse dirty or saved-after-run helpers, and recheck all read content before showing or accepting a response. Avoid credential files such as `.env`, private-key files, and extension secrets. Known key values must never enter prompts, panel messages, logs, or error details.
 
 Initial limits, adjustable only if real examples justify it: 12,000 characters of source (reject larger files rather than silently dropping their comments), the last 8,000 characters of run output with a visible truncation note, and 2,000 characters of learner clarification. Retain at most eight short display messages; send a concise issue summary and relevant latest exchanges rather than the full transcript. Truncated or incomplete evidence cannot support a confident solved verdict.
 
 Require a small JSON object with all fields required, explicit nulls where inapplicable, and no extra fields:
 
 ```text
+targetFile: exact related-file relative path | null for current file
 status: issue | solved | needs_clarification
 relationship: same | new | none | unknown
 category: syntax | runtime | logic | unknown
@@ -172,7 +173,7 @@ replacement: string | null
 explanation: string | null
 ```
 
-Validate field types, enum values, bounded text lengths, line numbers against the captured file, and agreement with the permitted stage. A replacement is allowed only at the fix stage; it targets the captured file only. Reject a malformed, refused, incomplete, or premature solution response without counting it as an attempt. A valid JSON shape alone does not prove that a diagnosis or teaching hint is correct; verify both with real examples.
+Validate field types, enum values, bounded text lengths, line numbers against the captured file, and agreement with the permitted stage. A replacement is allowed only at the fix stage; it targets the captured file or an exactly whitelisted, fully read related file only. Reject unprovided paths, traversal and truncated replacements. A local early-hint guard replaces obvious edit instructions/code with a thinking prompt; subtle leaks remain a live-review risk. Reject a malformed, refused, incomplete, or premature solution response without counting it as an attempt. A valid JSON shape alone does not prove that a diagnosis or teaching hint is correct; verify both with real examples.
 
 For success, require a prior tracked issue, clear expected behavior from the comment/clarification, sufficient observed evidence matching it, and no remaining reported issue. An inferred intention can guide a tentative hint, but unresolved guesses require clarification rather than celebration. With a missing comment, a clarification reply can establish intent; ask for a fresh run if the existing observation is insufficient.
 
@@ -200,7 +201,7 @@ Implements `prd.md > Screens and Layout`, `Look and Feel`, and `Provider Setting
 
 `src/editor.ts` manages a text decoration on the validated line, an in-memory original/proposed document pair, and the diff view. The first complete file replacement is adequate for the small-file proof of concept; no patch parser or multi-file editing system is needed.
 
-Before Accept Fix, check the linked URI, original version/content hash, proposal identity, and current pending status. Apply through `WorkspaceEdit` so the user can undo. Leave the accepted edit unsaved and show that the learner should save and rerun; do not silently execute the file. On rejection, discard the proposal without changing source. Source edits invalidate proposals and decorations tied to the old version. Model output cannot select another file path.
+Before Accept Fix, check the linked URI, original version/content hash, proposal identity, and current pending status. Apply through `WorkspaceEdit` so the user can undo. Leave the accepted edit unsaved and show that the learner should save and rerun; do not silently execute the file. On rejection, discard the proposal without changing source. Source edits invalidate proposals and decorations tied to the old version. A model may select only an exact fully-read related-file path from the sent snapshot; validate its current content and root boundary. Acceptance also checks the whole selected context for changes. Only one file changes per reviewed proposal.
 
 Implements `prd.md > Proposed Fix and Explanation` and `States and Boundaries`.
 
@@ -210,7 +211,7 @@ Implements `prd.md > Proposed Fix and Explanation` and `States and Boundaries`.
 | --- | --- |
 | Provider, per-provider model, automatic watching, confetti | User-level VS Code configuration; updated through settings; survives restart |
 | Provider API keys | `ExtensionContext.secrets`, one secret per provider; replace/remove through masked commands; retained across restart, not committed |
-| Active file/session; optional advanced terminal pin | Extension memory; automatic capture uses the file focused at run start; manual pins expire on disconnect/restart |
+| Active file/session; optional advanced terminal pin | Extension memory; automatic capture follows command/traceback source paths within opened folders; manual pins expire on disconnect/restart |
 | Run snapshot | Memory: URI, version, source/hash, language, command, bounded output, exit status, run ID; replaced by the next relevant run |
 | Learning session | Memory: issue summary, expected-outcome context, retry count 0–6, permitted level, latest guidance/messages, dedupe fingerprint, request generation ID |
 | Proposed fix | Memory: original snapshot, replacement, explanation, proposal ID; cleared on rejection, source change, disconnect, or provider/context reset |
@@ -233,6 +234,8 @@ coding-buddy/
 ├── src/
 │   ├── extension.ts             # Register and connect the extension pieces
 │   ├── terminal.ts              # Selected-command capture and saved-file snapshots
+│   ├── workspace.ts             # Source routing, bounded context and freshness
+│   ├── playground.ts            # Fresh practice copies in a new window
 │   ├── session.ts               # Counts, stages, deduplication, session transitions
 │   ├── teaching.ts              # Teaching prompt, response schema, validation
 │   ├── providers.ts             # Gemini, OpenAI, and Groq HTTP functions
@@ -315,7 +318,7 @@ Finally inspect the VSIX file list, install the package, and repeat the main Pyt
 
 - One desktop extension with a small bundled panel; use native editor annotations/diff review and direct requests to avoid maintaining separate services.
 - Completed commands in integrated terminals, using one candidate source file per run; external/browser/API results enter through the settings menu. This is the learner-agreed boundary for automatic observation.
-- Current linked file plus relevant output/clarification; no automatic whole-project scan. This is the learner-agreed context boundary.
+- Current run source plus bounded related code and a source index across its opened workspace folder; requested by the learner after testing exposed the single-file limitation.
 - Current-session hints/counts in memory; preferences and encrypted keys persist. This is the learner-agreed restart behavior.
 - Full replacement review for a bounded small file; preserve acceptance, rejection, undo, and stale-file safeguards without building a multi-file patch engine.
 - Static supplied character artwork and a small local celebration effect; preserve identity without requiring a character-animation system.
@@ -341,7 +344,7 @@ At review, the learner asked whether connecting the extension to VS Code should 
 
 ### Derived Implementation Details for Review
 
-The connection control, one linked file/session, explicit Share Run Result action for the manual fallback, local attempt controller, schema validation, file-size/output limits, model defaults, native key-entry commands, default enabled confetti with reduced-motion support, and stale-proposal checks are engineering recommendations that implement the agreed experience. They are included in this draft for approval rather than attributed as separate learner choices. Reconnecting to another file/command starts a new issue; merely hiding the panel or switching tabs does not.
+The connection control, one linked file/session, explicit Share Run Result action for the manual fallback, local attempt controller, schema validation, file-size/output limits, model defaults, native key-entry commands, default enabled confetti with reduced-motion support, and stale-proposal checks are engineering recommendations that implement the agreed experience. They are included in this draft for approval rather than attributed as separate learner choices. The later workspace revision preserves per-file sessions across tab/file changes; hiding the panel does not reset them.
 
 ### Checks That Remain
 
@@ -350,3 +353,7 @@ The connection control, one linked file/session, explicit Share Run Result actio
 - OpenAI's create-response reference could not be retrieved; verify the documented guide-based request during the first small connection check.
 - Confirm the user's chosen open-source license before public release. Marketplace publisher identity/authentication and the exact publication date belong in shipping preparation.
 - If live evidence forces a change to the accepted product or technical boundaries, explain it and obtain agreement before updating the plan. Do not silently narrow the project to Python or remove a required provider.
+
+## Workspace Revision (0.0.6)
+
+The learner explicitly requested harder project tests, independent test-window launching, and folder context with progress across Python/JavaScript file switches. F5 opens the examples folder directly; Open Playground copies bundled examples to a fresh temporary folder in a new normal-profile window. The harder fixtures cover nested invoice data and percentage discounts, asynchronous API parsing, 404 and 503 behavior. Native tests use isolated folders under the opened test workspace; controller tests keep one activated instance across switches. These extend context and testing, not the deferred project-planning workflow.
