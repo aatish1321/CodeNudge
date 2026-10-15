@@ -1,13 +1,13 @@
 ---
 doc: checklist
-status: draft
+status: approved
 ---
 
 # Build Checklist
 
 Build mode: not chosen — offer learn mode by default; record the learner's choice before implementation.
 
-Git workflow: Keep verified checkpoints on `main`. Create a separate `build/NN-description` branch for each slice, commit its verified work, and merge it into `main` only after its required checks and learner feedback are complete. The initial planning checkpoint includes this draft checklist; implementation still requires approval of the build order.
+Git workflow: Keep verified checkpoints on `main`. Create a separate `build/NN-description` branch for each slice, commit its verified work, and merge it into `main` only after its required checks and learner feedback are complete. The learner approved this build order; choose the build mode before implementation.
 
 We will build in slices: small working steps the learner can try. Each step includes its own checks and Git checkpoint. The first step proves real terminal capture and real hint generation before further interface polish.
 
