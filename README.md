@@ -4,13 +4,15 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install `coding-buddy-0.0.1.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
+Install `coding-buddy-0.0.2.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
 
 1. Open a trusted project in **desktop VS Code 1.93 or newer** and click the Coding Buddy robot icon.
 2. Click the provider name to select **Google Gemini**, **OpenAI**, or **Groq**. Use **Add key** to enter that provider's API key. Keys are kept in VS Code secret storage; use **Coding Buddy: Remove API Key** in the command palette to remove one.
 3. Open a saved code file. A comment at the top describing what it should do helps the buddy understand your goal.
 4. Click **Connect terminal** and select a VS Code terminal. The **next code command** establishes which command to watch. Run it normally, for example `python3 loop_syntax.py` from the `examples` folder.
 5. Read the clue, make your own change, save, and run the same command again. Other commands are ignored; reconnect to watch a different command or file.
+
+Some terminal configurations report results without identifying the command. Buddy asks you to enter the exact command you just ran before checking that captured result. If the command name is missing, each run needs confirmation; identified matching runs continue automatically. Cancel the prompt to skip sharing. For fully automatic capture, try a new **Bash** terminal from the terminal profile dropdown and reconnect Buddy, or follow [VS Code shell integration setup](https://code.visualstudio.com/docs/terminal/shell-integration). No shell configuration is changed by the extension.
 
 After the initial clue, three unsuccessful **changed-code retries for the same problem** unlock an inline arrow hint. Three more unlock a colored diff with an explanation. **Accept fix** applies that reviewed change; **Keep my code** rejects it. Accepted changes remain unsaved and support normal VS Code undo. Save and run again to check your result.
 

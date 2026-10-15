@@ -31,7 +31,8 @@ export class TerminalCapture implements vscode.Disposable {
 
   private start(event: vscode.TerminalShellExecutionStartEvent): void {
     if (event.terminal !== this.terminal || !this.document) return;
-    if (this.command && event.execution.commandLine.value.trim() !== this.command) return;
+    const command = event.execution.commandLine.value.trim();
+    if (this.command && command && command !== this.command) return;
     if (this.document.isClosed || this.document.isDirty) { this.onStatus('Save the connected file, then run it again.'); return; }
     const source = this.document.getText();
     try { checkSource(source, this.document.fileName); } catch (error) { this.onStatus((error as Error).message); return; }
@@ -59,12 +60,22 @@ export class TerminalCapture implements vscode.Disposable {
     const result = await capture.output;
     if (capture.generation !== this.generation || !this.document) return;
     if (result.failed) { this.onStatus('Could not read this command’s output. Share the result manually or reconnect.'); return; }
-    const command = event.execution.commandLine.value.trim();
-    if (event.execution.commandLine.confidence === vscode.TerminalShellExecutionCommandLineConfidence.Low || !command) {
-      this.onStatus('VS Code could not identify this command. Share the result manually or reconnect.'); return;
-    }
+    let command = event.execution.commandLine.value.trim();
     if (event.exitCode === undefined) { this.onStatus('This command did not report a result. Share the result manually if needed.'); return; }
+    if (this.command && command && command !== this.command) return;
+    if (!command || (!this.command && event.execution.commandLine.confidence === vscode.TerminalShellExecutionCommandLineConfidence.Low)) {
+      this.onStatus('Confirm the command in the VS Code dialog so I can check its result.');
+      const confirmed = await vscode.window.showInputBox({ title: 'Coding Buddy: confirm the command you just ran',
+        value: command || this.command || '', ignoreFocusOut: true,
+        prompt: 'VS Code could not identify this run reliably. Enter its exact command to check the captured result. Nothing will be executed.',
+        validateInput: value => !value.trim() ? 'Enter the command you just ran, or press Escape to skip.'
+          : command && value.trim() !== command ? 'Confirm the detected command unchanged, or press Escape and share the result manually.' : undefined });
+      if (capture.generation !== this.generation || !this.document) return;
+      if (!confirmed?.trim() || (command && confirmed.trim() !== command)) { this.onStatus('Command not confirmed. Run again, or paste the output and choose Share run result.'); return; }
+      command = confirmed.trim();
+    }
     if (this.command && command !== this.command) return;
+    if (capture.generation !== this.generation || !this.document) return;
     if (this.document.isClosed || this.document.isDirty || this.document.version !== capture.run.version || this.document.getText() !== capture.run.source) {
       this.onStatus('The code changed while it ran. Save and run the current version again.'); return;
     }
