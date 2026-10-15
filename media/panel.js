@@ -36,7 +36,7 @@
     seenCelebration = state.celebration;
     proposalId = state.proposalId;
     document.getElementById('fixActions').hidden = !proposalId;
-    document.getElementById('progress').textContent = state.retries >= 6 ? 'A fix is ready for you to review.' : state.retries >= 3 ? 'I left a little nudge beside your code.' : '';
+    document.getElementById('progress').textContent = proposalId ? 'A fix is ready for you to review.' : state.retries >= 3 ? `${state.retries} attempts. Let’s narrow this down.` : '';
     history.replaceChildren(...state.messages.map(message => {
       const block = document.createElement('article'); block.className = `message ${message.role}`;
       const label = document.createElement('div'); label.className = 'message-label';

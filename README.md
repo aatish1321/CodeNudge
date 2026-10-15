@@ -4,7 +4,7 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install `coding-buddy-0.0.3.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
+Install `coding-buddy-0.0.4.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
 
 1. Open a trusted project in **desktop VS Code 1.93 or newer** and click the Coding Buddy robot icon.
 2. Open the **⚙ settings menu** to select Gemini, OpenAI, or Groq and add its API key. Keys use VS Code secret storage. Provider/key/model options, pause/resume, celebrations, retry/reset, and advanced terminal tools live in this menu.
@@ -16,7 +16,9 @@ Buddy starts watching automatically. It snapshots the saved code file focused wh
 
 After the initial clue, three unsuccessful **changed-code retries for the same problem** unlock an inline arrow hint. Three more unlock a colored diff with an explanation. **Accept fix** applies that reviewed change; **Keep my code** rejects it. Accepted changes remain unsaved and support normal VS Code undo. Save and run again to check your result.
 
-Rerunning identical code with the same result/context does not spend another AI request or advance the attempt count. Clarification messages do not count as code attempts. A new problem starts with a fresh clue.
+Rerunning identical code with the same result/context does not spend another AI request or advance the attempt count, including after a failed provider response. Use **⚙ → Retry last result** for an intentional retry. Clarification messages do not count as code attempts. A new problem starts with a fresh clue.
+
+When the same exception type and source line persist, the extension counts changed-code retries locally; the model cannot reset that count just by rephrasing the issue. At the inline threshold, a known error line gets an arrow even if the model fails to supply its own line hint. Other diagnostic formats still rely on the model identifying the same issue and its line. Each new source/result replaces the old guidance. Successful execution removes outdated execution-error advice while the intended output is checked separately for logic mistakes.
 
 ## Browser, API, and other results
 

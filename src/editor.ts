@@ -24,7 +24,7 @@ export class EditorGuidance implements vscode.Disposable {
 
   get proposalId(): string { return this.proposal?.id ?? ''; }
 
-  showHint(run: RunSnapshot, reply: TeachingReply): void {
+  showHint(run: RunSnapshot, reply: Pick<TeachingReply, 'line' | 'inlineHint'>): void {
     if (reply.line === null || !reply.inlineHint) return;
     this.hint = { uri: run.uri, version: run.version, line: reply.line - 1, text: reply.inlineHint };
     this.renderHint();

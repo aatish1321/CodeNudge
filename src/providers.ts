@@ -7,6 +7,10 @@ export async function analyze(provider: Provider, model: string, key: string, co
   if (!key) throw new Error('Add your API key using the key button first.');
   if (!/^[a-zA-Z0-9._/-]{1,100}$/.test(model)) throw new Error('Check the model name in Coding Buddy settings.');
   const input = JSON.stringify(context);
+  const { allowedLevel, sameDiagnostic } = context as { allowedLevel?: unknown; sameDiagnostic?: unknown };
+  const schema = sameDiagnostic === true && (allowedLevel === 'inline' || allowedLevel === 'fix')
+    ? { ...replySchema, properties: { ...replySchema.properties, level: { type: 'string', enum: [allowedLevel, 'none'] } } }
+    : replySchema;
   if (key.length >= 8 && input.includes(key)) throw new Error('Your provider key appears in the code or output. Remove it before asking the buddy to read it.');
   let url: string;
   let headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -18,21 +22,21 @@ export async function analyze(provider: Provider, model: string, key: string, co
       payload = {
         systemInstruction: { parts: [{ text: teachingPolicy }] },
         contents: [{ role: 'user', parts: [{ text: input }] }],
-        generationConfig: { responseMimeType: 'application/json', responseJsonSchema: replySchema, maxOutputTokens: 8192 }
+        generationConfig: { responseMimeType: 'application/json', responseJsonSchema: schema, maxOutputTokens: 8192 }
       };
       break;
     case 'openai':
       url = 'https://api.openai.com/v1/responses';
       headers.Authorization = `Bearer ${key}`;
       payload = { model, instructions: teachingPolicy, input, store: false, max_output_tokens: 8192,
-        text: { format: { type: 'json_schema', name: 'buddy_response', strict: true, schema: replySchema } } };
+        text: { format: { type: 'json_schema', name: 'buddy_response', strict: true, schema } } };
       break;
     case 'groq':
       url = 'https://api.groq.com/openai/v1/chat/completions';
       headers.Authorization = `Bearer ${key}`;
       payload = { model, messages: [{ role: 'system', content: teachingPolicy }, { role: 'user', content: input }],
         stream: false, max_completion_tokens: 8192,
-        response_format: { type: 'json_schema', json_schema: { name: 'buddy_response', strict: true, schema: replySchema } } };
+        response_format: { type: 'json_schema', json_schema: { name: 'buddy_response', strict: true, schema } } };
       break;
     default: throw new Error('Choose a supported provider in Coding Buddy settings.');
   }

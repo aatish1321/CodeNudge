@@ -2,7 +2,7 @@
   "name": "coding-buddy",
   "displayName": "Coding Buddy",
   "description": "A patient coding companion: clues first, answers when you need them.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "aatish1321",
   "license": "UNLICENSED",
   "repository": { "type": "git", "url": "https://github.com/aatish1321/coding-buddy.git" },
@@ -48,7 +48,7 @@
     "test:host": "npm run compile && node scripts/test-host.cjs",
     "test:package": "node scripts/test-host.cjs --package",
     "vscode:prepublish": "npm run compile",
-    "package": "vsce package --no-dependencies --skip-license --out coding-buddy-0.0.3.vsix"
+    "package": "vsce package --no-dependencies --skip-license --out coding-buddy-0.0.4.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

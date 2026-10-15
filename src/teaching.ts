@@ -59,9 +59,16 @@ does not prove logic is correct. When evidence is incomplete or intention unclea
 When sourceConfirmed is false, the source is only the file focused when a terminal command started.
 Ask whether this result came from that file before diagnosing it. Never mark it solved or offer code changes.
 Compare the issue with previousIssue. relationship is same only when it is actually the same problem.
+previousIssue is history, not a current diagnosis. Always inspect the CURRENT source and CURRENT output.
+If exitCode is 0 and the output contains no error, the earlier syntax/runtime error is gone.
+Check the intended output for logic issues; never repeat an earlier syntax/runtime clue from history.
+When the same issue persists, use exactly allowedLevel, not a lower level. A different phrasing
+of the same error is not a new issue. Always include the suspected 1-based line for an issue.
 For a new issue, return a general clue, regardless of the maximum allowed level.
 At clue level: name a likely category and give one useful thinking prompt, not a full fix or code.
 At inline level: add a concise arrow hint and its 1-based line number; do not provide corrected code.
+Before fix level, do not name the exact replacement token, spell out a one-character fix,
+or give an instruction such as "use a colon instead". Ask what to investigate instead.
 At fix level: propose the smallest change as the COMPLETE replacement for this one file, preserving
 unrelated code, and explain what changes and why. The user will review the diff before accepting.
 Never return a replacement at an earlier level, and never give a complete fix in message text earlier.
@@ -69,6 +76,7 @@ Clarification replies may explain the current hint but do not unlock a higher le
 Mark solved only for an existing tracked issue when a clear comment/clarified intent matches the
 observed result and no issue remains. Do not celebrate inferred intent or truncated evidence.
 When solved or asking a question, set level to none and edit/hint fields to null.
+For a solved result, explain briefly how the CURRENT output matches the goal; do not repeat old advice.
 Return only the required JSON object. Use null for inapplicable fields. Do not output hidden reasoning.`;
 
 export function hash(value: string): string {
@@ -83,10 +91,18 @@ export function checkSource(source: string, filename: string): void {
   }
 }
 
-export function validateReply(value: unknown, run: RunSnapshot, allowed: Level): TeachingReply {
+export function diagnostic(run: RunSnapshot): { key: string; line: number | null } {
+  if (run.exitCode === 0) return { key: '', line: null };
+  const error = run.output.match(/(?:^|\n)([A-Za-z]*(?:Error|Exception))\b/);
+  const line = Number(run.output.match(/\bline (\d+)\b/)?.[1] ?? run.output.match(/:(\d+):\d+/)?.[1]);
+  const validLine = Number.isInteger(line) && line >= 1 && line <= run.source.split('\n').length ? line : null;
+  return { key: error && validLine ? `${error[1]}:${validLine}` : '', line: validLine };
+}
+
+export function validateReply(value: unknown, run: RunSnapshot, allowed: Level, sameDiagnostic = false): TeachingReply {
   const invalid = () => new Error('The AI returned guidance I could not safely use. Try again or choose another model.');
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw invalid();
-  const item = value as Record<string, unknown>;
+  const item = { ...value } as Record<string, unknown>;
   if (Object.keys(item).length !== replySchema.required.length || replySchema.required.some(key => !(key in item))) throw invalid();
   const enums: Record<string, readonly string[]> = {
     status: ['issue', 'solved', 'needs_clarification'], relationship: ['same', 'new', 'none', 'unknown'],
@@ -94,9 +110,19 @@ export function validateReply(value: unknown, run: RunSnapshot, allowed: Level):
     level: ['clue', 'inline', 'fix', 'none']
   };
   for (const [key, options] of Object.entries(enums)) if (!options.includes(item[key] as string)) throw invalid();
+  if (sameDiagnostic && item.status === 'issue') item.relationship = 'same';
   if (typeof item.message !== 'string' || !item.message.trim() || item.message.length > 2_000) throw invalid();
   for (const [key, limit] of Object.entries({ expectedOutcome: 2_000, inlineHint: 240, replacement: 20_000, explanation: 3_000 })) {
     if (item[key] !== null && (typeof item[key] !== 'string' || (item[key] as string).length > limit)) throw invalid();
+  }
+  // Irrelevant edit fields are discarded rather than turning a success/question into an error.
+  if (item.status !== 'issue') Object.assign(item, { level: 'none', line: null, inlineHint: null, replacement: null, explanation: null });
+  if (item.status === 'solved') item.category = 'unknown';
+  if (item.status === 'issue' && run.exitCode === 0 && ['syntax', 'runtime'].includes(item.category as string) &&
+    !/(?:Traceback \(most recent call last\)|\b[A-Za-z]*(?:Error|Exception):)/.test(run.output)) {
+    Object.assign(item, { status: 'needs_clarification', relationship: 'none', category: 'unknown', level: 'none',
+      message: 'Your code runs now, so the earlier execution error is gone. Does this output match what you expected?',
+      line: null, inlineHint: null, replacement: null, explanation: null });
   }
   if (item.line !== null && (!Number.isInteger(item.line) || (item.line as number) < 1 || (item.line as number) > run.source.split('\n').length)) throw invalid();
   const reply = item as unknown as TeachingReply;

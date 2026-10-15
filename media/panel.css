@@ -1,17 +1,17 @@
 :root { color-scheme: light dark; --accent: #79d9ce; --warm: #ffc885; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; color: var(--vscode-foreground); background: var(--vscode-sideBar-background); font: var(--vscode-font-size)/1.6 var(--vscode-font-family); }
+body { margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; color: var(--vscode-foreground); background: var(--vscode-sideBar-background); font: var(--vscode-font-size)/1.6 var(--vscode-font-family); }
 button, textarea { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: wait; opacity: .45; }
 button:focus-visible, textarea:focus-visible { outline: 2px solid var(--vscode-focusBorder); outline-offset: 3px; }
-.topbar { padding: 17px 18px; display: flex; align-items: center; justify-content: space-between; }
+.topbar { flex-shrink: 0; padding: 17px 18px; display: flex; align-items: center; justify-content: space-between; }
 .wordmark { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 12px; letter-spacing: .3px; }
 .brand-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
 .icon-button { display: grid; place-items: center; width: 30px; height: 30px; padding: 5px; color: var(--vscode-descriptionForeground); border: 0; border-radius: 6px; background: transparent; }
 .icon-button:hover { color: var(--vscode-foreground); background: var(--vscode-toolbar-hoverBackground); }
-.conversation { flex: 1; padding: 0 18px 22px; }
+.conversation { flex: 1; min-height: 0; overflow-y: auto; padding: 0 18px 22px; }
 .buddy-intro { text-align: center; margin: clamp(12px, 6vh, 60px) 0 28px; }
 .mascot { display: block; width: min(240px, 100%); height: 210px; object-fit: cover; margin: 0 auto 14px; filter: drop-shadow(0 8px 20px #52c6c518); }
 h1 { font-size: 21px; letter-spacing: -.6px; line-height: 1.3; font-weight: 600; margin: 0 0 10px; }
@@ -32,7 +32,7 @@ body.has-messages h1 { display: none; }
 .thinking-dot { display: inline-block; width: 6px; height: 6px; margin-right: 6px; background: var(--accent); border-radius: 50%; animation: pulse 1s infinite alternate; }
 .progress { margin: 14px 0 0; color: var(--vscode-descriptionForeground); font-size: 11px; }
 .progress:empty { display: none; }
-footer { padding: 14px 16px 12px; position: sticky; bottom: 0; background: var(--vscode-sideBar-background); }
+footer { flex-shrink: 0; padding: 14px 16px 12px; position: sticky; bottom: 0; background: var(--vscode-sideBar-background); }
 .composer { display: flex; align-items: flex-end; gap: 6px; padding: 10px; border: 1px solid var(--vscode-input-border, var(--vscode-panel-border)); border-radius: 12px; background: var(--vscode-input-background); }
 .composer:focus-within { border-color: var(--vscode-focusBorder); }
 textarea { resize: vertical; width: 100%; min-width: 0; min-height: 42px; max-height: 180px; padding: 1px 2px; color: var(--vscode-input-foreground); background: transparent; border: 0; font-size: 12px; line-height: 1.6; }
@@ -49,7 +49,7 @@ textarea::placeholder { color: var(--vscode-input-placeholderForeground); }
 .fix-actions button + button { margin-left: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 @keyframes pulse { to { opacity: .25; } }
-@media (max-width: 240px) { .topbar { padding: 12px; }.conversation { padding: 0 12px 14px; }footer { padding: 10px; }.mascot { height: 170px; }h1 { font-size: 18px; } }
+@media (max-width: 240px) { .topbar { flex-shrink: 0; padding: 12px; }.conversation { padding: 0 12px 14px; }footer { flex-shrink: 0; padding: 10px; }.mascot { height: 170px; }h1 { font-size: 18px; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 10; }
 .confetti-piece { position: absolute; top: -15px; width: 6px; height: 11px; left: 50%; background: var(--accent); animation: confetti-fall 1.9s ease-in forwards; }

@@ -49,23 +49,27 @@ export function activate(context: vscode.ExtensionContext): void {
       }
       const config = configuration();
       const fingerprint = session.fingerprint(run, config.provider, config.model, attempt);
-      if (session.isDuplicate(fingerprint)) { status('Same code and result — your previous hint is still here.'); return; }
+      if (session.isDuplicate(fingerprint)) { void refresh(); return; }
       if (state.working) return;
       const key = await context.secrets.get(keyName(config.provider));
       if (!key) { status('Add an API key in ⚙ settings, then run your code again.'); return; }
       await checkKnownKeys(context, JSON.stringify(session.context(run, attempt)));
       if (state.working || mine !== requestGeneration) return;
       pending = new AbortController(); mine = ++requestGeneration; state.working = true;
-      status('Looking for a useful clue…');
+      session.begin(run, fingerprint, attempt);
+      const pendingHint = session.sameDiagnostic(run) ? session.lineHint(run) : undefined;
+      if (pendingHint) guidance.showHint(run, pendingHint);
+      status(run.exitCode === 0 ? 'Your code runs now. Checking whether the output matches your goal…' : 'Looking for a useful clue…');
       log.appendLine(`Analysis request ${++requestCount}: provider=${config.provider}; source=${run.reported ? 'learner-reported' : 'terminal'}`);
       const result = await analyze(config.provider, config.model, key, session.context(run, attempt), pending.signal);
       await checkKnownKeys(context, JSON.stringify(result));
       if (mine !== requestGeneration || !linked || linked.isClosed || linked.isDirty || linked.version !== run.version || linked.getText() !== run.source) return;
-      const reply = validateReply(result, run, session.allowedLevel(run, attempt));
+      const reply = validateReply(result, run, session.allowedLevel(run, attempt), session.sameDiagnostic(run));
       const celebrate = session.apply(run, reply, fingerprint, attempt);
       message('buddy', reply.message, reply.category);
       if (celebrate) { guidance.clear(); state.celebration++; }
-      if (reply.level === 'inline') guidance.showHint(run, reply);
+      const hint = session.lineHint(run, reply);
+      if (hint) guidance.showHint(run, hint);
       if (reply.level === 'fix') {
         await guidance.showProposal(run, reply);
         message('buddy', reply.explanation ?? 'Review the proposed change before deciding.');
@@ -139,7 +143,7 @@ export function activate(context: vscode.ExtensionContext): void {
       else if (name === 'toggleConfetti') { const config = vscode.workspace.getConfiguration('codingBuddy'); await config.update('confetti', !config.get('confetti', true), vscode.ConfigurationTarget.Global); }
       else if (name === 'acceptFix') { await guidance.accept(proposalId ?? guidance.proposalId); status('Change accepted. Save your file and run it to check the result.'); }
       else if (name === 'rejectFix') { guidance.reject(proposalId ?? guidance.proposalId); status('Your code is unchanged. Try your own approach and run again.'); }
-      else if (name === 'retry' && latestRun) await runAnalysis(latestRun, true);
+      else if (name === 'retry' && latestRun) { session.clearCache(); await runAnalysis(latestRun, true); }
       else if (name === 'shareResult' && text?.trim()) {
         if (state.working) return;
         const document = linked && !linked.isClosed ? linked : vscode.window.activeTextEditor?.document;
@@ -182,6 +186,9 @@ export function activate(context: vscode.ExtensionContext): void {
       cancel(); guidance.clear(); session = new LearningSession(); state.messages = [];
     }
     const repeatedUncertain = latestRun?.sourceConfirmed === false && latestRun.uri === run.uri && latestRun.source === run.source && latestRun.output === run.output;
+    if (!latestRun || latestRun.uri !== run.uri || latestRun.source !== run.source || latestRun.output !== run.output || latestRun.exitCode !== run.exitCode) {
+      cancel(); guidance.clear(); state.messages = [];
+    }
     linked = document; state.file = basename(document.fileName); latestRun = run;
     if (run.sourceConfirmed === false) {
       if (!repeatedUncertain) message('buddy', `Was that result from ${state.file}? Your terminal didn’t include a file name, so I want to check before giving you a clue.`);

@@ -126,3 +126,63 @@ test('a result with an uncertain source cannot escalate or celebrate', () => {
   assert.throws(() => session.apply(uncertain, { ...clue, status: 'solved', relationship: 'same',
     level: 'none', intentSource: 'comment', expectedOutcome: 'Print 1 through 5' }, 'solved', true));
 });
+
+test('same terminal diagnostic survives model new labels and produces an arrow on the third changed retry', () => {
+  const session = new LearningSession();
+  const failed = { ...run, output: 'File "example.py", line 2\nSyntaxError: invalid syntax' };
+  session.begin(failed, 'initial', true);
+  session.apply(failed, clue, 'initial', true);
+  for (let retry = 1; retry <= 3; retry++) {
+    const current = { ...failed, source: `${run.source}\n# attempt ${retry}`, version: retry + 1 };
+    const fingerprint = `retry-${retry}`;
+    session.begin(current, fingerprint, true);
+    assert.equal(session.retries, retry, 'local evidence counts the attempt before a provider can fail');
+    const pendingHint = session.lineHint(current);
+    assert.equal(pendingHint?.line, retry === 3 ? 2 : undefined);
+    const response = validateReply({ ...clue, message: `A differently phrased clue ${retry}` }, current,
+      session.allowedLevel(current, true), session.sameDiagnostic(current));
+    assert.equal(response.relationship, 'same');
+    session.apply(current, response, fingerprint, true);
+    assert.equal(session.retries, retry, 'the response must neither reset nor double-count');
+  }
+  assert.equal(session.lineHint(failed)?.line, 2);
+  assert.ok(session.lineHint(failed)?.inlineHint);
+});
+
+test('failed analysis is cached and explicit retry does not count the same edit twice', () => {
+  const session = new LearningSession();
+  const failed = { ...run, output: 'File "example.py", line 2\nSyntaxError: invalid syntax' };
+  session.apply(failed, clue, 'initial', true);
+  const changed = { ...failed, source: `${run.source}\n# retry` };
+  session.begin(changed, 'failed-request', true);
+  assert.equal(session.isDuplicate('failed-request'), true);
+  assert.equal(session.retries, 1);
+  session.clearCache();
+  assert.equal(session.isDuplicate('failed-request'), false);
+  session.begin(changed, 'failed-request', true);
+  assert.equal(session.retries, 1);
+});
+
+test('success drops irrelevant model edit fields and never replays a syntax clue against clean output', () => {
+  const current = { ...run, exitCode: 0, output: '1\n2\n3\n4\n5\n', sourceConfirmed: true };
+  const stale = validateReply(clue, current, 'clue');
+  assert.equal(stale.status, 'needs_clarification');
+  assert.equal(stale.category, 'unknown');
+  assert.match(stale.message, /Your code runs now/);
+  assert.equal(stale.inlineHint, null);
+  const solved = validateReply({ ...clue, status: 'solved', relationship: 'same', level: 'inline',
+    line: 2, inlineHint: 'outdated hint', replacement: 'unsolicited code', explanation: 'irrelevant' }, current, 'clue');
+  assert.equal(solved.level, 'none');
+  assert.equal(solved.replacement, null);
+  assert.equal(solved.inlineHint, null);
+  const session = new LearningSession(); session.apply(run, clue, 'initial', true);
+  assert.equal(session.apply(current, solved, 'done', true), true);
+  assert.equal(session.issue, '');
+});
+
+test('running successfully does not turn a logic error into success or hide errors actually in output', () => {
+  const logic = { ...clue, category: 'logic' as const, message: 'Does this include the last number?' };
+  const current = { ...run, exitCode: 0, output: '1\n2\n3\n4' };
+  assert.equal(validateReply(logic, current, 'clue').status, 'issue');
+  assert.equal(validateReply(clue, { ...current, output: 'SyntaxError: recorded error' }, 'clue').status, 'issue');
+});

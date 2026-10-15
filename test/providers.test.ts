@@ -117,3 +117,19 @@ test('oversized and interrupted responses do not become usable guidance', async 
   try { await assert.rejects(analyze('groq', 'fixture-model', key, {}, signal()), { name: 'TimeoutError' }); }
   finally { fetchMock.mock.restore(); }
 });
+
+test('a locally confirmed continuing error requires the unlocked stage in every provider schema', async () => {
+  for (const provider of ['gemini', 'openai', 'groq'] as const) {
+    for (const level of ['inline', 'fix']) {
+      const fetchMock = mock.method(globalThis, 'fetch', async (_url: string, options: RequestInit) => {
+        const body = JSON.parse(options.body as string);
+        const schema = provider === 'gemini' ? body.generationConfig.responseJsonSchema
+          : provider === 'openai' ? body.text.format.schema : body.response_format.json_schema.schema;
+        assert.deepEqual(schema.properties.level.enum, [level, 'none']);
+        return Response.json(responseFor(provider, clue));
+      });
+      try { await analyze(provider, 'fixture-model', key, { allowedLevel: level, sameDiagnostic: true }, signal()); }
+      finally { fetchMock.mock.restore(); }
+    }
+  }
+});
