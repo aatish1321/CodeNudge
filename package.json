@@ -22,7 +22,10 @@
       { "command": "codingBuddy.setKey", "title": "Coding Buddy: Set API Key" },
       { "command": "codingBuddy.removeKey", "title": "Coding Buddy: Remove API Key" },
       { "command": "codingBuddy.settings", "title": "Coding Buddy: Settings" },
-      { "command": "codingBuddy.reset", "title": "Coding Buddy: Reset Current Issue" }
+      { "command": "codingBuddy.reset", "title": "Coding Buddy: Reset Current Issue" },
+      { "command": "codingBuddy.retry", "title": "Coding Buddy: Retry Analysis" },
+      { "command": "codingBuddy.acceptFix", "title": "Coding Buddy: Accept Reviewed Fix" },
+      { "command": "codingBuddy.rejectFix", "title": "Coding Buddy: Reject Reviewed Fix" }
     ],
     "configuration": {
       "title": "Coding Buddy",
@@ -36,6 +39,7 @@
     "compile": "tsc -p .",
     "watch": "tsc -watch -p .",
     "test": "npm run compile && node --test out/test/*.test.js",
+    "test:host": "npm run compile && node scripts/test-host.cjs",
     "vscode:prepublish": "npm run compile",
     "package": "vsce package --allow-missing-repository --skip-license --out coding-buddy-0.0.1.vsix"
   },

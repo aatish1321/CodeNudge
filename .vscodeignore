@@ -8,6 +8,7 @@ skills/**
 skills-lock.json
 devpost/**
 test/**
+scripts/**
 src/**
 .vscode/**
 node_modules/**

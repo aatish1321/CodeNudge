@@ -2,6 +2,7 @@
   const vscode = acquireVsCodeApi();
   const input = document.getElementById('clarification');
   const history = document.getElementById('messages');
+  let proposalId = '';
   document.addEventListener('click', event => {
     const button = event.target.closest('button[data-action]');
     if (!button) return;
@@ -10,7 +11,7 @@
       const text = input.value.trim();
       if (!text) return;
       vscode.postMessage({ action, text }); input.value = '';
-    } else vscode.postMessage({ action });
+    } else vscode.postMessage({ action, proposalId });
   });
   input.addEventListener('keydown', event => {
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); document.getElementById('send').click(); }
@@ -25,6 +26,9 @@
     document.getElementById('status').textContent = state.status;
     document.getElementById('working').hidden = !state.working;
     document.getElementById('send').disabled = state.working;
+    proposalId = state.proposalId;
+    document.getElementById('fixActions').hidden = !proposalId;
+    document.getElementById('progress').textContent = state.retries ? `${state.retries} attempts · ${state.retries >= 6 ? 'Review a fix' : state.retries >= 3 ? 'Line hint' : 'Thinking clues'}` : '';
     history.replaceChildren(...state.messages.map(message => {
       const block = document.createElement('article'); block.className = `message ${message.role}`;
       const label = document.createElement('div'); label.className = 'message-label';

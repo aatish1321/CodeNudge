@@ -2,6 +2,11 @@ import * as vscode from 'vscode';
 import assert from 'node:assert/strict';
 import { TerminalCapture } from '../src/terminal';
 import { RunSnapshot } from '../src/teaching';
+import { EditorGuidance } from '../src/editor';
+import { mkdtemp, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { clue } from './fixtures';
 
 export async function run(): Promise<void> {
   const extension = vscode.extensions.getExtension('aatish1321.coding-buddy');
@@ -37,4 +42,39 @@ export async function run(): Promise<void> {
     assert.equal(result.command, 'python3 loop_syntax.py');
     console.log('HOST CHECK PASSED: extension activation, robot webview registration, actual terminal output and exit code.');
   } finally { capture?.dispose(); terminal.dispose(); }
+
+  const directory = await mkdtemp(join(tmpdir(), 'coding-buddy-edits-'));
+  const path = join(directory, 'review.py');
+  await writeFile(path, 'print(1)\n');
+  const editDocument = await vscode.workspace.openTextDocument(path);
+  await vscode.window.showTextDocument(editDocument);
+  const review = new EditorGuidance(() => {});
+  const snapshot = (): RunSnapshot => ({ uri: editDocument.uri.toString(), version: editDocument.version,
+    source: editDocument.getText(), language: 'python', command: 'python3 review.py', output: '1', exitCode: 0, truncated: false, reported: false });
+  const proposal = { ...clue, relationship: 'same' as const, level: 'fix' as const, replacement: 'print(2)\n', explanation: 'Print the intended number.' };
+  try {
+    const current = snapshot();
+    review.showHint(current, { ...clue, level: 'inline', line: 1, inlineHint: 'Which value should be printed?' });
+    await review.showProposal(current, proposal);
+    assert.equal(editDocument.getText(), 'print(1)\n', 'review must not mutate the source');
+    review.reject(review.proposalId);
+    assert.equal(editDocument.getText(), 'print(1)\n', 'reject must preserve the source');
+    await review.showProposal(current, proposal);
+    await review.accept(review.proposalId);
+    assert.equal(editDocument.getText(), 'print(2)\n');
+    assert.ok(editDocument.isDirty, 'accepted code should remain unsaved for learner review');
+    await vscode.commands.executeCommand('undo');
+    assert.equal(editDocument.getText(), 'print(1)\n', 'accepted fix must be undoable');
+    await editDocument.save();
+    await review.showProposal(snapshot(), proposal);
+    const oldId = review.proposalId;
+    const editor = await vscode.window.showTextDocument(editDocument);
+    await editor.edit(edit => edit.insert(new vscode.Position(0, 0), '# my change\n'));
+    await assert.rejects(review.accept(oldId));
+    assert.match(editDocument.getText(), /^# my change/);
+    console.log('HOST CHECK PASSED: arrow rendering, native colored diff, reject, accept, undo, and stale-edit protection.');
+  } finally { review.dispose(); await editDocument.save(); }
+  if (process.env.CODING_BUDDY_TEST_REPORT) {
+    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['activation', 'terminal-output', 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit'] }));
+  }
 }

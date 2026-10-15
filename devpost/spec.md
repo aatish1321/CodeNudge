@@ -136,7 +136,7 @@ Implements `prd.md > Context and First Clue` and the learner-agreed completed-co
 
 For a retry, compute the maximum level that would be allowed if the issue is the same, then make one analysis request. The response must provide only a general clue if it identifies a new issue. Validate that relationship and the returned help level before committing the transition; do not make an extra AI call solely to advance a stage. A clarification can explain the existing hint but cannot bypass the allowed help level.
 
-Fingerprint requests using source, expected-outcome clarification, watched command, meaningful run result, provider/model, and allowed level. Ignore transport metadata such as execution IDs when comparing duplicates. Source-identical reruns never advance attempts. A materially changed input/result is new context, not proof of a code-edit attempt. Coalesce pending identical requests and retain the latest successful response for duplicate suppression.
+Fingerprint requests using source, expected-outcome clarification, watched command, meaningful run result, and provider/model. Ignore transport metadata such as execution IDs and the locally computed level when comparing duplicates; a new-issue reset must not generate a second request for unchanged input. Source-identical reruns never advance attempts. A materially changed input/result is new context, not proof of a code-edit attempt. Coalesce pending identical requests and retain the latest successful response for duplicate suppression.
 
 Keep one learning session active at a time. Reconnecting to a different file/command, choosing Reset Issue, or restarting the extension starts fresh. Switching tabs alone does not change the linked file or its count.
 

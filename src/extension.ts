@@ -6,6 +6,7 @@ import { LearningSession } from './session';
 import { configuration, keyName, setKey } from './settings';
 import { checkSource, RunSnapshot, validateReply } from './teaching';
 import { TerminalCapture } from './terminal';
+import { EditorGuidance } from './editor';
 
 export function activate(context: vscode.ExtensionContext): void {
   let session = new LearningSession();
@@ -14,7 +15,7 @@ export function activate(context: vscode.ExtensionContext): void {
   let pending: AbortController | undefined;
   let requestGeneration = 0;
   let requestCount = 0;
-  const state: PanelState = { provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Ready when you are.', working: false, retries: 0, messages: [] };
+  const state: PanelState = { provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Ready when you are.', working: false, retries: 0, messages: [], proposalId: '' };
   const log = vscode.window.createOutputChannel('Coding Buddy');
 
   async function refresh(): Promise<void> {
@@ -23,6 +24,7 @@ export function activate(context: vscode.ExtensionContext): void {
       state.provider = config.provider; state.model = config.model;
       state.keyConfigured = !!await context.secrets.get(keyName(config.provider));
       state.retries = session.retries;
+      state.proposalId = guidance.proposalId;
       panel.update(state);
     } catch (error) { state.status = (error as Error).message; panel.update(state); }
   }
@@ -51,6 +53,11 @@ export function activate(context: vscode.ExtensionContext): void {
       const reply = validateReply(result, run, session.allowedLevel(run, attempt));
       session.apply(run, reply, fingerprint, attempt);
       message('buddy', reply.message, reply.category);
+      if (reply.level === 'inline') guidance.showHint(run, reply);
+      if (reply.level === 'fix') {
+        await guidance.showProposal(run, reply);
+        message('buddy', reply.explanation ?? 'Review the proposed change before deciding.');
+      }
       state.status = reply.status === 'needs_clarification' ? 'Your turn — tell the buddy what you expected.' : 'Your turn. Try a change, save, and run again.';
     } catch (error) {
       if (mine === requestGeneration) {
@@ -73,19 +80,21 @@ export function activate(context: vscode.ExtensionContext): void {
       { title: 'Choose the terminal for this file', placeHolder: 'Only this terminal and its next code command will be watched.' }) : undefined;
     if (terminals.length && !choice) return;
     const terminal = choice?.terminal ?? vscode.window.createTerminal('Coding Buddy');
-    cancel(); session = new LearningSession(); latestRun = undefined; linked = document;
+    cancel(); guidance.clear(); session = new LearningSession(); latestRun = undefined; linked = document;
     state.file = basename(document.fileName); state.messages = [];
     capture.connect(document, terminal); terminal.show();
     if (!terminal.shellIntegration) status('Connected. If capture is unavailable, enable VS Code shell integration or share the result manually. Run your code next.');
   }
 
-  async function action(name: string, text?: string): Promise<void> {
+  async function action(name: string, text?: string, proposalId?: string): Promise<void> {
     try {
       if (name === 'settings') await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:aatish1321.coding-buddy');
       else if (name === 'setKey') { await setKey(context); await refresh(); }
       else if (name === 'connect') await connect();
-      else if (name === 'disconnect') { cancel(); capture.disconnect(); linked = undefined; latestRun = undefined; session = new LearningSession(); state.file = ''; status('Disconnected.'); }
-      else if (name === 'reset') { cancel(); session = new LearningSession(); state.messages = []; status('Fresh start. Run your code when you are ready.'); }
+      else if (name === 'disconnect') { cancel(); guidance.clear(); capture.disconnect(); linked = undefined; latestRun = undefined; session = new LearningSession(); state.file = ''; status('Disconnected.'); }
+      else if (name === 'reset') { cancel(); guidance.clear(); session = new LearningSession(); state.messages = []; status('Fresh start. Run your code when you are ready.'); }
+      else if (name === 'acceptFix') { await guidance.accept(proposalId ?? guidance.proposalId); status('Change accepted. Save your file and run it to check the result.'); }
+      else if (name === 'rejectFix') { guidance.reject(proposalId ?? guidance.proposalId); status('Your code is unchanged. Try your own approach and run again.'); }
       else if (name === 'retry' && latestRun) await runAnalysis(latestRun, true);
       else if (name === 'clarify' && text?.trim()) {
         if (state.working) return;
@@ -98,15 +107,16 @@ export function activate(context: vscode.ExtensionContext): void {
   }
 
   const panel = new BuddyPanel(context.extensionUri, action);
+  const guidance = new EditorGuidance(() => { void refresh(); });
   const capture = new TerminalCapture(run => { latestRun = run; void runAnalysis(run, true); }, status);
   const register = (name: string, handler: () => unknown) => context.subscriptions.push(vscode.commands.registerCommand(`codingBuddy.${name}`, handler));
-  for (const name of ['connect','disconnect','settings','reset']) register(name, () => action(name));
+  for (const name of ['connect','disconnect','settings','reset','retry','acceptFix','rejectFix']) register(name, () => action(name));
   register('setKey', () => action('setKey'));
   register('removeKey', async () => { await context.secrets.delete(keyName(configuration().provider)); status('API key removed.'); });
-  context.subscriptions.push(log, capture,
+  context.subscriptions.push(log, capture, guidance,
     vscode.window.registerWebviewViewProvider('codingBuddy.panel', panel),
     vscode.workspace.onDidChangeTextDocument(event => { if (linked && event.document.uri.toString() === linked.uri.toString() && event.contentChanges.length) { cancel(); status('Code changed. Save and run it again to check your idea.'); } }),
-    vscode.workspace.onDidChangeConfiguration(event => { if (event.affectsConfiguration('codingBuddy')) { cancel(); session.clearCache(); status('Settings updated. Your next analysis uses the selected provider and model.'); } }),
+    vscode.workspace.onDidChangeConfiguration(event => { if (event.affectsConfiguration('codingBuddy')) { cancel(); guidance.clear(); session.clearCache(); status('Settings updated. Your next analysis uses the selected provider and model.'); } }),
     context.secrets.onDidChange(() => { void refresh(); }),
     { dispose: cancel });
   void refresh();
