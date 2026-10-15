@@ -13,7 +13,7 @@ We will build in slices: small working steps the learner can try. Each step incl
 
 ## Slices
 
-- [ ] **1. Run broken code and receive a real first clue in VS Code**
+- [x] **1. Run broken code and receive a real first clue in VS Code**
   Becomes usable: The robot sidebar opens locally, a saved code file is connected to a selected terminal, and a completed command produces a real hint through Gemini. The learner can answer a clarification question.
   Why now: Includes bootstrapping while testing the two biggest assumptions immediately: actual terminal output capture and a real provider returning hint-first teaching guidance.
   PRD ref: `prd.md > The Core Journey`, `prd.md > Context and First Clue`, `prd.md > Screens and Layout`, `prd.md > Look and Feel`
