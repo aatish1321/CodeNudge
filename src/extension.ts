@@ -16,7 +16,7 @@ export function activate(context: vscode.ExtensionContext): void {
   let requestGeneration = 0;
   let requestCount = 0;
   let refreshGeneration = 0;
-  const state: PanelState = { provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Ready when you are.', working: false, retries: 0, messages: [], proposalId: '', confetti: true, celebration: 0 };
+  const state: PanelState = { provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Run your code. I’m right here if you get stuck.', working: false, retries: 0, messages: [], proposalId: '', confetti: true, celebration: 0 };
   const log = vscode.window.createOutputChannel('Coding Buddy');
 
   async function refresh(): Promise<void> {
@@ -40,6 +40,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   async function runAnalysis(run: RunSnapshot, attempt: boolean): Promise<void> {
     if (!vscode.workspace.isTrusted) { status('Trust this workspace before sharing coding context.'); return; }
+    if (run.sourceConfirmed === false) { status('Reply “yes” if that result came from this file before I check it.'); return; }
     let mine = requestGeneration;
     try {
       checkSource(run.source, vscode.Uri.parse(run.uri).fsPath);
@@ -51,7 +52,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (session.isDuplicate(fingerprint)) { status('Same code and result — your previous hint is still here.'); return; }
       if (state.working) return;
       const key = await context.secrets.get(keyName(config.provider));
-      if (!key) { status('Add your provider API key with the Add key button, then retry.'); return; }
+      if (!key) { status('Add an API key in ⚙ settings, then run your code again.'); return; }
       await checkKnownKeys(context, JSON.stringify(session.context(run, attempt)));
       if (state.working || mine !== requestGeneration) return;
       pending = new AbortController(); mine = ++requestGeneration; state.working = true;
@@ -103,11 +104,37 @@ export function activate(context: vscode.ExtensionContext): void {
     try {
       if (text) await checkKnownKeys(context, text);
       if (name === 'ready') log.appendLine('Sidebar scripts ready.');
-      else if (name === 'settings') await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:aatish1321.coding-buddy');
+      else if (name === 'settings') {
+        const config = configuration();
+        const automatic = vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true);
+        const choice = await vscode.window.showQuickPick([
+          { label: '$(sparkle) AI provider', description: config.provider, action: 'provider' },
+          { label: '$(key) Add or update API key', action: 'setKey' },
+          { label: '$(trash) Remove API key', action: 'removeKey' },
+          { label: automatic ? '$(debug-pause) Pause automatic hints' : '$(play) Resume automatic hints', action: 'toggleWatching' },
+          { label: state.confetti ? '$(star) Turn celebrations off' : '$(star) Turn celebrations on', action: 'toggleConfetti' },
+          { label: '$(refresh) Retry last result', action: 'retry' },
+          { label: '$(clear-all) Start a new issue', action: 'reset' },
+          { label: '$(clippy) Share a run result', action: 'pasteResult' },
+          { label: '$(terminal) Choose a specific file and terminal', description: 'Advanced', action: 'connect' },
+          { label: '$(settings-gear) Models and all settings', action: 'openSettings' }
+        ], { title: 'Coding Buddy settings', placeHolder: `${config.provider} · ${config.model} · Code and run results are sent to this provider` });
+        if (choice) await action(choice.action);
+      }
+      else if (name === 'openSettings') await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:aatish1321.coding-buddy');
+      else if (name === 'removeKey') await vscode.commands.executeCommand('codingBuddy.removeKey');
+      else if (name === 'toggleWatching') {
+        const config = vscode.workspace.getConfiguration('codingBuddy');
+        await config.update('autoWatch', !config.get('autoWatch', true), vscode.ConfigurationTarget.Global);
+      }
+      else if (name === 'pasteResult') {
+        const output = await vscode.window.showInputBox({ title: 'Share a run result', prompt: 'Paste the result from your code, browser, or API test. Keep credentials out.', ignoreFocusOut: true });
+        if (output?.trim()) await action('shareResult', output.slice(0, 2_000));
+      }
       else if (name === 'provider') await chooseProvider();
       else if (name === 'setKey') { await setKey(context); await refresh(); }
       else if (name === 'connect') await connect();
-      else if (name === 'disconnect') { cancel(); guidance.clear(); capture.disconnect(); linked = undefined; latestRun = undefined; session = new LearningSession(); state.file = ''; status('Disconnected.'); }
+      else if (name === 'disconnect') { cancel(); guidance.clear(); capture.disconnect(); linked = undefined; latestRun = undefined; session = new LearningSession(); state.file = ''; status('Hints paused. Resume automatic hints in settings.'); }
       else if (name === 'reset') { cancel(); guidance.clear(); session = new LearningSession(); latestRun = undefined; state.messages = []; status('Fresh start. Run your code when you are ready.'); }
       else if (name === 'toggleConfetti') { const config = vscode.workspace.getConfiguration('codingBuddy'); await config.update('confetti', !config.get('confetti', true), vscode.ConfigurationTarget.Global); }
       else if (name === 'acceptFix') { await guidance.accept(proposalId ?? guidance.proposalId); status('Change accepted. Save your file and run it to check the result.'); }
@@ -120,7 +147,10 @@ export function activate(context: vscode.ExtensionContext): void {
         checkSource(document.getText(), document.fileName);
         if (document.isDirty) { status('Save the code file before sharing its run result.'); return; }
         if (!linked || linked.uri.toString() !== document.uri.toString()) {
-          cancel(); guidance.clear(); capture.disconnect(); session = new LearningSession(); linked = document; state.file = basename(document.fileName);
+          cancel(); guidance.clear();
+          if (vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true)) capture.watch();
+          else capture.disconnect();
+          session = new LearningSession(); linked = document; state.file = basename(document.fileName);
         }
         latestRun = { uri: document.uri.toString(), version: document.version, language: document.languageId, source: document.getText(),
           command: 'Learner-shared run result', output: text.trim(), exitCode: null, truncated: false, reported: true };
@@ -131,6 +161,12 @@ export function activate(context: vscode.ExtensionContext): void {
         if (state.working) return;
         session.clarification = `${session.clarification}\n${text.trim()}`.trim().slice(-2_000);
         message('learner', text.trim());
+        if (latestRun?.sourceConfirmed === false) {
+          if (!/^(?:yes|yep|yeah|correct|it did|that’s right|that's right)\b/i.test(text.trim())) {
+            status('Open the file you ran and run it again, or share the right result from settings.'); return;
+          }
+          latestRun = { ...latestRun, sourceConfirmed: true, reported: true };
+        }
         if (latestRun && linked && !linked.isDirty && linked.version === latestRun.version) await runAnalysis(latestRun, false);
         else status('Context saved. Save and run the connected file so the buddy can check the result.');
       }
@@ -139,7 +175,23 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const panel = new BuddyPanel(context.extensionUri, action);
   const guidance = new EditorGuidance(() => { void refresh(); });
-  const capture = new TerminalCapture(run => { latestRun = run; void runAnalysis(run, true); }, status);
+  const capture = new TerminalCapture(run => {
+    const document = vscode.workspace.textDocuments.find(document => document.uri.toString() === run.uri);
+    if (!document) return;
+    if (linked?.uri.toString() !== run.uri) {
+      cancel(); guidance.clear(); session = new LearningSession(); state.messages = [];
+    }
+    const repeatedUncertain = latestRun?.sourceConfirmed === false && latestRun.uri === run.uri && latestRun.source === run.source && latestRun.output === run.output;
+    linked = document; state.file = basename(document.fileName); latestRun = run;
+    if (run.sourceConfirmed === false) {
+      if (!repeatedUncertain) message('buddy', `Was that result from ${state.file}? Your terminal didn’t include a file name, so I want to check before giving you a clue.`);
+      status('Reply “yes” if that result came from this file.'); return;
+    }
+    void runAnalysis(run, true);
+  }, status);
+  if (!vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true)) {
+    capture.disconnect(); state.status = 'Automatic hints paused. Resume them in settings.';
+  }
   const register = (name: string, handler: () => unknown) => context.subscriptions.push(vscode.commands.registerCommand(`codingBuddy.${name}`, handler));
   for (const name of ['connect','disconnect','settings','reset','retry','acceptFix','rejectFix','toggleConfetti']) register(name, () => action(name));
   register('setKey', () => action('setKey'));
@@ -148,7 +200,15 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(log, capture, guidance,
     vscode.window.registerWebviewViewProvider('codingBuddy.panel', panel),
     vscode.workspace.onDidChangeTextDocument(event => { if (linked && event.document.uri.toString() === linked.uri.toString() && event.contentChanges.length) { cancel(); status('Code changed. Save and run it again to check your idea.'); } }),
-    vscode.workspace.onDidChangeConfiguration(event => { if (event.affectsConfiguration('codingBuddy')) { cancel(); guidance.clear(); session.clearCache(); status('Settings updated. Your next analysis uses the selected provider and model.'); } }),
+    vscode.workspace.onDidChangeConfiguration(event => {
+      if (!event.affectsConfiguration('codingBuddy')) return;
+      cancel(); guidance.clear(); session.clearCache();
+      if (event.affectsConfiguration('codingBuddy.autoWatch')) {
+        if (vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true)) capture.watch();
+        else capture.disconnect();
+        status(vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true) ? 'Run your code. I’ll watch for a result automatically.' : 'Automatic hints paused.');
+      } else status('Settings updated. Run your code when you’re ready.');
+    }),
     context.secrets.onDidChange(() => { void refresh(); }),
     { dispose: cancel });
   void refresh();

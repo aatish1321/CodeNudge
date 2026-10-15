@@ -26,7 +26,7 @@ function panel() {
   };
   runInNewContext(readFileSync(resolve(__dirname, '../../media/panel.js'), 'utf8'), {
     acquireVsCodeApi: () => ({ postMessage: (value: unknown) => sent.push(value) }),
-    document: { getElementById: element, createElement: () => new Element(), addEventListener: (name: string, callback: (event: unknown) => void) => { listeners[name] = callback; } },
+    document: { body: { classList: { toggle() {} } }, getElementById: element, createElement: () => new Element(), addEventListener: (name: string, callback: (event: unknown) => void) => { listeners[name] = callback; } },
     window: { addEventListener: (name: string, callback: (event: unknown) => void) => { listeners[name] = callback; } },
     matchMedia: () => ({ matches: reducedMotion }), setTimeout: (callback: () => void) => timers.push(callback)
   });
@@ -44,7 +44,6 @@ test('shipped panel renders model text literally and preserves review controls',
   assert.equal(ui.element('messages').children[0].children[1].textContent, '<script>do not execute</script>');
   assert.equal(ui.element('fixActions').hidden, false);
   assert.equal(ui.element('send').disabled, true);
-  assert.equal(ui.element('share').disabled, true);
   ui.state.proposalId = ''; ui.render();
   assert.equal(ui.element('fixActions').hidden, true);
 });
@@ -64,14 +63,15 @@ test('confetti fires once, obeys its setting and reduced motion, and does not re
   assert.equal(reopened.element('celebration').children.length, 0);
 });
 
-test('clarification and reported results use distinct actions and clear the composer', () => {
+test('the composer sends clarification and the gear opens settings without sending typed text', () => {
   const ui = panel(); ui.render();
-  for (const action of ['clarify', 'shareResult']) {
+  for (const action of ['clarify', 'settings']) {
     const button = new Element(); button.dataset.action = action;
     ui.element('clarification').value = '  expected five numbers  ';
     ui.listeners.click({ target: { closest: () => button } });
     const message = ui.sent.at(-1) as { action: string; text: string };
-    assert.equal(message.action, action); assert.equal(message.text, 'expected five numbers');
-    assert.equal(ui.element('clarification').value, '');
+    assert.equal(message.action, action);
+    assert.equal(message.text, action === 'clarify' ? 'expected five numbers' : undefined);
+    assert.equal(ui.element('clarification').value, action === 'clarify' ? '' : '  expected five numbers  ');
   }
 });

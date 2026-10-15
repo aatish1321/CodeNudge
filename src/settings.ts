@@ -23,7 +23,7 @@ export async function chooseProvider(): Promise<void> {
 export async function checkKnownKeys(context: vscode.ExtensionContext, text: string): Promise<void> {
   for (const provider of Object.keys(defaults) as Provider[]) {
     const key = await context.secrets.get(keyName(provider));
-    if (key && text.includes(key)) throw new Error('A saved API key appears in this context. Remove it and use the Add key button for credentials.');
+    if (key && text.includes(key)) throw new Error('A saved API key appears in this context. Remove it and enter credentials through Buddy settings.');
   }
 }
 

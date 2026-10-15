@@ -11,6 +11,7 @@ export interface RunSnapshot {
   exitCode: number | null;
   truncated: boolean;
   reported: boolean;
+  sourceConfirmed?: boolean;
 }
 
 export interface TeachingReply {
@@ -55,6 +56,8 @@ Read the top-of-file comment for intended behavior. If absent, infer tentatively
 ask ONE concrete question. Never claim an uncertain guess is the intended outcome.
 Diagnose syntax, runtime, or logic issues using the actual observed result. A zero exit code
 does not prove logic is correct. When evidence is incomplete or intention unclear, ask for clarification.
+When sourceConfirmed is false, the source is only the file focused when a terminal command started.
+Ask whether this result came from that file before diagnosing it. Never mark it solved or offer code changes.
 Compare the issue with previousIssue. relationship is same only when it is actually the same problem.
 For a new issue, return a general clue, regardless of the maximum allowed level.
 At clue level: name a likely category and give one useful thinking prompt, not a full fix or code.

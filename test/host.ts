@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import type { TerminalCapture as CaptureType } from '../src/terminal';
 import { RunSnapshot } from '../src/teaching';
 import { mkdtemp, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { clue } from './fixtures';
@@ -36,7 +37,6 @@ export async function run(): Promise<void> {
     const observed = new Promise<RunSnapshot>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('No completed command was captured')), 20_000);
       capture = new TerminalCapture(result => { clearTimeout(timer); resolve(result); }, () => {});
-      capture.connect(document, terminal);
     });
     terminal.sendText('python3 loop_syntax.py');
     const result = await observed;
@@ -44,6 +44,7 @@ export async function run(): Promise<void> {
     assert.match(result.output, /SyntaxError/);
     assert.equal(result.source, document.getText());
     assert.equal(result.command, 'python3 loop_syntax.py');
+    assert.equal(result.sourceConfirmed, true);
     console.log('HOST CHECK PASSED: extension activation, robot webview registration, actual terminal output and exit code.');
     capture?.dispose();
     const javascript = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(folder.uri, 'loop_logic.js'));
@@ -51,7 +52,6 @@ export async function run(): Promise<void> {
     const observedJavascript = new Promise<RunSnapshot>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('JavaScript run was not captured')), 20_000);
       capture = new TerminalCapture(result => { clearTimeout(timer); resolve(result); }, () => {});
-      capture.connect(javascript, terminal);
     });
     terminal.sendText('node loop_logic.js');
     const javascriptResult = await observedJavascript;
@@ -60,6 +60,31 @@ export async function run(): Promise<void> {
     assert.equal(javascriptResult.output.trim(), '1\n2\n3\n4');
     console.log('HOST CHECK PASSED: JavaScript source/output capture without Python-specific assumptions.');
   } finally { capture?.dispose(); terminal.dispose(); }
+
+  if (existsSync('/bin/zsh')) {
+    await vscode.window.showTextDocument(document);
+    const zsh = vscode.window.createTerminal({ name: 'Buddy automatic zsh verification', shellPath: '/bin/zsh', cwd: folder.uri });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => { listener.dispose(); reject(new Error('zsh shell integration did not activate')); }, 20_000);
+        const listener = vscode.window.onDidChangeTerminalShellIntegration(event => {
+          if (event.terminal === zsh) { clearTimeout(timer); listener.dispose(); resolve(); }
+        });
+        if (zsh.shellIntegration) { clearTimeout(timer); listener.dispose(); resolve(); }
+        zsh.show();
+      });
+      const observed = new Promise<RunSnapshot>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('Automatic zsh run was not captured')), 20_000);
+        capture = new TerminalCapture(result => { clearTimeout(timer); resolve(result); }, () => {});
+      });
+      zsh.sendText('python3 loop_syntax.py');
+      const result = await observed;
+      assert.equal(result.exitCode, 1);
+      assert.match(result.output, /SyntaxError/);
+      assert.equal(result.sourceConfirmed, true, 'filename in traceback must link the run without a prompt');
+      console.log('HOST CHECK PASSED: automatic zsh capture without terminal attachment or command confirmation.');
+    } finally { capture?.dispose(); zsh.dispose(); }
+  }
 
   const directory = await mkdtemp(join(tmpdir(), 'coding-buddy-edits-'));
   const path = join(directory, 'review.py');
@@ -113,6 +138,6 @@ export async function run(): Promise<void> {
     console.log('HOST CHECK PASSED: three native provider settings and distinct secret names.');
   } finally { await config.update('provider', originalProvider, vscode.ConfigurationTarget.Global); }
   if (process.env.CODING_BUDDY_TEST_REPORT) {
-    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['activation', 'python-capture', 'javascript-capture', 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'provider-settings'] }));
+    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['activation', 'automatic-python-capture', 'automatic-javascript-capture', ...(existsSync('/bin/zsh') ? ['automatic-zsh-capture'] : []), 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'provider-settings'] }));
   }
 }

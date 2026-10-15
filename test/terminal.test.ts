@@ -8,99 +8,96 @@ import type * as vscode from 'vscode';
 import type { TerminalCapture } from '../src/terminal';
 import type { RunSnapshot } from '../src/teaching';
 
-function terminalFixture(confirm: () => Promise<string | undefined>) {
+function terminalFixture() {
   let start!: (event: vscode.TerminalShellExecutionStartEvent) => void;
   let end!: (event: vscode.TerminalShellExecutionEndEvent) => void;
-  let confirmations = 0;
   const runs: RunSnapshot[] = []; const statuses: string[] = [];
   const terminal = {} as vscode.Terminal;
-  const document = { fileName: '/demo.py', uri: { toString: () => 'file:///demo.py' }, version: 1,
+  const document = { fileName: '/demo.py', uri: { scheme: 'file', toString: () => 'file:///demo.py' }, version: 1,
     languageId: 'python', isDirty: false, isClosed: false, getText: () => 'print(1)\n' };
+  const window = {
+    activeTextEditor: { document },
+    onDidStartTerminalShellExecution: (callback: typeof start) => { start = callback; return { dispose() {} }; },
+    onDidEndTerminalShellExecution: (callback: typeof end) => { end = callback; return { dispose() {} }; },
+    onDidCloseTerminal: () => ({ dispose() {} }),
+    showInputBox: () => { throw new Error('Automatic capture must not ask for a command'); }
+  };
   const moduleExports = {} as { TerminalCapture: typeof TerminalCapture };
   const filename = resolve(__dirname, '../src/terminal.js');
   const localRequire = createRequire(filename);
   runInNewContext(readFileSync(filename, 'utf8'), { exports: moduleExports,
-    require: (name: string) => name === 'vscode' ? {
-      TerminalShellExecutionCommandLineConfidence: { Low: 0 },
-      window: {
-        onDidStartTerminalShellExecution: (callback: typeof start) => { start = callback; return { dispose() {} }; },
-        onDidEndTerminalShellExecution: (callback: typeof end) => { end = callback; return { dispose() {} }; },
-        onDidCloseTerminal: () => ({ dispose() {} }),
-        showInputBox: () => { confirmations++; return confirm(); }
-      }
-    } : localRequire(name)
+    require: (name: string) => name === 'vscode' ? { TerminalShellExecutionCommandLineConfidence: { Low: 0 }, window } : localRequire(name)
   });
   const capture = new moduleExports.TerminalCapture(run => runs.push(run), status => statuses.push(status));
-  capture.connect(document as unknown as vscode.TextDocument, terminal);
-  const run = async (command = 'python3 demo.py', confidence = 0) => {
+  const run = async (command = 'python3 demo.py', output = '1\r\n', confidence = 2, duringRun?: () => void) => {
     const execution = { cwd: undefined, commandLine: { value: command, confidence, isTrusted: false },
-      read: async function* () { yield '1\r\n'; } } as vscode.TerminalShellExecution;
+      read: async function* () { yield output; } } as vscode.TerminalShellExecution;
     start({ terminal, execution, shellIntegration: {} as vscode.TerminalShellIntegration });
+    duringRun?.();
     end({ terminal, execution, exitCode: 0, shellIntegration: {} as vscode.TerminalShellIntegration });
     await new Promise(resolve => setImmediate(resolve));
   };
-  return { capture, document, terminal, runs, statuses, run, confirmations: () => confirmations };
+  return { capture, document, terminal, runs, statuses, run };
 }
 
-test('uncertain commands need one confirmation; matching retries work and other commands are ignored', async () => {
-  const fixture = terminalFixture(async () => 'python3 demo.py');
+test('automatically observes the active saved file without attaching a terminal or prompting', async () => {
+  const fixture = terminalFixture();
   await fixture.run();
-  assert.equal(fixture.confirmations(), 1);
   assert.equal(fixture.runs[0].command, 'python3 demo.py');
   assert.equal(fixture.runs[0].output, '1\n');
-  await fixture.run();
-  await fixture.run('echo unrelated');
-  assert.equal(fixture.confirmations(), 1);
+  assert.equal(fixture.runs[0].sourceConfirmed, true);
+  fixture.capture.dispose();
+});
+
+test('zsh runs with empty command names use filename evidence without a command dialog', async () => {
+  const fixture = terminalFixture();
+  await fixture.run('', 'File "/demo.py", line 2\nSyntaxError: invalid syntax', 0);
+  await fixture.run('', 'File "/demo.py", line 2\nSyntaxError: invalid syntax', 0);
   assert.equal(fixture.runs.length, 2);
+  assert.equal(fixture.runs[0].sourceConfirmed, true);
+  assert.equal(fixture.runs[0].command, 'Terminal run (command unavailable)');
+  fixture.capture.dispose();
+});
+
+test('unidentified results retain uncertainty instead of claiming they came from the file', async () => {
+  const fixture = terminalFixture();
+  await fixture.run('', '1\n2\n3\n4', 0);
+  assert.equal(fixture.runs[0].sourceConfirmed, false);
+  fixture.capture.dispose();
+});
+
+test('ignores shell housekeeping and respects pause/resume', async () => {
+  const fixture = terminalFixture();
+  await fixture.run('git status');
+  await fixture.run('ls');
   fixture.capture.disconnect();
+  await fixture.run();
+  assert.equal(fixture.runs.length, 0);
+  fixture.capture.watch();
+  await fixture.run();
+  assert.equal(fixture.runs.length, 1);
+  fixture.capture.dispose();
+});
+
+test('dirty, changed-during-run and non-code files are not analyzed', async () => {
+  const fixture = terminalFixture();
+  fixture.document.isDirty = true;
+  await fixture.run();
+  fixture.document.isDirty = false;
+  await fixture.run('python3 demo.py', '1', 2, () => { fixture.document.version++; });
+  fixture.document.languageId = 'markdown';
+  await fixture.run();
+  assert.equal(fixture.runs.length, 0);
+  fixture.capture.dispose();
+});
+
+test('optional manual attachment still pins one command and disconnect invalidates pending output', async () => {
+  const fixture = terminalFixture();
   fixture.capture.connect(fixture.document as unknown as vscode.TextDocument, fixture.terminal);
   await fixture.run();
-  assert.equal(fixture.confirmations(), 2, 'reconnecting requires a fresh confirmation');
-  fixture.capture.dispose();
-});
-
-test('dismissing confirmation never shares a result', async () => {
-  const fixture = terminalFixture(async () => undefined);
-  await fixture.run();
-  await fixture.run('');
-  assert.equal(fixture.runs.length, 0);
-  assert.equal(fixture.confirmations(), 2);
-  assert.match(fixture.statuses.at(-1)!, /Share run result/);
-  fixture.capture.dispose();
-});
-
-test('confirmed code changed or disconnected during the dialog is not analyzed', async () => {
-  for (const invalidate of ['edit', 'disconnect']) {
-    let confirm!: (choice: string) => void;
-    const fixture = terminalFixture(() => new Promise(resolve => { confirm = resolve; }));
-    await fixture.run();
-    if (invalidate === 'edit') fixture.document.version++;
-    else fixture.capture.disconnect();
-    confirm('python3 demo.py');
-    await new Promise(resolve => setImmediate(resolve));
-    assert.equal(fixture.runs.length, 0);
-    fixture.capture.dispose();
-  }
-});
-
-test('empty command names need confirmation for each run, including retries, without guessing unrelated commands', async () => {
-  let command = 'python3 demo.py';
-  const fixture = terminalFixture(async () => command);
-  await fixture.run('');
-  await fixture.run('');
-  assert.equal(fixture.runs.length, 2);
-  assert.equal(fixture.runs[1].command, command);
-  assert.equal(fixture.confirmations(), 2);
-  command = 'echo unrelated';
-  await fixture.run('');
-  assert.equal(fixture.runs.length, 2);
-  fixture.capture.dispose();
-});
-
-test('reliably identified commands do not prompt', async () => {
-  const fixture = terminalFixture(async () => { throw new Error('Unexpected confirmation'); });
-  await fixture.run('python3 demo.py', 2);
+  await fixture.run('python3 other.py');
   assert.equal(fixture.runs.length, 1);
-  assert.equal(fixture.confirmations(), 0);
+  await fixture.run('python3 demo.py', '1', 2, () => fixture.capture.disconnect());
+  assert.equal(fixture.runs.length, 1);
   fixture.capture.dispose();
 });

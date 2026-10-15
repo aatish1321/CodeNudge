@@ -25,7 +25,7 @@ Source: `scope.md > The Core Loop` and `What "Working" Looks Like`.
 ## Screens and Layout
 
 - **Sidebar icon:** opens the buddy panel.
-- **Buddy panel:** character element, initially blank conversation area, and a text area. The learner types extra context or answers the buddy's questions; ordinary error help does not depend on a typed request.
+- **Buddy panel:** transparent cutout character, initially blank conversation area, and a compact reply box. Keep provider/key controls, terminal tools, retry/reset, and celebration preferences behind the gear icon. The learner types extra context or answers the buddy's questions; ordinary error help does not depend on a typed request or manually attaching a terminal.
 - **Editor guidance:** an arrow-style pointer such as `<-------` and an inline hint identify the relevant code after escalation.
 - **Fix review:** a colored diff makes removed and added code distinguishable and offers accept/reject actions. Show the explanation in the buddy panel.
 - **Settings:** supported provider choice, that provider's API key, any connection details required by the selected provider, and a confetti on/off control.
@@ -48,6 +48,8 @@ Source: `scope.md > Inspiration & Identity`, expanded by the learner's character
 ### Context and First Clue
 
 Use the code being worked on and the relevant run result to provide help automatically after a run reveals a problem. Start with a likely category, such as syntax or logic, and a clue that leaves the learner room to think. Do not reveal the complete fix in the first clue.
+
+Watch completed integrated-terminal runs automatically using the saved code file focused when each run starts. If the terminal cannot identify the command and the output does not link to that file, ask a plain-language question in the panel before diagnosing it. Do not show command-entry dialogs. Automatic hints can be paused from the settings gear.
 
 Read the top-of-file comment describing what the code should do. If the learner omits it, analyze the code for a tentative interpretation, presented as a guess. If intent is still unclear, ask what the learner expected; their answer in the text area becomes context. Use this same expected-outcome context for diagnosis and recognizing success. Successful execution alone does not prove that the logic is correct.
 

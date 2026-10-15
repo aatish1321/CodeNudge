@@ -2,7 +2,7 @@
   "name": "coding-buddy",
   "displayName": "Coding Buddy",
   "description": "A patient coding companion: clues first, answers when you need them.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "aatish1321",
   "license": "UNLICENSED",
   "repository": { "type": "git", "url": "https://github.com/aatish1321/coding-buddy.git" },
@@ -12,7 +12,7 @@
   "main": "./out/src/extension.js",
   "extensionKind": ["ui"],
   "capabilities": { "untrustedWorkspaces": { "supported": false }, "virtualWorkspaces": false },
-  "activationEvents": ["onView:codingBuddy.panel"],
+  "activationEvents": ["onStartupFinished", "onView:codingBuddy.panel"],
   "contributes": {
     "viewsContainers": { "activitybar": [{ "id": "codingBuddy", "title": "Coding Buddy", "icon": "media/buddy-icon.svg" }] },
     "views": { "codingBuddy": [{ "type": "webview", "id": "codingBuddy.panel", "name": "Coding Buddy" }] },
@@ -32,6 +32,7 @@
     "configuration": {
       "title": "Coding Buddy",
       "properties": {
+        "codingBuddy.autoWatch": { "type": "boolean", "default": true, "scope": "application", "description": "Automatically check completed terminal runs using the saved code file focused when the run starts. Code and output are sent to your selected AI provider. Pause this in the buddy settings menu." },
         "codingBuddy.provider": { "type": "string", "enum": ["gemini", "openai", "groq"], "default": "gemini", "scope": "application", "description": "AI provider that receives your connected code and run output. Use Coding Buddy: Set API Key to store its key securely." },
         "codingBuddy.models.gemini": { "type": "string", "default": "gemini-3.5-flash-lite", "scope": "application", "description": "Gemini model with structured-output support. Model availability depends on your account." },
         "codingBuddy.models.openai": { "type": "string", "default": "gpt-6-luna", "scope": "application", "description": "OpenAI model with Responses API structured-output support." },
@@ -47,7 +48,7 @@
     "test:host": "npm run compile && node scripts/test-host.cjs",
     "test:package": "node scripts/test-host.cjs --package",
     "vscode:prepublish": "npm run compile",
-    "package": "vsce package --no-dependencies --skip-license --out coding-buddy-0.0.2.vsix"
+    "package": "vsce package --no-dependencies --skip-license --out coding-buddy-0.0.3.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

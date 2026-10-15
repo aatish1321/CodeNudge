@@ -114,3 +114,15 @@ test('provider switches invalidate cached guidance while preserving the teaching
   const groq = session.fingerprint(run, 'groq', 'model', true);
   assert.notEqual(gemini, groq);
 });
+
+test('a result with an uncertain source cannot escalate or celebrate', () => {
+  const session = new LearningSession();
+  session.apply(run, clue, 'first', true);
+  session.retries = 6;
+  const uncertain = { ...run, source: `${run.source}\n# retry`, sourceConfirmed: false, output: '1\n2\n3\n4\n5', exitCode: 0 };
+  assert.equal(session.allowedLevel(uncertain, true), 'clue');
+  session.apply(uncertain, { ...clue, relationship: 'same' }, 'uncertain', true);
+  assert.equal(session.retries, 6);
+  assert.throws(() => session.apply(uncertain, { ...clue, status: 'solved', relationship: 'same',
+    level: 'none', intentSource: 'comment', expectedOutcome: 'Print 1 through 5' }, 'solved', true));
+});

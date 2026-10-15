@@ -7,25 +7,25 @@ status: approved
 
 ## How This Works, In Plain Language
 
-Coding Buddy is one extension running inside desktop VS Code. Its robot panel shows hints and asks questions. The extension connects one code file to a terminal the learner chooses, reads the result when a watched command finishes, and sends the relevant context directly to the chosen AI provider.
+Coding Buddy is one extension running inside desktop VS Code. Its robot panel shows hints and asks questions. The extension watches completed integrated-terminal runs using the saved code file focused at run start, reads their results, and sends the relevant context directly to the chosen AI provider.
 
 The AI identifies the likely issue and writes teaching guidance. Ordinary extension code counts attempts and controls which level of help is allowed, so switching providers does not bypass the three-plus-three rule. Editor arrows are visual annotations, not extra text inserted into the learner's file. Proposed fixes open in VS Code's change-review view and apply only after acceptance.
 
-Provider preferences and the confetti setting are remembered. API keys use VS Code's encrypted secret storage. Hints, run output, and attempt counts remain in memory for the current window session; closing the panel preserves them, while restarting VS Code clears them. There is no separately hosted Coding Buddy server or database.
+Provider preferences, automatic-watching preference, and the confetti setting are remembered. API keys use VS Code's encrypted secret storage. Hints, run output, and attempt counts remain in memory for the current window session; closing the panel preserves them, while restarting VS Code clears them. There is no separately hosted Coding Buddy server or database.
 
-Automatic observation covers completed commands in a selected VS Code terminal with working shell integration. For browser results, Postman responses, long-running servers, or an unavailable terminal integration, the learner supplies the relevant result in the text box. Guidance is language-independent; automatic observation is limited by the execution environment, not by a Python-only restriction.
+Automatic observation covers completed commands in VS Code integrated terminals with working shell integration. For browser results, Postman responses, long-running servers, or an unavailable terminal integration, the learner shares the relevant result through the settings menu. Guidance is language-independent; automatic observation is limited by the execution environment, not by a Python-only restriction.
 
 ## The Core Journey Through the System
 
 Implements `prd.md > The Core Journey` and `Context and First Clue`.
 
-1. Opening the sidebar icon creates the robot panel. Controls expose provider setup and terminal connection without preloading a conversation.
+1. Opening the sidebar icon creates the quiet robot panel with a transparent cutout character, a reply box, and a gear icon. Extra controls are tucked into the gear menu without preloading a conversation.
 2. Provider setup saves the selected provider/model as preferences and its key through a masked VS Code input into secret storage.
-3. A Connect Terminal control links the current saved code file to a selected terminal. The UI names both. The learner's next code command establishes the watched command; unrelated subsequent commands are ignored unless the learner reconnects. Explain this next-command behavior before enabling the connection.
-4. At the start of the watched command, capture the linked file's contents, version, and language, and immediately begin reading the command's output stream. Wait for command completion before analysis.
+3. Watching starts automatically on extension startup. At a terminal command start, use the focused saved code file as the candidate; no manual terminal attachment is required. Settings allow pausing/resuming or optionally pinning a specific file and terminal.
+4. At command start, capture the candidate file's contents, version, and language, and immediately begin reading output. Ignore recognized housekeeping commands. Wait for command completion and link the result by its command or output filename. If neither confirms the candidate, ask in the conversation before spending an AI request or advancing attempts.
 5. At completion, check that source and run still match, bound the output, and suppress duplicate requests. Ask the selected provider to analyze the code, expected outcome, run result, and current allowed help level.
 6. Validate the response before updating the learning session. Show a first clue, inline guidance, clarification question, or proposed fix according to the approved progression.
-7. A clarification reply can request another response without counting as a code attempt. For external results, a Share Run Result action beside the same text box labels the text as a learner-reported run; a changed-code retry can then follow the same attempt rules, without claiming automatic observation.
+7. A clarification reply can request another response without counting as a code attempt. For external results, a Share Run Result action in the settings menu labels the text as a learner-reported run; a changed-code retry can then follow the same attempt rules, without claiming automatic observation.
 8. Review a proposed replacement beside the captured original. Acceptance updates only the linked file if its content/version still matches the reviewed original. Rejection does not change the file.
 9. The next observed result is assessed against the top-of-file comment or clarified intention. On a supported conclusion that the tracked issue is solved, reset its count, show success feedback, and celebrate if enabled. Unclear intention or insufficient evidence produces a question rather than success.
 
@@ -62,7 +62,7 @@ npm run compile
 npm test
 ```
 
-Open the project in desktop VS Code and press F5 using the planned `.vscode/launch.json`. A separate Extension Development Host window loads the extension. In that window, open `examples/`, choose a provider, enter its key locally, open a demo file, and connect a fresh integrated terminal. Run, for example:
+Open the project in desktop VS Code and press F5 using the planned `.vscode/launch.json`. A separate Extension Development Host window loads the extension. In that window, open `examples/`, choose a provider, enter its key locally, open a saved demo file, and run it in an integrated terminal. Run, for example:
 
 ```sh
 python3 loop_syntax.py
@@ -107,11 +107,11 @@ Implements `prd.md > Screens and Layout` and `States and Boundaries`.
 
 ### Terminal Capture
 
-`src/terminal.ts` listens to `onDidStartTerminalShellExecution` and `onDidEndTerminalShellExecution` for the selected terminal/command. Call `execution.read()` immediately at the start; reading only after completion misses output according to the [API contract](https://code.visualstudio.com/api/references/vscode-api#TerminalShellExecution).
+`src/terminal.ts` listens to `onDidStartTerminalShellExecution` and `onDidEndTerminalShellExecution` automatically. Call `execution.read()` immediately at the start; reading only after completion misses output according to the [API contract](https://code.visualstudio.com/api/references/vscode-api#TerminalShellExecution).
 
-Pin the linked file rather than whatever tab happens to be focused at completion. Reject dirty, missing, unsupported, or changed-during-run snapshots with a clear message; do not diagnose a file version that was not executed. Capture command identity and run ID locally, strip terminal escape/control sequences, and cap the output buffer. Do not execute or rerun terminal commands on behalf of the model.
+Snapshot the saved code file focused at command start rather than choosing a tab at completion. Reject dirty, missing, unsupported, or changed-during-run snapshots. Strip control sequences and cap output. Ignore recognized housekeeping commands. A reliable command or output mentioning the file confirms its source. For missing/uncertain command names without filename evidence, mark `sourceConfirmed: false`, ask the learner whether this result came from that file, and send nothing to the provider until confirmed. A yes reply makes it learner-reported context without counting as a changed-code retry. Never guess a solved state or unlock a more specific stage from an unconfirmed result.
 
-Ignore other terminals and commands. Disconnecting stops capture and cancels pending analysis. Shell integration that is absent, command identity that is unreliable, an interrupted command, or an unknown exit status must be surfaced rather than guessed. For an uncertain first command, ask the learner to confirm its name before checking the captured result. If the shell reports an empty name, ask for the actual command on each run, prefill the watched command after the first confirmation, and ignore results the learner identifies as unrelated. Cancelling shares nothing. Check connection/file freshness again after the prompt. Offer shell-integration instructions and the agreed manual-result fallback. Manual sharing can pin the current saved file without requiring a terminal connection. Long-running commands do not create repeated attempts as output streams in.
+No attachment or native command-entry dialog is part of the normal flow. The gear menu can pause/resume automatic watching or optionally pin a specific file/terminal. Source and connection freshness guards remain in place. Absent shell integration, interrupted commands, and unknown exit statuses produce a limitation message and the manual-result fallback in settings. Manual sharing can pin the current saved file without requiring a terminal connection. Long-running commands do not create repeated attempts as output streams in.
 
 Implements `prd.md > Context and First Clue` and the learner-agreed completed-command boundary.
 
@@ -182,11 +182,11 @@ Implements `prd.md > Provider Settings and Open Source` and `States and Boundari
 
 ### Buddy Panel and Settings
 
-`src/panel.ts` supplies the webview and handles a small allowlisted message set. `media/panel.js` renders character/status/messages, sends clarification or an explicitly shared run result from the same text area, opens native provider/key settings, and offers capture/review actions. Validate message types and lengths in the extension host. Render user/model content with `textContent`; do not enable command links from model text.
+`src/panel.ts` supplies the webview and handles a small allowlisted message set. `media/panel.js` renders character/status/messages, sends clarification from the reply box, opens the native gear menu for provider/key/model preferences and run-result sharing, and offers fix-review actions. Validate message types and lengths in the extension host. Render user/model content with `textContent`; do not enable command links from model text.
 
 Load only bundled scripts, styles, and images using webview resource URIs. Use a restrictive content security policy, script nonces, and media-only local resource roots. Network calls and key entry remain in the extension host. When the panel is recreated, redraw from the in-memory session rather than creating a new attempt.
 
-`src/settings.ts` keeps provider, per-provider model choice, and confetti preference in user-level VS Code configuration. Key actions use masked `showInputBox` and `context.secrets.store/get/delete`, scoped by provider. The panel shows configured/missing status, never the stored value. Default confetti is enabled unless reduced motion is requested. Switching provider alone does not make a billable connection test; the next intentional analysis verifies access.
+`src/settings.ts` keeps provider, per-provider model choice, automatic-watching preference, and confetti preference in user-level VS Code configuration. Key actions use masked `showInputBox` and `context.secrets.store/get/delete`, scoped by provider. The panel shows configured/missing status, never the stored value. Default confetti is enabled unless reduced motion is requested. Switching provider alone does not make a billable connection test; the next intentional analysis verifies access.
 
 Implements `prd.md > Screens and Layout`, `Look and Feel`, and `Provider Settings and Open Source`.
 
@@ -202,9 +202,9 @@ Implements `prd.md > Proposed Fix and Explanation` and `States and Boundaries`.
 
 | Information | Location and lifetime |
 | --- | --- |
-| Provider, per-provider model, confetti | User-level VS Code configuration; updated through settings; survives restart |
+| Provider, per-provider model, automatic watching, confetti | User-level VS Code configuration; updated through settings; survives restart |
 | Provider API keys | `ExtensionContext.secrets`, one secret per provider; replace/remove through masked commands; retained across restart, not committed |
-| Linked file/terminal/command | Extension memory; connection is explicit and expires on disconnect/restart |
+| Active file/session; optional advanced terminal pin | Extension memory; automatic capture uses the file focused at run start; manual pins expire on disconnect/restart |
 | Run snapshot | Memory: URI, version, source/hash, language, command, bounded output, exit status, run ID; replaced by the next relevant run |
 | Learning session | Memory: issue summary, expected-outcome context, retry count 0–6, permitted level, latest guidance/messages, dedupe fingerprint, request generation ID |
 | Proposed fix | Memory: original snapshot, replacement, explanation, proposal ID; cleared on rejection, source change, disconnect, or provider/context reset |
@@ -308,7 +308,7 @@ Finally inspect the VSIX file list, install the package, and repeat the main Pyt
 ## What Was Simplified and Why
 
 - One desktop extension with a small bundled panel; use native editor annotations/diff review and direct requests to avoid maintaining separate services.
-- Completed commands in one selected terminal; external/browser/API results enter through the existing text box. This is the learner-agreed boundary for automatic observation.
+- Completed commands in integrated terminals, using one candidate source file per run; external/browser/API results enter through the settings menu. This is the learner-agreed boundary for automatic observation.
 - Current linked file plus relevant output/clarification; no automatic whole-project scan. This is the learner-agreed context boundary.
 - Current-session hints/counts in memory; preferences and encrypted keys persist. This is the learner-agreed restart behavior.
 - Full replacement review for a bounded small file; preserve acceptance, rejection, undo, and stale-file safeguards without building a multi-file patch engine.

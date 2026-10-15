@@ -12,6 +12,7 @@ export class LearningSession {
   private level(retries: number): Level { return retries >= 6 ? 'fix' : retries >= 3 ? 'inline' : 'clue'; }
 
   allowedLevel(run: RunSnapshot, attempt: boolean): Level {
+    if (run.sourceConfirmed === false) return 'clue';
     const changedRetry = !!this.issue && attempt && run.source !== this.lastSource;
     return this.level(this.retries + (changedRetry ? 1 : 0));
   }
@@ -24,7 +25,7 @@ export class LearningSession {
 
   fingerprint(run: RunSnapshot, provider: string, model: string, _attempt: boolean): string {
     return hash(JSON.stringify([run.uri, run.source, run.command, run.output, run.exitCode, run.truncated,
-      this.clarification, provider, model]));
+      run.sourceConfirmed, this.clarification, provider, model]));
   }
 
   isDuplicate(fingerprint: string): boolean { return this.lastRequest === fingerprint; }
@@ -32,7 +33,7 @@ export class LearningSession {
   apply(run: RunSnapshot, reply: TeachingReply, fingerprint: string, attempt: boolean): boolean {
     let celebrate = false;
     if (reply.status === 'solved') {
-      if (run.truncated || !run.output.trim() || (!run.reported && run.exitCode !== 0) ||
+      if (run.sourceConfirmed === false || run.truncated || !run.output.trim() || (!run.reported && run.exitCode !== 0) ||
         !reply.expectedOutcome?.trim() || !['comment', 'clarified'].includes(reply.intentSource) ||
         (reply.intentSource === 'clarified' && !this.clarification.trim()) ||
         ['new', 'unknown'].includes(reply.relationship)) {
@@ -46,7 +47,7 @@ export class LearningSession {
         throw new Error('I need to understand whether this is the same issue before giving more specific help. Clarify what happened.');
       }
       if (reply.relationship === 'new' || !this.issue) this.retries = 0;
-      else if (reply.relationship === 'same' && attempt && run.source !== this.lastSource) this.retries = Math.min(6, this.retries + 1);
+      else if (reply.relationship === 'same' && attempt && run.sourceConfirmed !== false && run.source !== this.lastSource) this.retries = Math.min(6, this.retries + 1);
       this.issue = `${reply.category}: ${reply.message}`;
       this.lastSource = run.source;
     }

@@ -8,7 +8,7 @@
     const button = event.target.closest('button[data-action]');
     if (!button) return;
     const action = button.dataset.action;
-    if (action === 'clarify' || action === 'shareResult') {
+    if (action === 'clarify') {
       const text = input.value.trim();
       if (!text) return;
       vscode.postMessage({ action, text }); input.value = '';
@@ -20,16 +20,12 @@
   window.addEventListener('message', event => {
     const state = event.data;
     if (state.type !== 'state') return;
-    document.getElementById('provider').textContent = `${state.provider === 'openai' ? 'OpenAI' : state.provider === 'groq' ? 'Groq' : 'Gemini'} ▾`;
-    document.getElementById('model').textContent = `${state.model} · Connected code and results go to ${state.provider}.`;
-    document.getElementById('keyButton').textContent = state.keyConfigured ? 'Update key' : 'Add key';
-    document.getElementById('file').textContent = state.file || 'No file connected';
+    document.body.classList.toggle('has-messages', state.messages.length > 0);
+    document.getElementById('setup').hidden = state.keyConfigured;
+    document.getElementById('file').textContent = state.file || '';
     document.getElementById('status').textContent = state.status;
     document.getElementById('working').hidden = !state.working;
     document.getElementById('send').disabled = state.working;
-    document.getElementById('share').disabled = state.working;
-    document.getElementById('confettiToggle').textContent = state.confetti ? 'Confetti on' : 'Confetti off';
-    document.getElementById('confettiToggle').setAttribute('aria-pressed', String(state.confetti));
     if (seenCelebration !== null && state.celebration > seenCelebration && state.confetti && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const celebration = document.getElementById('celebration');
       celebration.replaceChildren(...Array.from({ length: 28 }, () => {
@@ -40,7 +36,7 @@
     seenCelebration = state.celebration;
     proposalId = state.proposalId;
     document.getElementById('fixActions').hidden = !proposalId;
-    document.getElementById('progress').textContent = state.retries ? `${state.retries} attempts · ${state.retries >= 6 ? 'Review a fix' : state.retries >= 3 ? 'Line hint' : 'Thinking clues'}` : '';
+    document.getElementById('progress').textContent = state.retries >= 6 ? 'A fix is ready for you to review.' : state.retries >= 3 ? 'I left a little nudge beside your code.' : '';
     history.replaceChildren(...state.messages.map(message => {
       const block = document.createElement('article'); block.className = `message ${message.role}`;
       const label = document.createElement('div'); label.className = 'message-label';
