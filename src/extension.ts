@@ -126,7 +126,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (mine !== requestGeneration) return;
       const reply = validateReply(result, targetRun, session.allowedLevel(run, attempt), session.sameDiagnostic(run));
       const celebrate = session.apply(run, reply, fingerprint, attempt);
-      message('buddy', reply.message, reply.category);
+      message('buddy', targetRun.uri !== run.uri ? `In ${reply.targetFile}: ${reply.message}` : reply.message, reply.category);
       if (celebrate) { guidance.clear(); activeHint = undefined; state.celebration++; }
       const hint = session.lineHint(run, reply);
       if (hint) {

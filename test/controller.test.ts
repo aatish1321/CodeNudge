@@ -251,6 +251,7 @@ test('related-file hints use fully read project files and reject truncated or un
   fixture.respond(input => reply(input, { targetFile: 'helper.py' }));
   await fixture.select(main);
   await fixture.run(main);
+  assert.match(fixture.state().messages.at(-1)!.text, /^In helper\.py:/, 'name the helper even before inline escalation');
   for (let index = 0; index < 3; index++) {
     await fixture.change(helper, `${helper.source}# attempt ${index}\n`);
     await fixture.run(main);
