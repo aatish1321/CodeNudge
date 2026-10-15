@@ -55,7 +55,7 @@ Checked slices record completed implementation and available agent verification.
   Learner check: Switch providers through settings and try the same small exercise with each. Check that keys remain concealed and that all three preserve the teaching approach. Report differences that matter for the demo.
   Commit: `feat: support Gemini OpenAI and Groq`
 
-- [ ] **5. Install the package and verify the complete journey across languages**
+- [x] **5. Install the package and verify the complete journey across languages**
   Becomes usable: A VSIX installs into ordinary desktop VS Code, and another person can follow the README to configure a provider and try the buddy.
   Why now: Verifies the deliverable people will actually install, after the complete learning loop and all required providers work.
   PRD ref: `prd.md > The Core Journey`, `prd.md > What We're Building`, `prd.md > Acceptance Criteria`, `prd.md > Non-Goals`
@@ -81,15 +81,15 @@ The learner explicitly waived these hands-on sessions. Keep their boxes unchecke
 
 ## Code Tour and App Map
 
-- [ ] Learning activity complete — follow one real run through two or three code locations, connecting the plan, implementation, and verification to the learner's AI-workflow goal.
-- [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
-- [ ] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
+- [x] Learning activity complete — evidence-only recap and reference map prepared; the learner explicitly waived explanations and hands-on activity.
+- [x] Optional edit and transfer reflection addressed — not offered, following the learner's explicit no-hands-on/no-explanations instruction.
+- [x] `devpost/app-map.html` generated from finished code, checked, and provided as a reference, including a project-grounded practice to reuse.
 
-Activity and evidence: Not started.
-Route and stops: Choose actual files and functions from the completed implementation; no invented code route.
-Edit outcome: Not offered yet.
-Reflection: Not offered yet; any personal answer belongs in the ignored learner profile.
-Activity mode: Not established; default to the running extension and editor.
+Activity and evidence: Agent evidence recap: the three-plus-three criterion is implemented in LearningSession and tested; real installed VS Code verifies capture and safe editor actions. This is not a claim of learner practice or mastery.
+Route and stops: Reference only — src/terminal.ts (TerminalCapture.start/end), src/session.ts (allowedLevel/apply), src/editor.ts (showHint/showProposal/accept), snapshot 7c4f2e2.
+Edit outcome: Not applicable; optional learner edit waived.
+Reflection: Skipped per the learner's explicit preference; no personal reflection was invented.
+Activity mode: Reference map and factual verification recap; no interactive tour. Map links, code anchors, unique IDs, and offline/no-script resources checked. No browser surface was available for a visual map check.
 
 ## Revisions
 
@@ -101,3 +101,4 @@ Activity mode: Not established; default to the running extension and editor.
 - Slice 4 agent checks passed: eight provider tests exercise the three documented HTTP contracts, authentication/schema mapping, refusal/truncation/quota/timeout failures, and no automatic retry/failover. Ten session tests cover progression and provider-switch count preservation. The real VS Code host verifies all provider settings; sidebar scripts report ready. Live access/teaching quality for the three accounts remains pending. The TypeScript config is included in this checkpoint so a clean checkout has the full build configuration.
 - Slice 5 agent checks passed: 21 tests across session, provider, and shipped-panel behavior; a 19-file VSIX with no private/development material; actual isolated installation; and real packaged-code activation, Python/JavaScript capture, inline hints, diff acceptance/rejection, undo, stale-edit protection, and preferences. Package/runtime bytes match compiled source. Browser visual inspection was unavailable; the real webview reported its script ready.
 - The packager's dependency discovery omitted the root when there were no production dependencies. Packaging now uses `--no-dependencies`, matching the extension's empty runtime-dependency set; the installed package test confirms the entrypoint is included and usable.
+- A clean archive of committed source 7c4f2e2 passed lockfile installation, all unit tests, VSIX packaging, isolated installation, and the real packaged VS Code integration suite. The delivered VSIX was rebuilt from this archive and its runtime bytes/content exclusions verified. The offline app map references this code snapshot; live AI acceptance and Marketplace/license work remain pending.

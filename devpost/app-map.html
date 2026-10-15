@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coding Buddy · App map</title>
+<style>
+:root{color-scheme:dark;--bg:#101622;--card:#182231;--ink:#edf3fc;--muted:#adbdcf;--line:#344457;--accent:#65ddd1;--warm:#ffbe69}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,sans-serif}main{max-width:980px;margin:auto;padding:46px 24px 60px}h1{font-size:clamp(30px,5vw,48px);letter-spacing:-1.7px;line-height:1.15;margin:10px 0 16px}h2{font-size:21px;margin:0 0 12px}h3{font-size:17px;margin:0 0 6px}p{margin:0 0 16px}.eyebrow{font-size:11px;letter-spacing:2px;color:var(--accent);font-weight:700}.lede{max-width:730px;color:var(--muted)}.badge{display:inline-block;font-size:12px;padding:3px 10px;border:1px solid var(--line);border-radius:20px;color:var(--muted)}section{margin-top:30px;padding:23px;background:var(--card);border:1px solid var(--line);border-radius:12px}a{color:var(--accent);text-underline-offset:3px}a:focus-visible,summary:focus-visible{outline:2px solid var(--warm);outline-offset:4px}code{font:13px/1.6 ui-monospace,monospace;color:#c5fff2;overflow-wrap:anywhere}pre{background:var(--bg);padding:15px;border-radius:7px;overflow:auto}pre code{color:var(--ink)}.route{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.stop{padding:16px;border-left:2px solid var(--accent);background:var(--bg);border-radius:5px}.number{color:var(--warm);font-size:11px;font-weight:700;letter-spacing:1px}.stop p{font-size:14px;color:var(--muted);margin:8px 0 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}summary{cursor:pointer;color:var(--accent)}details p{margin-top:12px;color:var(--muted);font-size:14px}.note{border-left:3px solid var(--warm);padding-left:14px;color:var(--muted)}.diagram{width:100%;height:auto;display:block;min-height:110px}svg text{font-family:system-ui,sans-serif}.foot{font-size:12px;color:var(--muted);margin-top:24px}@media(max-width:700px){main{padding:28px 15px}.route{grid-template-columns:1fr}section{padding:17px}.diagram{min-height:90px}table{font-size:12px}th,td{padding:9px 4px}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">CODING BUDDY · TAKE-HOME REFERENCE</div>
+<h1>A clue, then a little more.</h1>
+<p class="lede">One desktop VS Code extension connects a saved code file and its run result to a chosen AI provider. The AI writes teaching guidance; local rules decide how specific that guidance may become. Suggested edits stay under the learner’s control.</p>
+<span class="badge">Implementation snapshot: <code>7c4f2e2</code></span>
+
+<section aria-labelledby="flow-title"><h2 id="flow-title">Follow one code run</h2>
+<svg class="diagram" viewBox="0 0 870 125" role="img" aria-labelledby="diagram-title diagram-desc">
+<title id="diagram-title">A run becomes a hint or reviewed fix</title><desc id="diagram-desc">The terminal capture reads the saved code and result. The selected provider returns a diagnosis. Local validation and attempt rules control the level. The panel and editor show a clue, arrow, or reviewed diff.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#65ddd1"/></marker></defs>
+<g fill="#101622" stroke="#344457"><rect x="1" y="15" width="190" height="87" rx="9"/><rect x="226" y="15" width="190" height="87" rx="9"/><rect x="451" y="15" width="190" height="87" rx="9"/><rect x="676" y="15" width="193" height="87" rx="9"/></g>
+<g stroke="#65ddd1" stroke-width="2" marker-end="url(#arrow)"><path d="M193 59H218"/><path d="M418 59H443"/><path d="M643 59H668"/></g>
+<g fill="#edf3fc" text-anchor="middle" font-size="15" font-weight="600"><text x="96" y="49">Code + run result</text><text x="321" y="49">Selected AI</text><text x="546" y="49">Local learning rules</text><text x="773" y="49">Visible guidance</text></g>
+<g fill="#adbdcf" text-anchor="middle" font-size="11"><text x="96" y="75">terminal.ts</text><text x="321" y="75">providers.ts + teaching.ts</text><text x="546" y="75">session.ts</text><text x="773" y="75">panel + editor.ts</text></g>
+</svg>
+<p class="note">First clue → three changed-code retries → inline arrow → three more retries → a proposed diff with an explanation. Identical reruns with unchanged context do not advance the count or make another request.</p>
+</section>
+
+<section aria-labelledby="route-title"><h2 id="route-title">Three-stop reference route</h2>
+<div class="route">
+<article class="stop"><span class="number">01 · INPUT</span><h3>Capture what ran</h3><a href="../src/terminal.ts"><code>src/terminal.ts</code></a><p>Search for <code>class TerminalCapture</code>, <code>private start</code>, and <code>private async end</code>. They pin the saved file, read the selected command’s output, and reject mismatched or interrupted runs.</p></article>
+<article class="stop"><span class="number">02 · DECISION</span><h3>Keep the learning rule</h3><a href="../src/session.ts"><code>src/session.ts</code></a><p>Search for <code>allowedLevel</code> and <code>apply</code>. These functions control the count, keep clarification separate from attempts, and check evidence before celebration.</p></article>
+<article class="stop"><span class="number">03 · RESULT</span><h3>Show help safely</h3><a href="../src/editor.ts"><code>src/editor.ts</code></a><p>Search for <code>showHint</code>, <code>showProposal</code>, and <code>accept</code>. Arrows are annotations; diffs are previews; accepted changes support undo and cannot overwrite newer edits.</p></article>
+</div>
+</section>
+
+<section aria-labelledby="changes-title"><h2 id="changes-title">To change this, start here</h2>
+<table><thead><tr><th>What to change</th><th>Where it lives</th></tr></thead><tbody>
+<tr><td>The buddy’s teaching voice</td><td><a href="../src/teaching.ts"><code>teachingPolicy</code></a> and its response validation</td></tr>
+<tr><td>Hint thresholds</td><td><a href="../src/session.ts"><code>level</code>, <code>allowedLevel</code>, <code>apply</code></a>; update <a href="../test/session.test.ts">session tests</a> alongside the rule</td></tr>
+<tr><td>Robot panel, colors, confetti</td><td><a href="../src/panel.ts"><code>src/panel.ts</code></a>, <a href="../media/panel.css"><code>media/panel.css</code></a>, and <a href="../media/panel.js"><code>media/panel.js</code></a></td></tr>
+<tr><td>Provider connections</td><td><a href="../src/providers.ts"><code>analyze</code> and <code>defaults</code></a>; provider settings live in <a href="../package.json"><code>package.json</code></a></td></tr>
+<tr><td>What goes in the installable package</td><td><a href="../.vscodeignore"><code>.vscodeignore</code></a>; package verification uses <a href="../scripts/test-host.cjs"><code>scripts/test-host.cjs</code></a></td></tr>
+</tbody></table>
+</section>
+
+<section aria-labelledby="practice-title"><h2 id="practice-title">A practice to reuse</h2>
+<p>Turn a vague requirement into a result you can check. “After many tries” became the three-plus-three rule in <a href="prd.md">the PRD</a>, then <code>LearningSession</code> in the code, then tests that verify exactly when arrows and fixes become available.</p>
+<p class="lede">On another AI-assisted project, define one observable outcome before asking for code, and require evidence for it. Here, <a href="../test/session.test.ts">session tests</a> check the rule, while <a href="../test/host.ts">the VS Code host test</a> checks real terminal and editor behavior. Neither substitutes for live model evaluation.</p>
+<details><summary>What is remembered, and what is sent?</summary><p>VS Code remembers provider/model preferences and the confetti setting. Keys use its secret storage. Current hints, code snapshots, and counts remain in memory until restart. Only the selected provider receives connected code, relevant output, and clarification; provider data policies still apply.</p></details>
+</section>
+
+<section aria-labelledby="run-title"><h2 id="run-title">Run it again</h2>
+<pre><code>npm ci
+npm test</code></pre>
+<p>Open the project in desktop VS Code and press <strong>F5</strong>. In the new window, open <code>examples</code>, select a provider, enter its key locally, and connect the code file and terminal.</p>
+<pre><code>npm run test:host
+npm run package
+npm run test:package</code></pre>
+<p class="note">Live provider calls have not been verified without configured API keys. The installed-package checks cover actual VS Code capture, arrows, diffs, undo, stale-edit protection, and settings. Marketplace publication and license selection remain release work.</p>
+</section>
+<p class="foot">This map is a reference snapshot, not a record of a completed guided code tour. Open this file directly in a browser; it needs no server or internet connection. Source changes after <code>7c4f2e2</code> can make the snapshot drift.</p>
+</main></body></html>
