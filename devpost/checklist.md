@@ -5,9 +5,9 @@ status: approved
 
 # Build Checklist
 
-Build mode: not chosen — offer learn mode by default; record the learner's choice before implementation.
+Build mode: fast. The learner explicitly requested the full build with no explanations, hands-on pauses, or additional approvals. Agent verification replaces the planned learner checkpoints; do not record unperformed learner testing as completed.
 
-Git workflow: Keep verified checkpoints on `main`. Create a separate `build/NN-description` branch for each slice, commit its verified work, and merge it into `main` only after its required checks and learner feedback are complete. The learner approved this build order; choose the build mode before implementation.
+Git workflow: Keep verified checkpoints on `main`. Create a separate `build/NN-description` branch for each slice, commit its verified work, and merge it into `main` after agent checks pass. Learner feedback pauses were waived by explicit instruction.
 
 We will build in slices: small working steps the learner can try. Each step includes its own checks and Git checkpoint. The first step proves real terminal capture and real hint generation before further interface polish.
 
@@ -69,10 +69,11 @@ We will build in slices: small working steps the learner can try. Each step incl
 - [ ] Integrated teaching journey explored — after slice 3, the learner checks escalation, fix control, outcome clarification, and celebration together.
 - [ ] Final kick-the-tires exploration and feedback completed — after slice 5, using the installed package.
 
-Learn mode adds the learner check after every slice. Fast mode retains the three checkpoints above. No checkpoint is complete until the learner reports back and relevant issues are resolved.
+The learner explicitly waived these hands-on sessions. Keep their boxes unchecked to avoid implying they occurred; use agent verification and record remaining live checks in Final Review.
 
 ## Final Review
 
+- [ ] Live provider acceptance — configure real keys locally and exercise the full teaching loop with Gemini, OpenAI, and Groq. HTTP fixtures are not live model validation.
 - [ ] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
@@ -88,3 +89,7 @@ Reflection: Not offered yet; any personal answer belongs in the ignored learner 
 Activity mode: Not established; default to the running extension and editor.
 
 ## Revisions
+
+- The learner selected fast mode and explicitly waived explanations, hands-on checkpoints, and further approval pauses. Continue implementing and verifying all slices without those pauses.
+- No Gemini, OpenAI, or Groq API key is configured in the task environment. Build the real integrations and verify their contracts with HTTP fixtures; keep live model acceptance checks pending rather than claiming they passed. This missing external setup does not prevent implementing the remaining slices.
+- Slice 1 agent checks passed: TypeScript compilation; eight Node assertions/tests across two test files; actual VS Code 1.141 Extension Development Host activation/sidebar registration; real Bash shell integration captured the Python SyntaxError and exit code 1. Live Gemini guidance remains pending in Final Review because no key is configured.

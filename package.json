@@ -1,0 +1,48 @@
+{
+  "name": "coding-buddy",
+  "displayName": "Coding Buddy",
+  "description": "A patient coding companion: clues first, answers when you need them.",
+  "version": "0.0.1",
+  "publisher": "aatish1321",
+  "license": "UNLICENSED",
+  "repository": { "type": "git", "url": "https://github.com/aatish1321/coding-buddy.git" },
+  "engines": { "vscode": "^1.93.0" },
+  "categories": ["Education", "Other"],
+  "keywords": ["learning", "hints", "beginner", "coding", "ai"],
+  "main": "./out/src/extension.js",
+  "extensionKind": ["ui"],
+  "capabilities": { "untrustedWorkspaces": { "supported": false }, "virtualWorkspaces": false },
+  "activationEvents": ["onView:codingBuddy.panel"],
+  "contributes": {
+    "viewsContainers": { "activitybar": [{ "id": "codingBuddy", "title": "Coding Buddy", "icon": "media/buddy-icon.svg" }] },
+    "views": { "codingBuddy": [{ "type": "webview", "id": "codingBuddy.panel", "name": "Coding Buddy" }] },
+    "commands": [
+      { "command": "codingBuddy.connect", "title": "Coding Buddy: Connect Terminal" },
+      { "command": "codingBuddy.disconnect", "title": "Coding Buddy: Disconnect" },
+      { "command": "codingBuddy.setKey", "title": "Coding Buddy: Set API Key" },
+      { "command": "codingBuddy.removeKey", "title": "Coding Buddy: Remove API Key" },
+      { "command": "codingBuddy.settings", "title": "Coding Buddy: Settings" },
+      { "command": "codingBuddy.reset", "title": "Coding Buddy: Reset Current Issue" }
+    ],
+    "configuration": {
+      "title": "Coding Buddy",
+      "properties": {
+        "codingBuddy.provider": { "type": "string", "enum": ["gemini"], "default": "gemini", "scope": "application", "description": "AI provider that receives your connected code and run output. Use Coding Buddy: Set API Key to store its key securely." },
+        "codingBuddy.models.gemini": { "type": "string", "default": "gemini-3.5-flash-lite", "scope": "application", "description": "Gemini model with structured-output support. Model availability depends on your account." }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "test": "npm run compile && node --test out/test/*.test.js",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package --allow-missing-repository --skip-license --out coding-buddy-0.0.1.vsix"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "1.93.0",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.9.0"
+  }
+}
