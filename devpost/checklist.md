@@ -23,7 +23,7 @@ We will build in slices: small working steps the learner can try. Each step incl
   Learner check: Press F5, open the buddy icon, configure Gemini locally, connect the demo file and terminal, and run the broken Python example. Describe whether the clue is useful without giving away the answer and whether the robot panel feels like the intended buddy.
   Commit: `feat: show real coding hints from terminal runs`
 
-- [ ] **2. Escalate from clues to arrow hints and a fix the learner controls**
+- [x] **2. Escalate from clues to arrow hints and a fix the learner controls**
   Becomes usable: Three unsuccessful changed-code retries produce an inline arrow hint; three further retries produce a colored diff and explanation that the learner can accept or reject.
   Why now: Proves the distinctive progressive-help loop early, using the already working run-to-hint path.
   PRD ref: `prd.md > Attempts and Escalation`, `prd.md > Proposed Fix and Explanation`, `prd.md > States and Boundaries`
