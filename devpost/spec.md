@@ -1,0 +1,346 @@
+---
+doc: spec
+status: approved
+---
+
+# Coding Buddy — Technical Spec
+
+## How This Works, In Plain Language
+
+Coding Buddy is one extension running inside desktop VS Code. Its robot panel shows hints and asks questions. The extension connects one code file to a terminal the learner chooses, reads the result when a watched command finishes, and sends the relevant context directly to the chosen AI provider.
+
+The AI identifies the likely issue and writes teaching guidance. Ordinary extension code counts attempts and controls which level of help is allowed, so switching providers does not bypass the three-plus-three rule. Editor arrows are visual annotations, not extra text inserted into the learner's file. Proposed fixes open in VS Code's change-review view and apply only after acceptance.
+
+Provider preferences and the confetti setting are remembered. API keys use VS Code's encrypted secret storage. Hints, run output, and attempt counts remain in memory for the current window session; closing the panel preserves them, while restarting VS Code clears them. There is no separately hosted Coding Buddy server or database.
+
+Automatic observation covers completed commands in a selected VS Code terminal with working shell integration. For browser results, Postman responses, long-running servers, or an unavailable terminal integration, the learner supplies the relevant result in the text box. Guidance is language-independent; automatic observation is limited by the execution environment, not by a Python-only restriction.
+
+## The Core Journey Through the System
+
+Implements `prd.md > The Core Journey` and `Context and First Clue`.
+
+1. Opening the sidebar icon creates the robot panel. Controls expose provider setup and terminal connection without preloading a conversation.
+2. Provider setup saves the selected provider/model as preferences and its key through a masked VS Code input into secret storage.
+3. A Connect Terminal control links the current saved code file to a selected terminal. The UI names both. The learner's next code command establishes the watched command; unrelated subsequent commands are ignored unless the learner reconnects. Explain this next-command behavior before enabling the connection.
+4. At the start of the watched command, capture the linked file's contents, version, and language, and immediately begin reading the command's output stream. Wait for command completion before analysis.
+5. At completion, check that source and run still match, bound the output, and suppress duplicate requests. Ask the selected provider to analyze the code, expected outcome, run result, and current allowed help level.
+6. Validate the response before updating the learning session. Show a first clue, inline guidance, clarification question, or proposed fix according to the approved progression.
+7. A clarification reply can request another response without counting as a code attempt. For external results, a Share Run Result action beside the same text box labels the text as a learner-reported run; a changed-code retry can then follow the same attempt rules, without claiming automatic observation.
+8. Review a proposed replacement beside the captured original. Acceptance updates only the linked file if its content/version still matches the reviewed original. Rejection does not change the file.
+9. The next observed result is assessed against the top-of-file comment or clarified intention. On a supported conclusion that the tracked issue is solved, reset its count, show success feedback, and celebrate if enabled. Unclear intention or insufficient evidence produces a question rather than success.
+
+## Stack
+
+The learner agreed to a TypeScript desktop extension, a small HTML/CSS/JavaScript panel, native editor features, and direct provider connections.
+
+| Piece | Choice and reason | Documentation |
+| --- | --- | --- |
+| Extension code | TypeScript, strict checks; compile to CommonJS/ES2022 for the extension host | [VS Code starter](https://code.visualstudio.com/api/get-started/your-first-extension), [TypeScript](https://www.typescriptlang.org/docs/) |
+| VS Code support | `engines.vscode: ^1.93.0`; shell-execution observation became available in 1.93; compile against matching `@types/vscode` | [1.93 API release](https://code.visualstudio.com/updates/v1_93#_terminal-shell-integration-api), [API reference](https://code.visualstudio.com/api/references/vscode-api) |
+| Panel | `WebviewViewProvider` with bundled HTML/CSS/JavaScript and artwork | [Webviews](https://code.visualstudio.com/api/extension-guides/webview), [sidebar webviews](https://code.visualstudio.com/api/ux-guidelines/webviews) |
+| Requests | Native `fetch` with cancellation and bounded responses; separate small request functions for the three different APIs | [Node fetch](https://nodejs.org/api/globals.html#fetch) |
+| Preferences and keys | VS Code configuration plus `ExtensionContext.secrets` | [Storage capabilities](https://code.visualstudio.com/api/extension-capabilities/common-capabilities#data-storage) |
+| Editor feedback | Text decorations for arrows; `TextDocumentContentProvider` plus `vscode.diff` for review; `WorkspaceEdit` for accepted changes | [VS Code API](https://code.visualstudio.com/api/references/vscode-api), [virtual documents](https://code.visualstudio.com/api/extension-guides/virtual-documents) |
+| Checks | TypeScript compilation, Node's test runner for pure logic/HTTP fixtures, and real Extension Development Host checks | [Node test runner](https://nodejs.org/api/test.html), [extension testing](https://code.visualstudio.com/api/working-with-extensions/testing-extension) |
+| Packaging | `@vscode/vsce` as a development dependency; create a VSIX before publishing | [Packaging and publishing](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) |
+
+Keep runtime dependencies empty initially. No UI framework, provider SDK, agent framework, or extra service is needed for these small request/response flows. Resolve development-tool patch versions when installing and commit the lockfile; installed package versions have not yet been verified. Check the minimum VS Code version against every API actually used.
+
+Observed tools in this workspace: Node 26.10.0, npm 11.19.1, Python 3.14.4, Git 2.53.0, and an available `code` executable. These checks establish tool presence, not a working graphical extension host or provider access.
+
+## Where It Runs and How Someone Tries It
+
+### Development and Local Demo
+
+Desktop VS Code, a trusted project folder, and a supported integrated shell with active shell integration are required for automatic capture. Start by verifying the learner's actual local setup. Browser-only VS Code, remote workspaces, and debugger/Output-channel capture are not verified targets for this first package.
+
+Planned root commands, to be created by `5-build`:
+
+```sh
+npm install
+npm run compile
+npm test
+```
+
+Open the project in desktop VS Code and press F5 using the planned `.vscode/launch.json`. A separate Extension Development Host window loads the extension. In that window, open `examples/`, choose a provider, enter its key locally, open a demo file, and connect a fresh integrated terminal. Run, for example:
+
+```sh
+python3 loop_syntax.py
+```
+
+Load the extension into this development window early, not only after standalone tests. Real terminal capture, sidebar behavior, arrow placement, and diff review require testing inside VS Code. This local development step is separate from public Marketplace publication, which follows full workflow and package verification.
+
+The examples must be saved before running. Exercise the learning loop using genuine changed-code retries. Configure each provider in turn and repeat the same scenario. Add a small JavaScript example runnable with `node loop_logic.js` to verify that capture and guidance are not hardcoded to Python; Python remains the main recorded demo.
+
+### Installable Package and Public Release
+
+```sh
+npm run package
+code --install-extension coding-buddy-0.0.1.vsix
+```
+
+`npm run package` will compile and invoke `vsce package`; use the actual generated versioned filename if it differs. Inspect package contents so learner profiles, keys, local logs, course material, and development-only files do not ship.
+
+The learner chose to test locally first and publish to the VS Code Marketplace a few days before preparing the demo, so the public can try it. Public publication is a planned shipping deliverable, not an action performed by this spec. `6-ship` must confirm publisher identity, authentication, package metadata, licensing, and release readiness. A VSIX remains available for testing while publication is prepared. No calendar date or guaranteed Marketplace processing time has been established.
+
+Submission still requires a short accessible demo video and public GitHub repository. A hosted website is unnecessary for this extension. Confirm an explicit open-source license with the learner before public release; do not silently choose one.
+
+## Look and Feel
+
+Implements `prd.md > Look and Feel`.
+
+- Bundle the supplied [robot reference](assets/buddy-reference.png) locally as `media/buddy.png`, scaled in the panel without requiring external image hosting. Use a simple robot-inspired monochrome SVG sidebar icon. Custom animation is not required.
+- Use VS Code theme colors and its font variables for readable text, with restrained cyan/teal/orange accents taken from the reference. Support both light and dark themes; keep the text area and controls usable in a narrow sidebar.
+- Keep the initial conversation empty. Use the character, status changes, and short teaching messages for personality rather than a wall of chat bubbles.
+- Render inline guidance as an editor annotation such as `<------- Check where this loop stops`, with a fuller explanation available in the panel or hover. It must not alter source text.
+- Use the built-in diff colors and addition/removal markers. Place explicit Accept Fix and Reject Fix actions in the panel while a review is open.
+- Implement a brief local confetti effect in the panel, controlled by the preference and reduced-motion settings. Keep textual success feedback when animation is disabled.
+- Render model/user text as text, not executable HTML. Keyboard access, labels, focus visibility, and usable contrast are required.
+
+## Components
+
+### Extension Entry and Connections
+
+`src/extension.ts` registers the sidebar container/view, commands, configuration changes, and cleanup handlers. It connects the following small modules; there is no general-purpose plugin or event-bus layer. Commands include opening settings, setting/removing a provider key, connecting/disconnecting a terminal, retrying a failed request, resetting the current issue, and accepting/rejecting a fix.
+
+Implements `prd.md > Screens and Layout` and `States and Boundaries`.
+
+### Terminal Capture
+
+`src/terminal.ts` listens to `onDidStartTerminalShellExecution` and `onDidEndTerminalShellExecution` for the selected terminal/command. Call `execution.read()` immediately at the start; reading only after completion misses output according to the [API contract](https://code.visualstudio.com/api/references/vscode-api#TerminalShellExecution).
+
+Pin the linked file rather than whatever tab happens to be focused at completion. Reject dirty, missing, unsupported, or changed-during-run snapshots with a clear message; do not diagnose a file version that was not executed. Capture command identity and run ID locally, strip terminal escape/control sequences, and cap the output buffer. Do not execute or rerun terminal commands on behalf of the model.
+
+Ignore other terminals and commands. Disconnecting stops capture and cancels pending analysis. Shell integration that is absent, command identity that is unreliable, an interrupted command, or an unknown exit status must be surfaced rather than guessed. Offer shell-integration instructions and the agreed manual-result fallback. Manual sharing can pin the current saved file without requiring a terminal connection. Long-running commands do not create repeated attempts as output streams in.
+
+Implements `prd.md > Context and First Clue` and the learner-agreed completed-command boundary.
+
+### Learning Session and Attempt Rules
+
+`src/session.ts` contains pure, testable rules. The AI supplies a diagnosis; this module owns counts and allowed help levels.
+
+| Event | Local behavior |
+| --- | --- |
+| First confirmed issue | Save issue summary; zero retry attempts; general clue |
+| Changed-code retry, same unresolved issue | Increment only after a valid, current analysis; retries 1–2 stay at clues |
+| Third unsuccessful retry | Inline hint becomes allowed |
+| Fourth/fifth unsuccessful retry | Continue inline guidance |
+| Sixth unsuccessful retry | A fix proposal and explanation become allowed |
+| Same code and unchanged relevant context rerun | Keep existing guidance; no extra request or count |
+| Clarification | May request analysis; never counts as a code-run attempt |
+| Explicitly shared external run result | Label as learner-reported; count only if code changed and analysis confirms the same unresolved issue |
+| Missing intent, unknown issue relationship, failed/invalid response, stale run | Do not advance count or claim success |
+| Genuinely new issue | Reset to zero and start with a clue; show that the issue changed |
+| Provider switch | Cancel stale work and invalidate provider-specific cache/proposals; preserve current issue count |
+| Solved tracked issue | Reset count; show success and optional confetti once |
+
+For a retry, compute the maximum level that would be allowed if the issue is the same, then make one analysis request. The response must provide only a general clue if it identifies a new issue. Validate that relationship and the returned help level before committing the transition; do not make an extra AI call solely to advance a stage. A clarification can explain the existing hint but cannot bypass the allowed help level.
+
+Fingerprint requests using source, expected-outcome clarification, watched command, meaningful run result, provider/model, and allowed level. Ignore transport metadata such as execution IDs when comparing duplicates. Source-identical reruns never advance attempts. A materially changed input/result is new context, not proof of a code-edit attempt. Coalesce pending identical requests and retain the latest successful response for duplicate suppression.
+
+Keep one learning session active at a time. Reconnecting to a different file/command, choosing Reset Issue, or restarting the extension starts fresh. Switching tabs alone does not change the linked file or its count.
+
+Implements `prd.md > Attempts and Escalation`, `Solved State and Celebration`, and `States and Boundaries`.
+
+### Context and Teaching Response
+
+`src/teaching.ts` builds the common teaching instructions, response schema, and runtime validation shared by the provider calls. Treat file comments and run output as learning material, not instructions that can override the teaching policy. The AI receives no command-execution or file-write tools.
+
+Send the linked file's language and contents, its top-of-file comment, bounded run output and exit status when known, learner clarification, previous issue summary, previous hint, and the locally allowed help level. Do not scan the repository or read other source files automatically. Avoid credential files such as `.env`, private-key files, and extension secrets. Known key values must never enter prompts, panel messages, logs, or error details.
+
+Initial limits, adjustable only if real examples justify it: 12,000 characters of source (reject larger files rather than silently dropping their comments), the last 8,000 characters of run output with a visible truncation note, and 2,000 characters of learner clarification. Retain at most eight short display messages; send a concise issue summary and relevant latest exchanges rather than the full transcript. Truncated or incomplete evidence cannot support a confident solved verdict.
+
+Require a small JSON object with all fields required, explicit nulls where inapplicable, and no extra fields:
+
+```text
+status: issue | solved | needs_clarification
+relationship: same | new | none | unknown
+category: syntax | runtime | logic | unknown
+intentSource: comment | clarified | inferred | unknown
+expectedOutcome: string | null
+level: clue | inline | fix | none
+message: string
+line: integer | null
+inlineHint: string | null
+replacement: string | null
+explanation: string | null
+```
+
+Validate field types, enum values, bounded text lengths, line numbers against the captured file, and agreement with the permitted stage. A replacement is allowed only at the fix stage; it targets the captured file only. Reject a malformed, refused, incomplete, or premature solution response without counting it as an attempt. A valid JSON shape alone does not prove that a diagnosis or teaching hint is correct; verify both with real examples.
+
+For success, require a prior tracked issue, clear expected behavior from the comment/clarification, sufficient observed evidence matching it, and no remaining reported issue. An inferred intention can guide a tentative hint, but unresolved guesses require clarification rather than celebration. With a missing comment, a clarification reply can establish intent; ask for a fresh run if the existing observation is insufficient.
+
+Implements `prd.md > Context and First Clue`, `Proposed Fix and Explanation`, and `Solved State and Celebration`.
+
+### Provider Connections
+
+`src/providers.ts` selects one of three small HTTP request functions and normalizes its response into the teaching object. Requests run in the extension host, not the webview, so keys are not exposed to panel scripts. Use non-streaming requests initially: the UI shows a working status and then a complete validated response.
+
+Use a single pending analysis per session, cancellation on reset/context/provider changes, a 45-second timeout, and manual retry after failure. Do not automatically switch providers or send code to another service after a failure. No speculative background calls or automatic retry loops.
+
+Implements `prd.md > Provider Settings and Open Source` and `States and Boundaries`.
+
+### Buddy Panel and Settings
+
+`src/panel.ts` supplies the webview and handles a small allowlisted message set. `media/panel.js` renders character/status/messages, sends clarification or an explicitly shared run result from the same text area, opens native provider/key settings, and offers capture/review actions. Validate message types and lengths in the extension host. Render user/model content with `textContent`; do not enable command links from model text.
+
+Load only bundled scripts, styles, and images using webview resource URIs. Use a restrictive content security policy, script nonces, and media-only local resource roots. Network calls and key entry remain in the extension host. When the panel is recreated, redraw from the in-memory session rather than creating a new attempt.
+
+`src/settings.ts` keeps provider, per-provider model choice, and confetti preference in user-level VS Code configuration. Key actions use masked `showInputBox` and `context.secrets.store/get/delete`, scoped by provider. The panel shows configured/missing status, never the stored value. Default confetti is enabled unless reduced motion is requested. Switching provider alone does not make a billable connection test; the next intentional analysis verifies access.
+
+Implements `prd.md > Screens and Layout`, `Look and Feel`, and `Provider Settings and Open Source`.
+
+### Inline Guidance and Fix Review
+
+`src/editor.ts` manages a text decoration on the validated line, an in-memory original/proposed document pair, and the diff view. The first complete file replacement is adequate for the small-file proof of concept; no patch parser or multi-file editing system is needed.
+
+Before Accept Fix, check the linked URI, original version/content hash, proposal identity, and current pending status. Apply through `WorkspaceEdit` so the user can undo. Leave the accepted edit unsaved and show that the learner should save and rerun; do not silently execute the file. On rejection, discard the proposal without changing source. Source edits invalidate proposals and decorations tied to the old version. Model output cannot select another file path.
+
+Implements `prd.md > Proposed Fix and Explanation` and `States and Boundaries`.
+
+## Data Model
+
+| Information | Location and lifetime |
+| --- | --- |
+| Provider, per-provider model, confetti | User-level VS Code configuration; updated through settings; survives restart |
+| Provider API keys | `ExtensionContext.secrets`, one secret per provider; replace/remove through masked commands; retained across restart, not committed |
+| Linked file/terminal/command | Extension memory; connection is explicit and expires on disconnect/restart |
+| Run snapshot | Memory: URI, version, source/hash, language, command, bounded output, exit status, run ID; replaced by the next relevant run |
+| Learning session | Memory: issue summary, expected-outcome context, retry count 0–6, permitted level, latest guidance/messages, dedupe fingerprint, request generation ID |
+| Proposed fix | Memory: original snapshot, replacement, explanation, proposal ID; cleared on rejection, source change, disconnect, or provider/context reset |
+| Robot image and styling | Bundled read-only extension files |
+
+No learner code, outputs, or conversations are written to a local database by Coding Buddy. Requests do send selected context to the configured external provider, whose retention and data-use rules still apply. Do not imply that encrypted key storage makes transmitted code private from that provider.
+
+## File Structure
+
+```text
+coding-buddy/
+├── package.json                 # VS Code contributions, commands, settings, scripts
+├── package-lock.json            # Reproducible dependency versions
+├── tsconfig.json                # Strict TypeScript build
+├── .gitignore                   # Secrets, learner profile, generated output
+├── .vscodeignore                # Exclude course/private/development material from VSIX
+├── .vscode/
+│   ├── launch.json              # F5 Extension Development Host
+│   └── tasks.json               # Compile before launching
+├── src/
+│   ├── extension.ts             # Register and connect the extension pieces
+│   ├── terminal.ts              # Selected-command capture and saved-file snapshots
+│   ├── session.ts               # Counts, stages, deduplication, session transitions
+│   ├── teaching.ts              # Teaching prompt, response schema, validation
+│   ├── providers.ts             # Gemini, OpenAI, and Groq HTTP functions
+│   ├── panel.ts                 # Sidebar webview and validated messages
+│   ├── settings.ts              # Preferences and encrypted-key commands
+│   └── editor.ts                # Arrow decorations, diffs, accepted edits
+├── media/
+│   ├── buddy.png                # Supplied robot artwork
+│   ├── buddy-icon.svg           # Sidebar icon
+│   ├── panel.css                # Theme-aware layout and celebration styling
+│   └── panel.js                 # Panel behavior and small confetti effect
+├── test/
+│   ├── session.test.ts          # Real escalation/deduplication/reset cases
+│   └── providers.test.ts        # HTTP fixtures, validation, failure/stale-result cases
+├── examples/
+│   ├── loop_syntax.py           # Small broken example with intended behavior
+│   ├── loop_logic.py            # Running example with a wrong loop result
+│   └── loop_logic.js            # Small second-language verification
+├── README.md                    # Setup, supported environments, key setup, demo steps
+├── LICENSE                      # Add after the learner selects a license before release
+└── devpost/                     # Canonical learning documents; profile stays ignored
+```
+
+Compiled output goes to `out/` and is generated, not hand-maintained. Existing curriculum folders remain unchanged and do not ship in the extension package.
+
+## External Services and Dependencies
+
+### Shared Contract
+
+One intentional analysis calls only the selected provider. Send the teaching instructions separately from serialized learner context. Supply the same response schema in each provider's supported structured-output form and validate the result locally. Cap output at 8,192 tokens and handle truncation/refusal without applying code or advancing counts. Different model families may consume some of this allowance as reasoning; check the cap against the demo.
+
+The following model defaults are recommendations derived from the agreed providers and are part of this draft for review. They have documentation support, but their access, latency, teaching quality, and endpoint behavior have not been live-tested with the learner's accounts. Keep a model setting per provider. Do not silently replace a model or claim a successful integration before testing it.
+
+### Google Gemini
+
+- Initial model: `gemini-3.5-flash-lite`, a documented cost-oriented model with structured-output support. [Model](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite)
+- Call: `POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent` with `Content-Type: application/json` and `x-goog-api-key` authentication.
+- Payload: `systemInstruction.parts[].text` for the teaching policy; `contents: [{role: "user", parts: [{text: serializedContext}]}]`; `generationConfig` with `responseMimeType: "application/json"`, `responseJsonSchema: schema`, and `maxOutputTokens: 8192`.
+- Read non-thought text from `candidates[0].content.parts`, check finish reason and block feedback, then parse/validate the JSON object. Missing/blocked/truncated content is a recoverable request failure.
+- The Generate Content interface is documented as legacy alongside the newer Interactions API. Use the verified Generate Content contract for this small integration; check continued model compatibility before implementation rather than mixing the two response formats. [Generate Content API](https://ai.google.dev/api/generate-content), [its structured-output guide](https://ai.google.dev/gemini-api/docs/generate-content/structured-output)
+- Published standard pricing checked on 2026-10-15: selected model lists a free tier and paid prices of $0.30 input / $2.50 output per million tokens. Availability and quotas depend on the account/project; free-tier data-use rules differ from paid usage. [Pricing](https://ai.google.dev/gemini-api/docs/pricing), [rate limits](https://ai.google.dev/gemini-api/docs/rate-limits)
+
+### OpenAI
+
+- Initial model: `gpt-6-luna`, the lower-cost choice in the documented current family, with structured-output support. [Model](https://developers.openai.com/api/docs/models/gpt-6-luna)
+- Call: `POST https://api.openai.com/v1/responses` with bearer API-key authentication and JSON content type.
+- Payload: `model`, `instructions: teachingPolicy`, `input: serializedContext`, `store: false`, `max_output_tokens: 8192`, and `text.format: {type: "json_schema", name: "buddy_response", strict: true, schema}`.
+- Read text parts from message items in `output[]` where content type is `output_text`; do not assume the REST response has an SDK-only `output_text` convenience property. Handle refusal, error, and incomplete status before JSON parsing.
+- [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses) was accessible during research; the detailed create-response reference returned retrieval errors. Verify the exact REST payload with a small real call before building the full UI. This remains a documented early-build check, not a claimed live validation.
+- Published standard short-context pricing checked on 2026-10-15: $0.10 input / $0.50 output per million tokens. Free account tier is not supported for this model; confirm API billing and available limits locally. `store: false` is not a promise of zero provider-side retention. [Pricing](https://developers.openai.com/api/docs/pricing), [limits](https://developers.openai.com/api/docs/guides/rate-limits)
+
+### Groq
+
+- Initial model: `openai/gpt-oss-120b`, hosted by Groq. This is a Groq connection with a Groq key, distinct from the direct OpenAI provider above. [Models](https://console.groq.com/docs/models)
+- Call: `POST https://api.groq.com/openai/v1/chat/completions` with bearer API-key authentication and JSON content type.
+- Payload: `model`, system/user `messages`, `stream: false`, `max_completion_tokens: 8192`, and `response_format: {type: "json_schema", json_schema: {name: "buddy_response", strict: true, schema}}`.
+- Parse `choices[0].message.content` only after checking completion/refusal status. Use strict structured output on a documented supported model, without tool calls or streaming. [API reference](https://console.groq.com/docs/api-reference), [structured outputs](https://console.groq.com/docs/structured-outputs)
+- Published model pricing checked on 2026-10-15: $0.15 input / $0.60 output per million tokens. Actual access and quotas depend on the account; do not treat published developer-plan limits as the learner's limits. [Models/pricing](https://console.groq.com/docs/models), [rate limits](https://console.groq.com/docs/rate-limits)
+
+Pricing and model availability can change. Show provider/model choice clearly, keep requests bounded, and check current prices/account limits before the learner enables billable usage. No API key is required to review this plan; keys are entered locally during build testing.
+
+## Important Failure Modes
+
+- **Terminal integration missing or the run cannot be tied to saved code:** show the capture limitation, keep earlier guidance available, and offer manual context. Do not simulate a captured run or increment attempts.
+- **Missing key, quota, timeout, or unusable model response:** preserve source/counts, show a short actionable message, and offer settings or retry. Avoid raw error bodies that may echo sensitive request context.
+- **Source changes while analysis/diff is pending:** cancel or disregard stale output using the snapshot and request generation ID. Require a fresh analysis before accepting an outdated change.
+- **AI misjudges a logic issue:** keep inference tentative, use the expected-outcome comment/clarification and actual output, and verify known examples. Never treat one successful run as proof of all program behavior.
+
+## Verification and Early Feasibility Checks
+
+Before investing in panel polish, demonstrate a real command's output/exit status reaching the extension from the learner's integrated terminal. Also verify one small structured request with the first configured provider. If either fails, explain the evidence and revisit the technical approach with the learner; do not replace the central learning loop with canned responses.
+
+Use one focused set of Node tests for the initial-clue/3/6 progression, unchanged reruns, clarification versus explicit external-run reports, new issues, invalid responses, provider switches, and stale results. Use HTTP fixtures to exercise each provider's payload/response mapping, refusal, timeout, and missing-key handling. Fixtures are test data, not the live demo.
+
+In the Extension Development Host verify terminal linkage, arrow placement, keyboard-readable panel, real colored diff, accept/reject behavior, undo, stale-edit protection, confetti on/off, and restart lifetime. Repeated unchanged runs must produce no additional provider requests. Run a small Python syntax/logic scenario and the JavaScript example. Test the full hint-first behavior with Gemini, OpenAI, and Groq before calling provider switching complete; passing a generic connectivity prompt is insufficient.
+
+Finally inspect the VSIX file list, install the package, and repeat the main Python loop. Record what environments/providers were actually verified. Capture the demo only after these checks and the planned public-release preparation.
+
+## What Was Simplified and Why
+
+- One desktop extension with a small bundled panel; use native editor annotations/diff review and direct requests to avoid maintaining separate services.
+- Completed commands in one selected terminal; external/browser/API results enter through the existing text box. This is the learner-agreed boundary for automatic observation.
+- Current linked file plus relevant output/clarification; no automatic whole-project scan. This is the learner-agreed context boundary.
+- Current-session hints/counts in memory; preferences and encrypted keys persist. This is the learner-agreed restart behavior.
+- Full replacement review for a bounded small file; preserve acceptance, rejection, undo, and stale-file safeguards without building a multi-file patch engine.
+- Static supplied character artwork and a small local celebration effect; preserve identity without requiring a character-animation system.
+- One provider during early development, all three before submission; the additional connections remain required work.
+- Project-building tasks and a harder showcase remain deferred under the approved PRD.
+
+## Decisions and Open Issues
+
+### Learner-Agreed Choices
+
+- Watch completed terminal commands automatically; use manual result/context sharing for browser, Postman, long-running server, or unsupported capture workflows.
+- Use a TypeScript desktop extension with a small HTML/CSS/JavaScript panel, native editor features, and direct provider requests.
+- Support Gemini and OpenAI, plus the learner's requested Groq addition.
+- Limit automatic context to the current file, relevant run output, and clarification; preserve preferences/keys across restarts while current hints/counts reset.
+- Build and test locally first; plan public Marketplace publication a few days before preparing the demo.
+- Continue Markdown planning reviews and beginner-oriented explanations; the learning goal remains an effective AI workflow and better results.
+
+### Useful Unknown and What Clarified It
+
+The learner described running Python in a terminal, previewing frontend work in a browser, and using Postman for backend APIs. This exposed the uncertainty about how a VS Code buddy can observe different kinds of execution. Official shell-integration documentation established a supported terminal-output path; the learner agreed to completed-command capture plus manual context for external results. A real terminal-capture check early in the build is the evidence still needed. This is an explanation and an agreed investigation, not evidence that the learner has implemented or mastered shell integration.
+
+At review, the learner asked whether connecting the extension to VS Code should wait until thorough testing. Clarified the distinction: load it locally in an Extension Development Host early to test real editor behavior, and publish publicly only after workflow/package checks. This is an agent explanation; hands-on verification remains for the build.
+
+### Derived Implementation Details for Review
+
+The connection control, one linked file/session, explicit Share Run Result action for the manual fallback, local attempt controller, schema validation, file-size/output limits, model defaults, native key-entry commands, default enabled confetti with reduced-motion support, and stale-proposal checks are engineering recommendations that implement the agreed experience. They are included in this draft for approval rather than attributed as separate learner choices. Reconnecting to another file/command starts a new issue; merely hiding the panel or switching tabs does not.
+
+### Checks That Remain
+
+- Exact installed package versions, reproducible lockfile, VS Code minimum-version compatibility, and usable Git metadata must be checked during setup.
+- Actual shell integration, terminal/file linkage, model access, API billing/quotas, and teaching quality require live validation. No provider has been called during planning.
+- OpenAI's create-response reference could not be retrieved; verify the documented guide-based request during the first small connection check.
+- Confirm the user's chosen open-source license before public release. Marketplace publisher identity/authentication and the exact publication date belong in shipping preparation.
+- If live evidence forces a change to the accepted product or technical boundaries, explain it and obtain agreement before updating the plan. Do not silently narrow the project to Python or remove a required provider.
