@@ -36,11 +36,13 @@ export class ProjectMode implements vscode.Disposable {
   }
 
   observe(run: RunSnapshot): void {
+    if (this.ready) { this.ready = false; this.changed(); }
     if (this.snapshot) this.cancel('A new run arrived. Check your attempt again when you are ready.');
     this.run = run.sourceConfirmed !== false ? run : undefined;
   }
 
   sourceChanged(uri: string): void {
+    if (this.ready) { this.ready = false; this.changed(); }
     this.run = undefined;
     if (this.snapshot?.sources.some(source => vscode.Uri.file(source.path).toString() === uri)) this.cancel('Code changed while Buddy was thinking. Save it, then ask again.');
   }
