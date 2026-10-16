@@ -1,10 +1,27 @@
 import { replySchema, teachingPolicy } from './teaching';
 import { projectCoachSchema, projectPlanSchema, projectPolicy } from './project';
 
-export type Provider = 'gemini' | 'openai' | 'groq';
-export const defaults: Record<Provider, string> = { gemini: 'gemini-3.5-flash-lite', openai: 'gpt-6-luna', groq: 'openai/gpt-oss-120b' };
+export type Provider = 'gemini' | 'openai' | 'groq' | 'anthropic' | 'openrouter' | 'deepseek' | 'mistral' | 'ollama' | 'custom';
+export const defaults: Record<Provider, string> = { gemini: 'gemini-3.5-flash-lite', openai: 'gpt-6-luna', groq: 'openai/gpt-oss-120b',
+  anthropic: 'claude-sonnet-4-6', openrouter: 'openai/gpt-oss-120b', deepseek: 'deepseek-flash', mistral: 'mistral-large-latest', ollama: 'qwen3:8b', custom: 'local-model' };
+export const providerLabels: Record<Provider, string> = { gemini: 'Google Gemini', openai: 'OpenAI', groq: 'Groq', anthropic: 'Anthropic Claude',
+  openrouter: 'OpenRouter', deepseek: 'DeepSeek', mistral: 'Mistral', ollama: 'Ollama (local)', custom: 'Custom OpenAI-compatible' };
+export interface Connection { endpoint?: string; format?: 'json_schema' | 'json_object' }
+export const defaultEndpoints = { ollama: 'http://localhost:11434/api/chat', custom: 'http://localhost:1234/v1/chat/completions' };
+export const modelPattern = /^[a-zA-Z0-9._/:@+-]{1,200}$/;
+export const requiresKey = (provider: Provider): boolean => provider !== 'ollama' && provider !== 'custom';
 
-export async function analyze(provider: Provider, model: string, key: string, context: object, signal: AbortSignal): Promise<unknown> {
+export function validateEndpoint(value: unknown): string {
+  try {
+    if (typeof value !== 'string' || value.length > 2_000 || /\s/.test(value.trim())) throw new Error();
+    const url = new URL(value.trim());
+    const loopback = url.hostname === 'localhost' || url.hostname === '[::1]' || /^127\.\d+\.\d+\.\d+$/.test(url.hostname);
+    if (url.username || url.password || url.search || url.hash || !(url.protocol === 'https:' || (url.protocol === 'http:' && loopback))) throw new Error();
+    return url.toString();
+  } catch { throw new Error('Use a full HTTPS endpoint, or HTTP on localhost/127.0.0.1/::1. Keep keys, query parameters and fragments out of the URL.'); }
+}
+
+export async function analyze(provider: Provider, model: string, key: string, context: object, signal: AbortSignal, connection: Connection = {}): Promise<unknown> {
   const { allowedLevel, sameDiagnostic } = context as { allowedLevel?: unknown; sameDiagnostic?: unknown };
   const level = allowedLevel === 'inline' || allowedLevel === 'fix' ? allowedLevel : 'clue';
   const schema = { ...replySchema, properties: { ...replySchema.properties,
@@ -12,17 +29,18 @@ export async function analyze(provider: Provider, model: string, key: string, co
     ...(level !== 'fix' ? { replacement: { type: 'null' }, explanation: { type: 'null' } } : {}),
     ...(level === 'clue' ? { inlineHint: { type: 'null' } } : {})
   } };
-  return request(provider, model, key, context, signal, teachingPolicy, schema);
+  return request(provider, model, key, context, signal, teachingPolicy, schema, connection);
 }
 
-export async function projectReply(provider: Provider, model: string, key: string, context: object, signal: AbortSignal): Promise<unknown> {
+export async function projectReply(provider: Provider, model: string, key: string, context: object, signal: AbortSignal, connection: Connection = {}): Promise<unknown> {
   const operation = (context as { operation?: string }).operation;
-  return request(provider, model, key, context, signal, projectPolicy, operation === 'plan' ? projectPlanSchema : projectCoachSchema);
+  return request(provider, model, key, context, signal, projectPolicy, operation === 'plan' ? projectPlanSchema : projectCoachSchema, connection);
 }
 
-async function request(provider: Provider, model: string, key: string, context: object, signal: AbortSignal, policy: string, schema: object): Promise<unknown> {
-  if (!key) throw new Error('Add your API key in Buddy settings first.');
-  if (!/^[a-zA-Z0-9._/-]{1,100}$/.test(model)) throw new Error('Check the model name in Coding Buddy settings.');
+async function request(provider: Provider, model: string, key: string, context: object, signal: AbortSignal, policy: string, schema: object, connection: Connection): Promise<unknown> {
+  if (!key && requiresKey(provider)) throw new Error('Add your API key in Buddy settings first.');
+  if (/[\r\n]/.test(key)) throw new Error('Check your saved API key in Buddy settings.');
+  if (!modelPattern.test(model)) throw new Error('Check the model name in Coding Buddy settings.');
   const input = JSON.stringify(context);
   if (key.length >= 8 && input.includes(key)) throw new Error('Your provider key appears in the code or output. Remove it before asking the buddy to read it.');
   let url: string;
@@ -44,19 +62,38 @@ async function request(provider: Provider, model: string, key: string, context: 
       payload = { model, instructions: policy, input, store: false, max_output_tokens: 8192,
         text: { format: { type: 'json_schema', name: 'buddy_response', strict: true, schema } } };
       break;
-    case 'groq':
-      url = 'https://api.groq.com/openai/v1/chat/completions';
-      headers.Authorization = `Bearer ${key}`;
-      payload = { model, messages: [{ role: 'system', content: policy }, { role: 'user', content: input }],
-        stream: false, max_completion_tokens: 8192,
-        response_format: { type: 'json_schema', json_schema: { name: 'buddy_response', strict: true, schema } } };
+    case 'anthropic':
+      url = 'https://api.anthropic.com/v1/messages';
+      headers['x-api-key'] = key; headers['anthropic-version'] = '2023-06-01';
+      payload = { model, system: policy, messages: [{ role: 'user', content: input }], max_tokens: 8192,
+        output_config: { format: { type: 'json_schema', schema } } };
       break;
+    case 'ollama':
+      url = validateEndpoint(connection.endpoint ?? defaultEndpoints.ollama);
+      if (key) headers.Authorization = `Bearer ${key}`;
+      payload = { model, messages: [{ role: 'system', content: `${policy}\nReturn JSON matching this schema: ${JSON.stringify(schema)}` }, { role: 'user', content: input }],
+        stream: false, format: schema, options: { num_predict: 8192 } };
+      break;
+    case 'groq': case 'openrouter': case 'deepseek': case 'mistral': case 'custom': {
+      const endpoints = { groq: 'https://api.groq.com/openai/v1/chat/completions', openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+        deepseek: 'https://api.deepseek.com/chat/completions', mistral: 'https://api.mistral.ai/v1/chat/completions' };
+      url = provider === 'custom' ? validateEndpoint(connection.endpoint ?? defaultEndpoints.custom) : endpoints[provider];
+      if (key) headers.Authorization = `Bearer ${key}`;
+      if (connection.format !== undefined && !['json_schema', 'json_object'].includes(connection.format)) throw new Error('Choose JSON schema or JSON object output in Buddy settings.');
+      const jsonObject = provider === 'deepseek' || (provider === 'custom' && connection.format === 'json_object');
+      payload = { model, messages: [{ role: 'system', content: jsonObject ? `${policy}\nReturn a JSON object matching this schema: ${JSON.stringify(schema)}` : policy }, { role: 'user', content: input }],
+        stream: false, ...(provider === 'groq' ? { max_completion_tokens: 8192 } : { max_tokens: 8192 }),
+        ...(provider === 'openrouter' ? { provider: { require_parameters: true } } : {}),
+        response_format: jsonObject ? { type: 'json_object' } : { type: 'json_schema', json_schema: { name: 'buddy_response', strict: true, schema } } };
+      break;
+    }
     default: throw new Error('Choose a supported provider in Coding Buddy settings.');
   }
   const response = await fetch(url, {
     method: 'POST',
     headers,
-    signal: AbortSignal.any([signal, AbortSignal.timeout(45_000)]),
+    redirect: 'error',
+    signal: AbortSignal.any([signal, AbortSignal.timeout(provider === 'ollama' || provider === 'custom' ? 120_000 : 45_000)]),
     body: JSON.stringify(payload)
   });
   if (!response.ok) {
@@ -92,6 +129,12 @@ async function request(provider: Provider, model: string, key: string, context: 
       const parts = body.output.filter((item: { type: string }) => item.type === 'message').flatMap((item: { content: unknown[] }) => item.content);
       if (parts.some((part: { type: string }) => part.type === 'refusal')) throw new Error();
       output = parts.filter((part: { type: string; text?: string }) => part.type === 'output_text' && typeof part.text === 'string').map((part: { text: string }) => part.text).join('');
+    } else if (provider === 'anthropic') {
+      if (body.stop_reason !== 'end_turn' || body.error || !Array.isArray(body.content)) throw new Error();
+      output = body.content.filter((part: { type: string; text?: string }) => part.type === 'text' && typeof part.text === 'string').map((part: { text: string }) => part.text).join('');
+    } else if (provider === 'ollama') {
+      if (body.done !== true || body.done_reason !== 'stop' || body.error || typeof body.message?.content !== 'string') throw new Error();
+      output = body.message.content;
     } else {
       const choice = body.choices?.[0];
       if (choice?.finish_reason !== 'stop' || choice.message?.refusal || typeof choice.message?.content !== 'string') throw new Error();

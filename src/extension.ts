@@ -4,7 +4,7 @@ import { WorkspaceContext, ProjectSnapshot, sourcePath } from './workspace';
 import { analyze } from './providers';
 import { BuddyPanel, PanelState } from './panel';
 import { LearningSession } from './session';
-import { checkKnownKeys, chooseProvider, configuration, keyName, setKey } from './settings';
+import { checkKnownKeys, chooseProvider, configuration, configureProvider, keyName, setKey } from './settings';
 import { checkSource, GuidanceValidationError, RunSnapshot, TeachingReply, validateReply } from './teaching';
 import { TerminalCapture } from './terminal';
 import { EditorGuidance } from './editor';
@@ -33,7 +33,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const mine = ++refreshGeneration;
     try {
       const config = configuration();
-      const configured = !!await context.secrets.get(keyName(config.provider));
+      const configured = config.requiresKey === false || !!await context.secrets.get(keyName(config.provider));
       if (mine !== refreshGeneration) return;
       state.provider = config.provider; state.model = config.model;
       state.keyConfigured = configured;
@@ -101,7 +101,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (session.isDuplicate(fingerprint)) { void refresh(); return; }
       if (state.working) return;
       const key = await context.secrets.get(keyName(config.provider));
-      if (!key) { status('Add an API key in ⚙ settings, then run your code again.'); return; }
+      if (!key && config.requiresKey !== false) { status('Add an API key in ⚙ settings, then run your code again.'); return; }
       await checkKnownKeys(context, JSON.stringify({ ...session.context(run, attempt), workspace: snapshot.data }));
       if (state.working || mine !== requestGeneration) return;
       pending = new AbortController(); mine = ++requestGeneration; state.working = true;
@@ -111,7 +111,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (pendingHint) { activeHint = { run, reply: pendingHint }; guidance.showHint(run, pendingHint); }
       status(run.exitCode === 0 ? 'Your code runs now. Checking whether the output matches your goal…' : 'Looking for a useful clue…');
       log.appendLine(`Analysis request ${++requestCount}: provider=${config.provider}; source=${run.reported ? 'learner-reported' : 'terminal'}`);
-      const result = await analyze(config.provider, config.model, key, { ...session.context(run, attempt), workspace: { ...snapshot.data, currentFile: vscode.workspace.asRelativePath(linked.uri, false) } }, pending.signal);
+      const result = await analyze(config.provider, config.model, key ?? '', { ...session.context(run, attempt), workspace: { ...snapshot.data, currentFile: vscode.workspace.asRelativePath(linked.uri, false) } }, pending.signal, config);
       await checkKnownKeys(context, JSON.stringify(result));
       if (mine !== requestGeneration || !linked || linked.isClosed || linked.isDirty || linked.version !== run.version || linked.getText() !== run.source) return;
       const current = await workspace.current(snapshot);
@@ -228,6 +228,7 @@ export function activate(context: vscode.ExtensionContext): void {
         const choice = await vscode.window.showQuickPick([
           { label: '$(beaker) Open test playground', action: 'playground' },
           { label: '$(sparkle) AI provider', description: config.provider, action: 'provider' },
+          { label: '$(settings) Model and connection', description: config.model, action: 'configureProvider' },
           { label: '$(key) Add or update API key', action: 'setKey' },
           { label: '$(trash) Remove API key', action: 'removeKey' },
           { label: automatic ? '$(debug-pause) Pause automatic hints' : '$(play) Resume automatic hints', action: 'toggleWatching' },
@@ -253,6 +254,7 @@ export function activate(context: vscode.ExtensionContext): void {
         if (output?.trim()) await action('shareResult', output.slice(0, 2_000));
       }
       else if (name === 'provider') await chooseProvider();
+      else if (name === 'configureProvider') await configureProvider();
       else if (name === 'setKey') { await setKey(context); await refresh(); }
       else if (name === 'connect') await connect();
       else if (name === 'disconnect') { cancel(); guidance.clear(); capture.disconnect(); linked = undefined; latestRun = undefined; session = new LearningSession(); state.file = ''; status('Hints paused. Resume automatic hints in settings.'); }
@@ -323,6 +325,7 @@ export function activate(context: vscode.ExtensionContext): void {
   register('projectMode', async () => { await vscode.commands.executeCommand('codingBuddy.panel.focus'); await action('modeProject'); });
   register('setKey', () => action('setKey'));
   register('chooseProvider', () => action('provider'));
+  register('configureProvider', () => action('configureProvider'));
   register('removeKey', async () => { cancel(); guidance.clear(); session.clearCache(); await context.secrets.delete(keyName(configuration().provider)); status('API key removed.'); });
   context.subscriptions.push(log, capture, guidance, runner, project,
     vscode.window.registerWebviewViewProvider('codingBuddy.panel', panel),
@@ -334,7 +337,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (event.contentChanges.length && (linked?.uri.toString() === event.document.uri.toString() || activeSnapshot?.sources.some(source => source.path === event.document.uri.fsPath))) { if (state.working) session.clearCache(); cancel(); guidance.clear(); activeHint = undefined; status('Code changed. Save and run it again to check your idea.'); } }),
     vscode.workspace.onDidChangeConfiguration(event => {
       if (!event.affectsConfiguration('codingBuddy')) return;
-      if (!['provider', 'models', 'autoWatch'].some(key => event.affectsConfiguration(`codingBuddy.${key}`))) { void refresh(); return; }
+      if (!['provider', 'models', 'endpoints', 'customFormat', 'autoWatch'].some(key => event.affectsConfiguration(`codingBuddy.${key}`))) { void refresh(); return; }
       project.cancel('Provider or watching settings changed. Retry your project request when ready.');
       cancel(); guidance.clear(); activeHint = undefined; session.clearCache();
       for (const saved of memories.values()) { saved.session.clearCache(); saved.hint = undefined; }

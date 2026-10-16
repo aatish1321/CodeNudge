@@ -48,9 +48,11 @@ async function controllerFixture(t: TestContext, trusted = true, storage = new M
   const proposals: { run: RunSnapshot; reply: unknown }[] = [];
   let acceptCount = 0;
   let confirmReset = false;
-  const projectRequests: { input: Record<string, unknown>; signal: AbortSignal }[] = [];
+  const providerConfig = { provider: 'groq', model: 'test-model', requiresKey: true, endpoint: undefined as string | undefined, format: undefined as string | undefined };
+  let providerKey: string | undefined = 'test-placeholder-key';
+  const projectRequests: { input: Record<string, unknown>; signal: AbortSignal; connection?: unknown; key?: string }[] = [];
   let respondProject: (input: Record<string, unknown>) => unknown | Promise<unknown> = input => input.operation === 'plan' ? projectPlan() : { message: 'Follow one value through your attempt. What changes?', ready: false };
-  const requests: { input: Input; signal: AbortSignal }[] = [];
+  const requests: { input: Input; signal: AbortSignal; connection?: unknown; key?: string }[] = [];
   let respond: (input: Input) => unknown | Promise<unknown> = input => reply(input);
   const folder = { uri: uri(root), name: 'project', index: 0 };
   async function sourceFiles(path: string): Promise<string[]> {
@@ -127,12 +129,12 @@ async function controllerFixture(t: TestContext, trusted = true, storage = new M
       }
       dispose() {}
     } },
-    './providers': { projectReply: async (_provider: string, _model: string, _key: string, input: Record<string, unknown>, signal: AbortSignal) => { projectRequests.push({ input: JSON.parse(JSON.stringify(input)), signal }); return respondProject(input); }, analyze: async (_provider: string, _model: string, _key: string, input: Input, signal: AbortSignal) => {
-      requests.push({ input: JSON.parse(JSON.stringify(input)), signal });
+    './providers': { projectReply: async (_provider: string, _model: string, key: string, input: Record<string, unknown>, signal: AbortSignal, connection?: unknown) => { projectRequests.push({ input: JSON.parse(JSON.stringify(input)), signal, connection, key }); return respondProject(input); }, analyze: async (_provider: string, _model: string, key: string, input: Input, signal: AbortSignal, connection?: unknown) => {
+      requests.push({ input: JSON.parse(JSON.stringify(input)), signal, connection, key });
       return respond(input);
     } },
-    './settings': { configuration: () => ({ provider: 'groq', model: 'test-model' }), keyName: () => 'test-key',
-      checkKnownKeys: async () => {}, chooseProvider: async () => {}, setKey: async () => {} },
+    './settings': { configuration: () => ({ ...providerConfig }), keyName: () => 'test-key',
+      checkKnownKeys: async () => {}, chooseProvider: async () => {}, configureProvider: async () => {}, setKey: async () => {} },
     './playground': { openPlayground: async () => {} },
   };
   const projectModeExports = {};
@@ -145,7 +147,7 @@ async function controllerFixture(t: TestContext, trusted = true, storage = new M
     AbortController, AbortSignal, process: { platform: process.platform }, setTimeout, clearTimeout,
   });
   extensionExports.activate({ extensionUri: uri(root), subscriptions, workspaceState: { get: (key: string) => storage.get(key), update: async (key: string, value: unknown) => { storage.set(key, value); } },
-    secrets: { get: async () => 'test-placeholder-key', onDidChange: () => disposable() } });
+    secrets: { get: async () => providerKey, onDidChange: () => disposable() } });
   t.after(() => subscriptions.forEach(subscription => subscription.dispose()));
   await until(() => !!state, 'initial panel state');
   async function add(name: string, source: string): Promise<Document> {
@@ -176,6 +178,7 @@ async function controllerFixture(t: TestContext, trusted = true, storage = new M
     if (!pending) await until(() => !state.working, 'analysis completion');
   }
   return { root, add, select, change, run, action: (name: string, text?: string) => action(name, text), requests, hints, proposals,
+    configure: (overrides: Partial<typeof providerConfig>, key?: string) => { Object.assign(providerConfig, overrides); providerKey = key; emitConfiguration('provider'); },
     executed, directRuns, projectRequests, storage, respondProject: (handler: typeof respondProject) => { respondProject = handler; },
     confirmReset: (value: boolean) => { confirmReset = value; }, project: () => state.project!, emitConfiguration, finishRun: () => finishRun(), watching: () => watching, collected: () => collected,
     grantTrust: async () => { workspace.isTrusted = true; granted?.(); await flush(); },
@@ -528,6 +531,32 @@ test('suggested plans can clarify/refine and tasks complete only when the learne
   await fixture.action('projectReset'); assert.equal(fixture.project().phase, 'done', 'cancelled reset retains progress');
   fixture.confirmReset(true); await fixture.action('projectReset');
   await until(() => fixture.project().phase === 'idea', 'new idea');
+});
+
+test('keyless local providers work in both modes and endpoint/format edits invalidate pending replies', async t => {
+  const fixture = await controllerFixture(t);
+  fixture.configure({ provider: 'ollama', model: 'qwen3:8b', requiresKey: false, endpoint: 'http://127.0.0.1:11434/api/chat' });
+  const doc = await fixture.add('main.py', '# Print 18.\nprint(18)\n');
+  await fixture.select(doc); await fixture.run(doc);
+  assert.equal(fixture.state().keyConfigured, true); assert.equal(fixture.requests[0].key, '');
+  assert.equal((fixture.requests[0].connection as { endpoint: string }).endpoint, 'http://127.0.0.1:11434/api/chat');
+  let finishDebug!: (value: unknown) => void;
+  fixture.respond(() => new Promise(resolve => { finishDebug = resolve; }));
+  await fixture.change(doc, '# Print 18.\nprint(18 + 0)\n'); await fixture.run(doc, true);
+  await until(() => fixture.requests.length === 2, 'local pending Debug reply');
+  fixture.emitConfiguration('endpoints'); assert.equal(fixture.requests[1].signal.aborted, true);
+  finishDebug(reply(fixture.requests[1].input)); await flush();
+  await fixture.action('modeProject'); await fixture.action('clarify', 'A local tracker'); await fixture.action('projectSuggest');
+  assert.equal(fixture.projectRequests[0].key, '');
+  assert.equal((fixture.projectRequests[0].connection as { endpoint: string }).endpoint, 'http://127.0.0.1:11434/api/chat');
+  await fixture.action('projectStart');
+  let finishProject!: (value: unknown) => void;
+  fixture.respondProject(() => new Promise(resolve => { finishProject = resolve; }));
+  const pending = fixture.action('projectHint');
+  await until(() => fixture.projectRequests.length === 2, 'local pending project reply');
+  fixture.emitConfiguration('customFormat'); assert.equal(fixture.projectRequests[1].signal.aborted, true);
+  finishProject({ message: 'OLD CONNECTION REPLY', ready: false }); await pending;
+  assert.ok(!fixture.project().messages.some(message => message.text.includes('OLD CONNECTION')));
 });
 
 test('cancelling a project confirms first, stops pending coaching and persists a fresh start without changing code', async t => {

@@ -351,13 +351,15 @@ export async function run(): Promise<void> {
   const originalProvider = config.inspect<string>('provider')?.globalValue;
   try {
     const providers = Object.keys(defaults) as Provider[];
-    assert.equal(new Set(providers.map(keyName)).size, 3, 'provider keys must have separate storage names');
+    assert.ok((await vscode.commands.getCommands()).includes('codingBuddy.configureProvider'));
+    assert.equal(new Set(providers.map(keyName)).size, providers.length, 'provider keys must have separate storage names');
     for (const provider of providers) {
       await config.update('provider', provider, vscode.ConfigurationTarget.Global);
       assert.equal(configuration().provider, provider);
       assert.equal(configuration().model, defaults[provider]);
+      assert.equal(configuration().requiresKey, provider !== 'ollama' && provider !== 'custom');
     }
-    console.log('HOST CHECK PASSED: three native provider settings and distinct secret names.');
+    console.log(`HOST CHECK PASSED: ${providers.length} native provider settings and distinct secret names.`);
   } finally { await config.update('provider', originalProvider, vscode.ConfigurationTarget.Global); }
   await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(directPath));
   await checkProjectMode(extension.extensionPath, workspace, { uri: directEditor.document.uri.toString(), version: directEditor.document.version,

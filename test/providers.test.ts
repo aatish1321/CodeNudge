@@ -1,10 +1,12 @@
 import { test, mock } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyze, projectReply, Provider } from '../src/providers';
+import { analyze, defaults, projectReply, Provider, validateEndpoint } from '../src/providers';
 import { clue } from './fixtures';
+import { createServer } from 'node:http';
 
 const key = 'fixture-provider-key-123456789';
 const signal = () => new AbortController().signal;
+const providers = Object.keys(defaults) as Provider[];
 
 test('Gemini request sends the schema and auth header, and decodes only non-thought content', async () => {
   const fetchMock = mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
@@ -25,9 +27,12 @@ test('Gemini request sends the schema and auth header, and decodes only non-thou
 test('missing keys and known key material are rejected before network access', async () => {
   const fetchMock = mock.method(globalThis, 'fetch', async () => { throw new Error('must not call'); });
   try {
-    await assert.rejects(analyze('gemini', 'fixture-model', '', {}, signal()), /API key/);
+    for (const provider of providers.filter(value => value !== 'ollama' && value !== 'custom')) {
+      await assert.rejects(analyze(provider, 'fixture-model', '', {}, signal()), /API key/);
+    }
     await assert.rejects(analyze('gemini', 'fixture-model', key, { source: key }, signal()), /appears in the code/);
     await assert.rejects(analyze('gemini', 'bad model?', key, {}, signal()), /model name/);
+    await assert.rejects(analyze('custom', 'model', 'bad\nheader-key', {}, signal()), /saved API key/);
     assert.equal(fetchMock.mock.callCount(), 0);
   } finally { fetchMock.mock.restore(); }
 });
@@ -55,8 +60,20 @@ test('blocked, truncated, missing and malformed model results remain failures', 
 function responseFor(provider: Provider, value: unknown): object {
   const text = JSON.stringify(value);
   if (provider === 'openai') return { status: 'completed', output: [{ type: 'reasoning', summary: [] }, { type: 'message', content: [{ type: 'output_text', text }] }] };
-  if (provider === 'groq') return { choices: [{ finish_reason: 'stop', message: { content: text, reasoning: 'not shown' } }] };
+  if (provider === 'anthropic') return { stop_reason: 'end_turn', content: [{ type: 'thinking', thinking: 'private' }, { type: 'text', text }] };
+  if (provider === 'ollama') return { done: true, done_reason: 'stop', message: { content: text, thinking: 'private' } };
+  if (provider !== 'gemini') return { choices: [{ finish_reason: 'stop', message: { content: text, reasoning: 'not shown' } }] };
   return { candidates: [{ finishReason: 'STOP', content: { parts: [{ text }] } }] };
+}
+
+
+function schemaFor(provider: Provider, body: any): any {
+  if (provider === 'gemini') return body.generationConfig.responseJsonSchema;
+  if (provider === 'openai') return body.text.format.schema;
+  if (provider === 'anthropic') return body.output_config.format.schema;
+  if (provider === 'ollama') return body.format;
+  if (body.response_format.type === 'json_object') return JSON.parse(body.messages[0].content.split('Return a JSON object matching this schema: ')[1]);
+  return body.response_format.json_schema.schema;
 }
 
 test('OpenAI and Groq use their own authenticated endpoint and strict schema', async () => {
@@ -100,7 +117,7 @@ test('OpenAI and Groq refuse incomplete, blocked, or non-text results', async ()
 });
 
 test('failed requests never retry or fall back to a different provider', async () => {
-  for (const provider of ['gemini', 'openai', 'groq'] as const) {
+  for (const provider of providers) {
     const fetchMock = mock.method(globalThis, 'fetch', async () => new Response('quota exceeded', { status: 429 }));
     try {
       await assert.rejects(analyze(provider, 'fixture-model', key, {}, signal()), /quota/);
@@ -119,12 +136,11 @@ test('oversized and interrupted responses do not become usable guidance', async 
 });
 
 test('a locally confirmed continuing error requires the unlocked stage in every provider schema', async () => {
-  for (const provider of ['gemini', 'openai', 'groq'] as const) {
+  for (const provider of providers) {
     for (const level of ['inline', 'fix']) {
       const fetchMock = mock.method(globalThis, 'fetch', async (_url: string, options: RequestInit) => {
         const body = JSON.parse(options.body as string);
-        const schema = provider === 'gemini' ? body.generationConfig.responseJsonSchema
-          : provider === 'openai' ? body.text.format.schema : body.response_format.json_schema.schema;
+        const schema = schemaFor(provider, body);
         assert.deepEqual(schema.properties.level.enum, [level, 'none']);
         return Response.json(responseFor(provider, clue));
       });
@@ -135,12 +151,11 @@ test('a locally confirmed continuing error requires the unlocked stage in every 
 });
 
 test('each provider schema prevents locked edit fields before the fix stage', async () => {
-  for (const provider of ['gemini', 'openai', 'groq'] as const) {
+  for (const provider of providers) {
     for (const level of ['clue', 'inline'] as const) {
       const fetchMock = mock.method(globalThis, 'fetch', async (_url: string, options: RequestInit) => {
         const body = JSON.parse(options.body as string);
-        const schema = provider === 'gemini' ? body.generationConfig.responseJsonSchema
-          : provider === 'openai' ? body.text.format.schema : body.response_format.json_schema.schema;
+        const schema = schemaFor(provider, body);
         assert.equal(schema.properties.replacement.type, 'null');
         assert.equal(schema.properties.explanation.type, 'null');
         assert.ok(!schema.properties.level.enum.includes('fix'));
@@ -156,20 +171,117 @@ test('each provider schema prevents locked edit fields before the fix stage', as
   }
 });
 
-test('all three providers reuse secure transport with separate project planning and coaching schemas', async () => {
-  for (const provider of ['gemini', 'openai', 'groq'] as const) for (const operation of ['plan', 'hint', 'review']) {
+test('all providers reuse secure transport with separate project planning and coaching schemas', async () => {
+  for (const provider of providers) for (const operation of ['plan', 'hint', 'review']) {
     const response = operation === 'plan' ? { kind: 'question', title: '', tasks: [], message: 'Browser or terminal?' } : { message: 'What happens with one entry?', ready: false };
     const fetchMock = mock.method(globalThis, 'fetch', async (_url: string, options: RequestInit) => {
       const body = JSON.parse(options.body as string);
-      const schema = provider === 'gemini' ? body.generationConfig.responseJsonSchema : provider === 'openai' ? body.text.format.schema : body.response_format.json_schema.schema;
+      const schema = schemaFor(provider, body);
       assert.equal(schema.additionalProperties, false);
       assert.equal(!!schema.properties.tasks, operation === 'plan');
       assert.equal(schema.properties.replacement, undefined);
-      const policy = provider === 'gemini' ? body.systemInstruction.parts[0].text : provider === 'openai' ? body.instructions : body.messages[0].content;
+      const policy = provider === 'gemini' ? body.systemInstruction.parts[0].text : provider === 'openai' ? body.instructions : provider === 'anthropic' ? body.system : body.messages[0].content;
       assert.match(policy, /Never write the project/);
       return Response.json(responseFor(provider, response));
     });
     try { assert.deepEqual(await projectReply(provider, 'fixture-model', key, { operation, idea: 'A tracker' }, signal()), response); }
     finally { fetchMock.mock.restore(); }
   }
+});
+
+test('new hosted providers use their own authentication, endpoint and documented output format', async () => {
+  const endpoints = { anthropic: 'https://api.anthropic.com/v1/messages', openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+    deepseek: 'https://api.deepseek.com/chat/completions', mistral: 'https://api.mistral.ai/v1/chat/completions' };
+  for (const provider of Object.keys(endpoints) as (keyof typeof endpoints)[]) {
+    const fetchMock = mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+      assert.equal(url, endpoints[provider]); assert.equal(options.redirect, 'error');
+      const headers = options.headers as Record<string, string>;
+      const body = JSON.parse(options.body as string);
+      if (provider === 'anthropic') {
+        assert.equal(headers['x-api-key'], key); assert.equal(headers['anthropic-version'], '2023-06-01');
+        assert.equal(headers.Authorization, undefined); assert.equal(body.max_tokens, 8192);
+      } else assert.equal(headers.Authorization, `Bearer ${key}`);
+      assert.equal(schemaFor(provider, body).properties.replacement.type, 'null');
+      if (provider === 'deepseek') assert.equal(body.response_format.type, 'json_object');
+      if (provider === 'openrouter') assert.equal(body.provider.require_parameters, true);
+      return Response.json(responseFor(provider, clue));
+    });
+    try { assert.deepEqual(await analyze(provider, defaults[provider], key, {}, signal()), clue); }
+    finally { fetchMock.mock.restore(); }
+  }
+});
+
+test('Claude and Ollama reject refused, truncated, incomplete and malformed envelopes', async () => {
+  const cases: [Provider, object][] = [
+    ['anthropic', { stop_reason: 'refusal', content: [{ type: 'text', text: JSON.stringify(clue) }] }],
+    ['anthropic', { stop_reason: 'max_tokens', content: [{ type: 'text', text: JSON.stringify(clue) }] }],
+    ['anthropic', { stop_reason: 'end_turn', content: [{ type: 'thinking', thinking: JSON.stringify(clue) }] }],
+    ['ollama', { done: false, done_reason: 'stop', message: { content: JSON.stringify(clue) } }],
+    ['ollama', { done: true, done_reason: 'length', message: { content: JSON.stringify(clue) } }],
+    ['ollama', { done: true, done_reason: 'stop', message: { content: 'bad JSON' } }]
+  ];
+  for (const [provider, body] of cases) {
+    const fetchMock = mock.method(globalThis, 'fetch', async () => Response.json(body));
+    try { await assert.rejects(analyze(provider, defaults[provider], key, {}, signal()), /incomplete or blocked/); }
+    finally { fetchMock.mock.restore(); }
+  }
+});
+
+test('optional custom/Ollama tokens authenticate only the chosen request without entering its body', async () => {
+  for (const provider of ['ollama', 'custom'] as const) {
+    const fetchMock = mock.method(globalThis, 'fetch', async (_url: string, options: RequestInit) => {
+      assert.equal((options.headers as Record<string, string>).Authorization, `Bearer ${key}`);
+      assert.ok(!String(options.body).includes(key));
+      return Response.json(responseFor(provider, clue));
+    });
+    try { assert.deepEqual(await analyze(provider, 'model:tag', key, {}, signal()), clue); }
+    finally { fetchMock.mock.restore(); }
+  }
+});
+
+test('custom endpoints allow HTTPS or loopback HTTP and reject credentials, ambiguous targets and unsafe schemes', async () => {
+  for (const endpoint of ['https://models.example/v1/chat/completions', 'http://localhost:1234/v1/chat/completions', 'http://127.0.0.1:11434/api/chat', 'http://[::1]:1234/v1/chat/completions']) {
+    assert.equal(validateEndpoint(endpoint), endpoint);
+  }
+  const fetchMock = mock.method(globalThis, 'fetch', async () => { throw new Error('must not call'); });
+  try {
+    for (const endpoint of ['http://models.example/v1/chat/completions', 'http://localhost.evil.example/api/chat', 'https://user:password@models.example/api',
+      'https://models.example/api?key=secret', 'https://models.example/api#secret', 'https://models.\nexample/api', 'file:///etc/passwd', 'ftp://localhost/api', 'broken', '']) {
+      assert.throws(() => validateEndpoint(endpoint), /HTTPS/);
+      await assert.rejects(analyze('custom', 'model:tag', '', {}, signal(), { endpoint }), /HTTPS/);
+    }
+    assert.equal(fetchMock.mock.callCount(), 0);
+  } finally { fetchMock.mock.restore(); }
+});
+
+test('real loopback HTTP works without keys for Ollama/custom, preserves stage schemas, and refuses redirects', async () => {
+  let redirected = false; const requests: any[] = [];
+  const server = createServer(async (req, res) => {
+    if (req.url === '/redirect') { res.writeHead(307, { Location: '/unexpected' }); res.end(); return; }
+    if (req.url === '/unexpected') { redirected = true; res.end(); return; }
+    let text = ''; for await (const part of req) text += part;
+    const body = JSON.parse(text); requests.push(body);
+    assert.equal(req.headers.authorization, undefined);
+    const input = JSON.parse(body.messages[1].content);
+    const reply = input.operation === 'plan' ? { kind: 'question', title: '', tasks: [], message: 'Browser or terminal?' } : clue;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(responseFor(req.url === '/api/chat' ? 'ollama' : 'custom', reply)));
+  });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const port = (server.address() as { port: number }).port;
+  const base = `http://127.0.0.1:${port}`;
+  try {
+    for (const provider of ['ollama', 'custom'] as const) {
+      const endpoint = base + (provider === 'ollama' ? '/api/chat' : '/v1/chat/completions');
+      assert.deepEqual(await analyze(provider, 'model:8b', '', { allowedLevel: 'inline', sameDiagnostic: true }, signal(), { endpoint }), clue);
+      assert.deepEqual(schemaFor(provider, requests.at(-1)).properties.level.enum, ['inline', 'none']);
+      assert.equal(schemaFor(provider, requests.at(-1)).properties.replacement.type, 'null');
+    }
+    const endpoint = base + '/v1/chat/completions';
+    await projectReply('custom', 'model:8b', '', { operation: 'plan' }, signal(), { endpoint, format: 'json_object' });
+    assert.equal(requests.at(-1).response_format.type, 'json_object');
+    assert.ok(schemaFor('custom', requests.at(-1)).properties.tasks);
+    await assert.rejects(analyze('custom', 'model:8b', key, {}, signal(), { endpoint: base + '/redirect' }));
+    assert.equal(redirected, false, 'credentials and code must not follow a redirect');
+  } finally { await new Promise<void>(resolve => server.close(() => resolve())); }
 });

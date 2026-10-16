@@ -125,7 +125,7 @@ export class ProjectMode implements vscode.Disposable {
       await this.save();
       const config = configuration();
       const key = await this.context.secrets.get(keyName(config.provider));
-      if (!key) throw new Error('Add your provider API key in the gear menu, then Retry.');
+      if (!key && config.requiresKey !== false) throw new Error('Add your provider API key in the gear menu, then Retry.');
       let code: object = { note: 'No source supplied. Ask the learner what they tried or how they tested it.' };
       let hasEvidence = false;
       if (operation !== 'plan') {
@@ -148,7 +148,7 @@ export class ProjectMode implements vscode.Disposable {
         ...(operation !== 'plan' ? { code } : {}) };
       await checkKnownKeys(this.context, JSON.stringify(input));
       if (mine !== this.generation || !vscode.workspace.isTrusted) return;
-      const reply = await projectReply(config.provider, config.model, key, input, pending.signal);
+      const reply = await projectReply(config.provider, config.model, key ?? '', input, pending.signal, config);
       await checkKnownKeys(this.context, JSON.stringify(reply));
       if (mine !== this.generation) return;
       if (this.snapshot && !await this.workspace.current(this.snapshot)) throw new Error('Project code changed while Buddy was thinking. Save it, then ask again.');

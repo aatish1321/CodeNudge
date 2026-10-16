@@ -4,12 +4,12 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install `coding-buddy-0.0.14.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
+Install `coding-buddy-0.0.15.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
 
 A fresh playground can open in **Restricted Mode**. Buddy remains visible with a **Trust this folder…** button that opens VS Code’s trust screen. Choose Trust for the playground, or use the top banner’s **Manage** link. Terminal watching and AI analysis stay disabled until you grant trust. After updating the extension, use **Developer: Reload Window** once.
 
 1. Open a trusted project in **desktop VS Code 1.93 or newer** and click the Coding Buddy robot icon.
-2. Open the **⚙ settings menu** to select Gemini, OpenAI, or Groq and add its API key. Keys use VS Code secret storage. Provider/key/model options, pause/resume, celebrations, retry/reset, and advanced terminal tools live in this menu.
+2. Open the **⚙ settings menu** to choose an AI provider, configure its model/connection, and add a key if required. Keys use VS Code secret storage. Provider/key/model options, pause/resume, celebrations, retry/reset, and advanced terminal tools live in this menu.
 3. Open a saved code file. A top comment describing its goal helps the buddy understand your intent.
 4. For Python or plain JavaScript, click the editor’s **Run with Buddy** play-circle button, or use **Ctrl+Shift+P → Coding Buddy: Run with Buddy**. It saves the file and launches a linked run in its own terminal. **No terminal attachment, command-entry dialog, or yes/no reply is required.** Other project commands can still run normally in an integrated terminal.
 5. Read the clue, try your own change, save, and run again.
@@ -57,8 +57,22 @@ The buddy checks the intended behavior in the top comment, tentatively infers in
 | Google Gemini | `gemini-3.5-flash-lite` | Gemini API key |
 | OpenAI | `gpt-6-luna` | OpenAI API key with model access/billing |
 | Groq | `openai/gpt-oss-120b` | Groq API key |
+| [Anthropic Claude](https://platform.claude.com/docs/en/build-with-claude/structured-outputs) | `claude-sonnet-4-6` | Anthropic API key |
+| [OpenRouter](https://openrouter.ai/docs/guides/features/structured-outputs) | `openai/gpt-oss-120b` | OpenRouter API key |
+| [DeepSeek](https://api-docs.deepseek.com/guides/json_mode/) | `deepseek-flash` | DeepSeek API key |
+| [Mistral](https://docs.mistral.ai/api/endpoint/chat) | `mistral-large-latest` | Mistral API key |
+| [Ollama (local)](https://docs.ollama.com/capabilities/structured-outputs) | `qwen3:8b` | Optional; local server/model must already be installed |
+| Custom OpenAI-compatible | Set your server’s model ID | Optional, depending on your server |
 
-Model names are configurable in Coding Buddy settings. Use a model supporting the relevant structured-output API. Access, quotas, prices, and data policies belong to your provider; the extension does not supply shared credentials. A failed request does not automatically retry or switch providers.
+These are configurable starting values, not guarantees of model access or availability. **Gear → Model and connection** (also **Coding Buddy: Configure Model and Connection** in the palette) changes the selected provider’s model. Ollama/custom also ask for the full request URL. Hosted providers require their own API keys; a chat subscription is not an API key. Existing Gemini/OpenAI/Groq keys stay in their original secret-storage slots.
+
+For **Ollama**, install/start Ollama and download a model yourself before selecting it. The [default model](https://ollama.com/library/qwen3:8b) is `qwen3:8b`; you can enter another downloaded model tag. The default full endpoint is `http://localhost:11434/api/chat`. No key is required for a normal local installation. Buddy does not install models or start the server; local performance and context capacity depend on your hardware/model. Ollama Cloud is not the local structured-output connection offered here.
+
+For **Custom OpenAI-compatible**, enter your server’s exact model ID and full `/v1/chat/completions` URL. The default `http://localhost:1234/v1/chat/completions` follows [LM Studio’s documented interface](https://lmstudio.ai/docs/developer/openai-compat/structured-output); replace `local-model` with your loaded model ID and start the server. Use **JSON schema** where supported, or explicitly choose **JSON object** for a compatible server without schema support. This is an API compatibility option, not a promise that every service/model works. Servers must return completed, non-streaming chat-completion JSON, with a JSON string in `choices[0].message.content`.
+
+Endpoint settings are application-wide. Full HTTPS URLs are accepted; unencrypted HTTP is limited to loopback (`localhost`, `127.x.x.x`, `::1`). Credentials, query parameters and fragments in URLs are rejected. Store an optional Ollama/custom token using **Add or update API key**; that provider’s saved token is sent to its configured endpoint, including after you deliberately change it. Redirects are not followed. The extension runs on the desktop side, so localhost means your desktop even in a remote VS Code workspace.
+
+Use a model supporting the relevant structured-output API. Access, quotas, prices, and data policies belong to your provider; the extension does not supply shared credentials. DeepSeek uses JSON object output with the schema in its instructions; other built-in cloud connections request schema output. All replies still pass Buddy’s local teaching/plan validation. OpenRouter routes to a compatible model host through your OpenRouter account. A failed request does not automatically retry, downgrade output format or switch providers.
 
 The run’s source, related source excerpts, relative source-file index, relevant output, and your clarification are sent directly to the **selected provider**. Git-ignored sources, hidden files, credential filenames, dependencies, generated directories, and symlinks escaping the folder are excluded from related context. Without Git, built-in directory exclusions apply. Coding Buddy does not execute AI commands or operate a separate backend. Avoid putting secrets into code or chat. Known saved keys and credential files are blocked from being used as coding context; this is not a universal secret detector.
 
@@ -92,7 +106,7 @@ npm run test:package
 
 Project tests cover custom/suggested planning, approval, progress restoration, learner-controlled completion, trust and stale/cancelled replies. The native suite also checks the actual Project Mode command and saved-source coaching with HTTP fixture replies; this is not live AI acceptance.
 
-Unit tests exercise the activated controller across language switches, workspace boundaries/freshness, fresh playground copies, attempt rules, early-answer guards, and HTTP fixtures for all three provider contracts. Live Groq checks now use the key already stored in VS Code without exposing it. They found early-answer leakage, prompting stricter stage schemas and a local hint guard. See the [verification report](devpost/verification.md) for the exact live and automated coverage. Gemini/OpenAI teaching quality and account access remain unverified; HTTP fixtures alone do not establish them.
+Unit tests exercise the activated controller across language switches, workspace boundaries/freshness, fresh playground copies, attempt rules, early-answer guards, and HTTP fixtures for all nine provider choices plus actual loopback HTTP against a test server (not a local model). Live Groq checks now use the key already stored in VS Code without exposing it. They found early-answer leakage, prompting stricter stage schemas and a local hint guard. See the [verification report](devpost/verification.md) for the exact live and automated coverage. New provider/local-model teaching quality and account access remain unverified; HTTP fixtures alone do not establish them.
 
 Context limits: 12,000 characters in the run’s primary file; up to 500 source paths in its workspace-folder index; up to eight related files, 6,000 characters each and 30,000 combined; the last 8,000 output characters; 2,000 clarification/result-input characters. Omissions and truncated excerpts are labeled for the model; truncated related files cannot be replaced. Related files over 100 KB are omitted. Save related changes before rerunning. New or excluded files may not be read, so the buddy cannot prove the entire project is correct.
 

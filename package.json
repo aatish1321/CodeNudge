@@ -2,7 +2,7 @@
   "name": "coding-buddy",
   "displayName": "Coding Buddy",
   "description": "A patient coding companion: clues first, answers when you need them.",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "publisher": "aatish1321",
   "license": "UNLICENSED",
   "repository": { "type": "git", "url": "https://github.com/aatish1321/coding-buddy.git" },
@@ -26,6 +26,7 @@
       { "command": "codingBuddy.setKey", "title": "Coding Buddy: Set API Key" },
       { "command": "codingBuddy.removeKey", "title": "Coding Buddy: Remove API Key" },
       { "command": "codingBuddy.chooseProvider", "title": "Coding Buddy: Choose AI Provider" },
+      { "command": "codingBuddy.configureProvider", "title": "Coding Buddy: Configure Model and Connection" },
       { "command": "codingBuddy.settings", "title": "Coding Buddy: Settings" },
       { "command": "codingBuddy.reset", "title": "Coding Buddy: Reset Current Issue" },
       { "command": "codingBuddy.retry", "title": "Coding Buddy: Retry Analysis" },
@@ -37,10 +38,19 @@
       "title": "Coding Buddy",
       "properties": {
         "codingBuddy.autoWatch": { "type": "boolean", "default": true, "scope": "application", "description": "Automatically check completed terminal runs using files identified in the opened folder and relevant project context. Code and output are sent to your selected AI provider. Pause this in the buddy settings menu." },
-        "codingBuddy.provider": { "type": "string", "enum": ["gemini", "openai", "groq"], "default": "gemini", "scope": "application", "description": "AI provider that receives your connected code and run output. Use Coding Buddy: Set API Key to store its key securely." },
+        "codingBuddy.provider": { "type": "string", "enum": ["gemini", "openai", "groq", "anthropic", "openrouter", "deepseek", "mistral", "ollama", "custom"], "default": "gemini", "scope": "application", "description": "Provider that receives your coding context in Debug and Project mode. Store keys with Coding Buddy: Set API Key. Ollama/custom endpoints allow an optional key." },
         "codingBuddy.models.gemini": { "type": "string", "default": "gemini-3.5-flash-lite", "scope": "application", "description": "Gemini model with structured-output support. Model availability depends on your account." },
         "codingBuddy.models.openai": { "type": "string", "default": "gpt-6-luna", "scope": "application", "description": "OpenAI model with Responses API structured-output support." },
         "codingBuddy.models.groq": { "type": "string", "default": "openai/gpt-oss-120b", "scope": "application", "description": "Groq-hosted model with strict structured-output support." },
+        "codingBuddy.models.anthropic": { "type": "string", "default": "claude-sonnet-4-6", "scope": "application", "description": "Claude API model with structured-output support. Uses an Anthropic API key, not a Claude chat subscription." },
+        "codingBuddy.models.openrouter": { "type": "string", "default": "openai/gpt-oss-120b", "scope": "application", "description": "OpenRouter model ID supporting JSON schema. OpenRouter routes the request to a compatible model host." },
+        "codingBuddy.models.deepseek": { "type": "string", "default": "deepseek-flash", "scope": "application", "description": "DeepSeek API model supporting JSON output. Buddy validates replies locally." },
+        "codingBuddy.models.mistral": { "type": "string", "default": "mistral-large-latest", "scope": "application", "description": "Mistral API model supporting custom structured outputs." },
+        "codingBuddy.models.ollama": { "type": "string", "default": "qwen3:8b", "scope": "application", "description": "Model already downloaded in your local Ollama installation. Buddy does not install or download models." },
+        "codingBuddy.models.custom": { "type": "string", "default": "local-model", "scope": "application", "description": "Exact model ID served by your custom OpenAI-compatible chat completions endpoint." },
+        "codingBuddy.endpoints.ollama": { "type": "string", "default": "http://localhost:11434/api/chat", "scope": "application", "description": "Full Ollama chat request URL. This server receives coding context; an optional saved Ollama key is sent here. HTTPS, or HTTP on loopback only. No URL credentials/query/fragment." },
+        "codingBuddy.endpoints.custom": { "type": "string", "default": "http://localhost:1234/v1/chat/completions", "scope": "application", "description": "Full OpenAI-compatible chat completions URL, for example LM Studio or a hosted service. This server receives coding context and your optional custom key. HTTPS, or HTTP on loopback only. No URL credentials/query/fragment." },
+        "codingBuddy.customFormat": { "type": "string", "enum": ["json_schema", "json_object"], "default": "json_schema", "scope": "application", "description": "Output format supported by your custom server. Use JSON object only if JSON schema is unsupported; Buddy still rejects unusable replies. No automatic fallback." },
         "codingBuddy.animateCharacter": { "type": "boolean", "default": true, "scope": "application", "description": "Animate the buddy character while idle, thinking and celebrating. Reduced-motion preferences are always respected." },
         "codingBuddy.confetti": { "type": "boolean", "default": true, "scope": "application", "description": "Celebrate a solved issue with confetti. Reduced-motion preferences are always respected." }
       }
@@ -54,7 +64,7 @@
     "test:trust": "npm run compile && node scripts/test-host.cjs --restricted",
     "test:package": "node scripts/test-host.cjs --package",
     "vscode:prepublish": "npm run compile",
-    "package": "vsce package --no-dependencies --skip-license --out coding-buddy-0.0.14.vsix"
+    "package": "vsce package --no-dependencies --skip-license --out coding-buddy-0.0.15.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
