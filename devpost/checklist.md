@@ -135,3 +135,11 @@ Activity mode: Reference map and factual verification recap; no interactive tour
 - [x] 96 source tests pass, including both planning paths, approval/refinement, progress restoration, advisory reviews, completion/reset, source freshness and safe mode switching. Source native VS Code suite passes with Project HTTP fixtures and existing Python/JavaScript/editor regressions.
 - [x] Final clean 35-entry VSIX, installed native Project/Debug suite, actual Restricted Mode activation, normal-profile installation and byte matching. Built from 5552afd; see verification.md.
 - [ ] New Project-mode live-provider teaching and visual layout rehearsal. Fixture replies are not live acceptance.
+
+
+## Provider freedom delivery (0.0.15)
+
+- [x] Nine provider choices, independent saved keys, optional local/custom authentication, configurable model/full endpoint/custom JSON mode, and the same connection in both modes.
+- [x] 107 source tests, all-provider stage/Project schemas, key/endpoint/envelope guards, real loopback HTTP with fixture replies, cancellation and setup tests.
+- [x] Clean 35-entry package from e54c8cc, installed native provider/Project/Debug suite, actual Restricted Mode, normal-profile installation and runtime-byte matching.
+- [ ] Live new-provider account access, local-model inference and teaching-quality rehearsal. No fixture test is a live-model result.

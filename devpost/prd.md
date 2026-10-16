@@ -175,3 +175,8 @@ The learner confirmed the successful-run fix and asked to spice up the bland sid
 ## Project Mode Revision
 
 Promoted from deferred work at the learner’s explicit request. Project mode asks for an idea, then offers “I have features” and “Suggest a plan”. Buddy may ask a short clarification question; it proposes a bounded task plan for review before the learner starts. Each active task has a light implementation prompt and a concrete way to test it. The learner can request a conceptual nudge, ask questions or ask Buddy to review saved code/current run context, then explicitly mark tasks done. Reviews are advisory; progress is learner-reported, and no files are automatically written or executed. Plans/progress survive reloads in local workspace storage, independently of per-file debugging conversations. Keep the provider/settings, character and existing error-help mode. AI errors, missing keys, stale source and cancellation retain the last usable plan.
+
+
+## Provider Freedom Revision (0.0.15)
+
+The learner requested broader provider freedom for the planned open-source project. Keep existing Gemini/OpenAI/Groq choices; add Anthropic Claude, OpenRouter, DeepSeek, Mistral, local Ollama and a custom OpenAI-compatible server. Both teaching modes use the selected connection. Let learners configure their model and, for local/custom services, the full endpoint and supported JSON output mode from the gear menu. Hosted connections use each learner’s own secure key; local/custom keys are optional. Do not download models, start services, retry or switch providers automatically. Explain compatibility/setup and actual verification rather than promising every model/service works.
