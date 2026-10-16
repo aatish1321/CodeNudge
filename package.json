@@ -4,7 +4,7 @@
   "description": "A patient coding companion: clues first, answers when you need them.",
   "version": "0.0.16",
   "publisher": "aatish1321",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "repository": { "type": "git", "url": "https://github.com/aatish1321/CodeNudge.git" },
   "engines": { "vscode": "^1.93.0" },
   "categories": ["Education", "Other"],
@@ -64,7 +64,7 @@
     "test:trust": "npm run compile && node scripts/test-host.cjs --restricted",
     "test:package": "node scripts/test-host.cjs --package",
     "vscode:prepublish": "npm run compile",
-    "package": "vsce package --no-dependencies --skip-license --out codenudge-0.0.16.vsix"
+    "package": "vsce package --no-dependencies --out codenudge-0.0.16.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

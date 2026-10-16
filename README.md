@@ -153,8 +153,12 @@ Live Groq Debug-stage probes are recorded separately. New provider/local-model t
 
 ## Project status and contributions
 
-CodeNudge is a **working hackathon prototype**, currently installed through a locally built VSIX. Marketplace publication is planned. An open-source license is still being selected; the manifest currently declares `UNLICENSED`.
+CodeNudge is a **working open-source hackathon prototype**, currently installed through a locally built VSIX. Marketplace publication is planned.
 
 The [Marketplace release checklist](docs/marketplace-release.md) tracks testing and publication preparation. See the [changelog](CHANGELOG.md) for local build history and [support guide](SUPPORT.md) for troubleshooting and bug reports.
 
 Feedback is welcome: try a practice example, describe what you expected and what happened, and share a small reproduction through [GitHub Issues](https://github.com/aatish1321/CodeNudge/issues). Remove keys and personal data from reports and recordings. Development areas include wider live-provider testing, more language/toolchain verification, and public-release preparation.
+
+## License
+
+CodeNudge is licensed under the [MIT License](LICENSE). You may use, modify, and redistribute it, including commercially, while keeping the copyright and license notices. AI providers and third-party components retain their own terms.

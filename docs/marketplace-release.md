@@ -12,7 +12,7 @@ Status: **preparation only**. The learner is testing the installed extension. No
 | Configured publisher ID | `aatish1321` — Marketplace ownership/access not verified |
 | Extension identity | `aatish1321.coding-buddy`, retained to preserve installed-user data |
 | Repository | [aatish1321/CodeNudge](https://github.com/aatish1321/CodeNudge) |
-| License | `UNLICENSED`; an open-source license has not been selected |
+| License | [MIT](../LICENSE); manifest and root lockfile metadata match |
 | Automated evidence | 107 source tests and installed VS Code/Restricted Mode checks passed for the branding build |
 
 Any code fixes found during testing need a fresh version/package and relevant checks. Keep the eventual published artifact identical to the final artifact tested.
@@ -38,7 +38,7 @@ Record problems with the version, file/example, provider/model, expected result 
 - [x] Changelog and support instructions are drafted.
 - [x] Provider/privacy/context limitations are documented.
 - [ ] Complete the learner test pass and resolve release-blocking bugs.
-- [ ] Choose the intended open-source license, add its file, and update the manifest accordingly. This is a project decision, not a claim that Marketplace requires an open-source license.
+- [x] Add the MIT license and update manifest/root lockfile metadata. Packaging now checks for the license without bypassing it.
 - [ ] Confirm control of the configured Marketplace publisher. Do not change the publisher/extension identity casually; existing installations use it.
 - [ ] Add a listing icon and screenshots from the final tested UI. Screenshots must not expose keys or private code.
 - [ ] Rebuild the final version from committed release content; inspect VSIX contents and repeat relevant source/installed checks.

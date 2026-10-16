@@ -120,4 +120,4 @@ The implementation plan and remaining acceptance checks live in [devpost/checkli
 
 ## Release status
 
-The source is public for development. An open-source license has not yet been selected, so this repository does not currently grant an open-source license. Select a license before publishing the Marketplace release. API keys, learner profiles, and development/course files are excluded from the VSIX.
+The source is available under the [MIT License](../LICENSE). Marketplace publication remains planned. API keys, learner profiles, and development/course files are excluded from the VSIX.

@@ -4,6 +4,7 @@ Versions listed below are local development builds. No Marketplace release is re
 
 ## 0.0.16
 
+- Added the MIT license and aligned package metadata and release documentation.
 - Updated the extension, sidebar, commands, settings, terminal, diff view and playground to the CodeNudge name.
 - Kept existing extension identifiers, saved provider keys, settings and Project progress compatible.
 - Renamed the installable package to `codenudge-0.0.16.vsix`.
