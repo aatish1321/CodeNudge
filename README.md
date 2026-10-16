@@ -4,7 +4,7 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install `coding-buddy-0.0.9.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
+Install `coding-buddy-0.0.10.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
 
 A fresh playground can open in **Restricted Mode**. Buddy remains visible with a **Trust this folder…** button that opens VS Code’s trust screen. Choose Trust for the playground, or use the top banner’s **Manage** link. Terminal watching and AI analysis stay disabled until you grant trust. After updating the extension, use **Developer: Reload Window** once.
 
@@ -14,7 +14,7 @@ A fresh playground can open in **Restricted Mode**. Buddy remains visible with a
 4. For Python or plain JavaScript, click the editor’s **Run with Buddy** play-circle button, or use **Ctrl+Shift+P → Coding Buddy: Run with Buddy**. It saves the file and launches a linked run in its own terminal. **No terminal attachment, command-entry dialog, or yes/no reply is required.** Other project commands can still run normally in an integrated terminal.
 5. Read the clue, try your own change, save, and run again.
 
-Buddy watches completed runs across the opened folder and integrated terminals. An explicit source path in the command owns that learning session, even when a helper fails; otherwise a workspace traceback/stack frame identifies the file. Relative and quoted paths use the terminal’s working directory. You can run Python with a JavaScript tab focused. If no source is identified, Buddy quietly skips analysis and points to Run with Buddy or explicit result sharing. It never asks “Was that result from this file?” or guesses that the active tab produced unrelated output. Outside-folder runs are ignored. Recognized housekeeping commands such as `git status` and `ls` are ignored.
+Buddy watches completed runs across the opened folder and integrated terminals. An explicit source path in the command owns that learning session, even when a helper fails; otherwise a workspace traceback/stack frame identifies the file. Relative and quoted paths use the terminal’s working directory. When local Linux shells omit that metadata, Buddy reads the running shell’s actual folder from `/proc` before the command ends; it does not infer the folder from the active editor. This fallback skips remote windows and compound commands. Shell command markers remove echoed commands/prompts when available. You can run Python with a JavaScript tab focused. If no source is identified, Buddy quietly skips analysis and points to Run with Buddy or explicit result sharing. It never asks “Was that result from this file?” or guesses that the active tab produced unrelated output. Outside-folder runs are ignored. Recognized housekeeping commands such as `git status` and `ls` are ignored.
 
 Switch between code files and back: each file retains its hints, clarification, and attempt count for this window session. Related-file edits also invalidate cached analysis and count as changed-code attempts when the same issue remains. Buddy includes a source-file index and bounded related code, prioritizing imports and error references. It can point to a helper file and offer a reviewed fix there; each proposal changes one file. It does not read every file’s full contents.
 

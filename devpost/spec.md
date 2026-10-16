@@ -80,7 +80,7 @@ The examples must be saved before running. Exercise the learning loop using genu
 
 ```sh
 npm run package
-code --install-extension coding-buddy-0.0.9.vsix
+code --install-extension coding-buddy-0.0.10.vsix
 ```
 
 `npm run package` will compile and invoke `vsce package`; use the actual generated versioned filename if it differs. Inspect package contents so learner profiles, keys, local logs, course material, and development-only files do not ship.
@@ -369,3 +369,7 @@ Declare limited untrusted-workspace support so Buddy is discoverable in fresh, u
 ## Run with Buddy (0.0.9)
 
 An editor/title play-circle and palette command launch `.py` with python3 (python on Windows) and `.js`/`.mjs`/`.cjs` with node on VS Code’s PATH. Require trust, allowed workspace source, successful save, and unchanged version after terminal initialization. `src/runner.ts` uses Node’s `spawn` with `shell: false` and a dedicated VS Code pseudoterminal. Retain the original source snapshot and capture only stdout/stderr and exit code. Refuse a second run while busy; closing its terminal or Ctrl+C stops its own process. Basic line input is supported. Preserve unrelated terminals and automatic watching; an explicit run works while automatic watching is paused. Shell-special filenames are literal arguments. The SDK shell runner was rejected after native tests exposed shell substitution and variable prompt text. Unlinked manual runs receive a quiet status, no API call, no attempted-source confirmation and no count change. The button uses the workspace folder as cwd; virtual-environment selection and project/dev-server wrappers are outside this small runner. Native Windows execution remains unverified.
+
+## Successful manual runs (0.0.10)
+
+A learner’s relative zsh command produced `18` but retained an old syntax clue. A native reproduction confirmed that Powerlevel10k supplied a medium-confidence command at start, an empty command at completion, and no cwd. Full error tracebacks had hidden the missing cwd because their paths were absolute. When shell cwd is missing on local Linux, read `/proc/<terminal-process-id>/cwd` while the execution is still pending. Ignore inaccessible, remote, compound-command and late results; never reuse a prior run’s directory or guess from the active editor. Existing source and freshness boundaries remain. Recognized OSC 133/633 command-output markers exclude command echo and later prompts when present. Successful linked output returns through the existing teaching path, replacing obsolete clues and celebrating once only after goal validation. Retain Run with Buddy and explicit sharing for environments without reliable metadata. Other platforms and remote cwd recovery remain unverified.

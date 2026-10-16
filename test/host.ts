@@ -225,6 +225,59 @@ export async function run(): Promise<void> {
       assert.equal(result.sourceConfirmed, true, 'filename in traceback must link the run without a prompt');
       console.log('HOST CHECK PASSED: automatic zsh capture without terminal attachment or command confirmation.');
       capture?.dispose();
+      async function manualZsh(command: string): Promise<RunSnapshot> {
+        capture?.dispose();
+        const observed = new Promise<RunSnapshot>((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('Relative zsh command was not linked')), 20_000);
+          capture = new TerminalCapture(result => { clearTimeout(timer); resolve(result); }, status => {
+            clearTimeout(timer); reject(new Error(status));
+          }, resolveSource);
+        });
+        zsh.sendText(command);
+        return observed;
+      }
+      const expensesPath = join(fixtures, 'expenses.py');
+      await writeFile(expensesPath, '# Print 18.\nprices = [10, "5", 3]\nprint(sum(prices))\n');
+      const expenses = await vscode.workspace.openTextDocument(expensesPath);
+      const expensesCommand = `python3 ${quote(vscode.workspace.asRelativePath(expenses.uri, false))}`;
+      await vscode.window.showTextDocument(expenses);
+      const runtime = await manualZsh(expensesCommand);
+      assert.match(runtime.output, /TypeError/);
+      async function setExpenses(source: string): Promise<void> {
+        const editor = await vscode.window.showTextDocument(expenses);
+        await editor.edit(edit => edit.replace(new vscode.Range(expenses.positionAt(0), expenses.positionAt(expenses.getText().length)), source));
+        await expenses.save();
+      }
+      await setExpenses('# Print 18.\nprices = [10, 5", 3]\nprint(sum(prices))\n');
+      assert.match((await manualZsh(expensesCommand)).output, /SyntaxError/);
+      await setExpenses('# Print 18.\nprices = [10, 5, 3]\nprint(sum(prices))\n');
+      await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(javascriptPath));
+      const success = await manualZsh(expensesCommand);
+      assert.equal(success.uri, expenses.uri.toString(), 'the relative command owns the run even with JavaScript focused');
+      assert.equal(success.command, expensesCommand);
+      assert.equal(success.source, expenses.getText());
+      assert.equal(success.sourceConfirmed, true);
+      assert.equal(success.exitCode, 0);
+      assert.match(success.output, /^18$/m);
+      assert.equal((await manualZsh(expensesCommand)).output, success.output, 'unchanged zsh output must remain stable despite prompt redraws');
+      const nextFolder = join(fixtures, 'another folder');
+      await vscode.workspace.fs.createDirectory(vscode.Uri.file(nextFolder));
+      const otherPath = join(nextFolder, 'expenses.py');
+      await writeFile(otherPath, '# Print 21.\nprint(21)\n');
+      await new Promise<void>((resolve, reject) => {
+        capture?.dispose();
+        const timer = setTimeout(() => { listener.dispose(); reject(new Error('cd did not complete')); }, 10_000);
+        const listener = vscode.window.onDidEndTerminalShellExecution(event => {
+          if (event.terminal !== zsh) return;
+          clearTimeout(timer); listener.dispose(); resolve();
+        });
+        zsh.sendText(`cd ${quote(nextFolder)}`);
+      });
+      const other = await manualZsh('python3 expenses.py');
+      assert.equal(other.uri, vscode.Uri.file(otherPath).toString(), 'a fresh process cwd must follow cd rather than reuse the previous file');
+      assert.match(other.output, /^21$/m);
+      console.log('HOST CHECK PASSED: relative manual zsh runtime/syntax/success runs, plain output with another language focused, and cd into a same-named file.');
+      capture?.dispose();
       const project = join(fixtures, 'zsh invoice');
       await cp(join(extension.extensionPath, 'examples/projects/python_invoices'), project, { recursive: true });
       const entry = await vscode.workspace.openTextDocument(join(project, 'main.py'));
@@ -296,6 +349,6 @@ export async function run(): Promise<void> {
     console.log('HOST CHECK PASSED: three native provider settings and distinct secret names.');
   } finally { await config.update('provider', originalProvider, vscode.ConfigurationTarget.Global); }
   if (process.env.CODING_BUDDY_TEST_REPORT) {
-    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['run-with-buddy-python-javascript', 'literal-shell-special-paths', 'save-before-run', 'direct-process-plain-output', 'activation', 'automatic-python-capture', 'automatic-javascript-capture', 'changed-retry-inline', 'successful-rerun-clears-errors', 'multi-file-invoice-runtime-logic-success', 'async-javascript-404-503', 'cross-language-execution-routing', 'helper-only-context-changes', 'quoted-paths', ...(existsSync('/bin/zsh') ? ['automatic-zsh-capture', 'zsh-multi-file-entry'] : []), 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'provider-settings'] }));
+    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['run-with-buddy-python-javascript', 'literal-shell-special-paths', 'save-before-run', 'direct-process-plain-output', 'activation', 'automatic-python-capture', 'automatic-javascript-capture', 'changed-retry-inline', 'successful-rerun-clears-errors', 'multi-file-invoice-runtime-logic-success', 'async-javascript-404-503', 'cross-language-execution-routing', 'helper-only-context-changes', 'quoted-paths', ...(existsSync('/bin/zsh') ? ['automatic-zsh-capture', 'zsh-multi-file-entry', 'relative-zsh-error-to-success', 'zsh-cd-same-name-routing'] : []), 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'provider-settings'] }));
   }
 }

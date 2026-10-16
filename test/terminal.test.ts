@@ -8,11 +8,11 @@ import type * as vscode from 'vscode';
 import type { TerminalCapture } from '../src/terminal';
 import type { RunSnapshot } from '../src/teaching';
 
-function terminalFixture() {
+function terminalFixture(readCwd?: () => Promise<string>, remoteName?: string) {
   let start!: (event: vscode.TerminalShellExecutionStartEvent) => void;
   let end!: (event: vscode.TerminalShellExecutionEndEvent) => void;
   const runs: RunSnapshot[] = []; const statuses: string[] = []; const clears: boolean[] = [];
-  const terminal = {} as vscode.Terminal;
+  const terminal = { processId: Promise.resolve(readCwd ? 4321 : undefined) } as unknown as vscode.Terminal;
   const document = { fileName: '/demo.py', uri: { scheme: 'file', toString: () => 'file:///demo.py' }, version: 1,
     languageId: 'python', isDirty: false, isClosed: false, getText: () => 'print(1)\n' };
   const window = {
@@ -26,7 +26,10 @@ function terminalFixture() {
   const filename = resolve(__dirname, '../src/terminal.js');
   const localRequire = createRequire(filename);
   runInNewContext(readFileSync(filename, 'utf8'), { exports: moduleExports,
-    require: (name: string) => name === './workspace' ? { referencedPaths: () => [] } : name === 'vscode' ? { TerminalShellExecutionCommandLineConfidence: { Low: 0 }, window } : localRequire(name)
+    require: (name: string) => name === './workspace' ? { referencedPaths: () => [] }
+      : name === 'node:os' ? { platform: () => 'linux' }
+      : name === 'node:fs/promises' && readCwd ? { ...localRequire(name), realpath: (path: string) => { assert.equal(path, '/proc/4321/cwd'); return readCwd(); } }
+      : name === 'vscode' ? { env: { remoteName }, TerminalShellExecutionCommandLineConfidence: { Low: 0 }, window } : localRequire(name)
   });
   const capture = new moduleExports.TerminalCapture(run => runs.push(run), (status, clear) => { statuses.push(status); clears.push(!!clear); });
   const run = async (command = 'python3 demo.py', output = '1\r\n', confidence = 2, duringRun?: () => void, cwd = '/') => {
@@ -139,5 +142,60 @@ test('optional manual attachment still pins one command and disconnect invalidat
   assert.equal(fixture.runs.length, 1);
   await fixture.run('python3 demo.py', '1', 2, () => fixture.capture.disconnect());
   assert.equal(fixture.runs.length, 1);
+  fixture.capture.dispose();
+});
+
+test('local Linux uses the live shell cwd for relative commands with plain successful output', async () => {
+  let cwd = '/'; let reads = 0;
+  const fixture = terminalFixture(async () => { reads++; return cwd; });
+  for (const directory of ['/', '/other']) {
+    cwd = directory;
+    const execution = { commandLine: { value: 'python3 demo.py', confidence: 1 }, read: async function* () { yield '18\n'; } } as unknown as vscode.TerminalShellExecution;
+    fixture.start({ terminal: fixture.terminal, execution, shellIntegration: {} as vscode.TerminalShellIntegration });
+    await new Promise(resolve => setImmediate(resolve));
+    Object.assign(execution.commandLine, { value: '', confidence: 0 });
+    fixture.end({ terminal: fixture.terminal, execution, exitCode: 0, shellIntegration: {} as vscode.TerminalShellIntegration });
+    await new Promise(resolve => setImmediate(resolve));
+  }
+  assert.equal(reads, 2, 'read each run’s actual cwd, including after cd');
+  assert.equal(fixture.runs.length, 1, 'a different same-named file is not linked to the active file');
+  assert.equal(fixture.runs[0].output, '18\n');
+  assert.equal(fixture.runs[0].sourceConfirmed, true);
+  assert.match(fixture.statuses.at(-1)!, /another copy/);
+  fixture.capture.dispose();
+});
+
+test('remote, inaccessible and too-late process cwd never become guessed success', async () => {
+  for (const mode of ['remote', 'denied', 'late', 'compound']) {
+    let complete!: (cwd: string) => void;
+    let reads = 0;
+    const fixture = terminalFixture(async () => {
+      reads++;
+      if (mode === 'denied') throw new Error('permission denied');
+      return new Promise(resolve => { complete = resolve; });
+    }, mode === 'remote' ? 'ssh-remote' : undefined);
+    const execution = { commandLine: { value: mode === 'compound' ? 'python3 demo.py; cd other' : 'python3 demo.py', confidence: 1 }, read: async function* () { yield '18\n'; } } as unknown as vscode.TerminalShellExecution;
+    fixture.start({ terminal: fixture.terminal, execution, shellIntegration: {} as vscode.TerminalShellIntegration });
+    await new Promise(resolve => setImmediate(resolve));
+    fixture.end({ terminal: fixture.terminal, execution, exitCode: 0, shellIntegration: {} as vscode.TerminalShellIntegration });
+    complete?.('/');
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(fixture.runs.length, 0);
+    assert.equal(reads, ['remote', 'compound'].includes(mode) ? 0 : 1);
+    assert.match(fixture.statuses.at(-1)!, /Run with Buddy/);
+    fixture.capture.dispose();
+  }
+});
+
+test('shell command markers exclude varying echoed commands and prompts from captured results', async () => {
+  const fixture = terminalFixture();
+  for (const protocol of ['133', '633']) for (const prompt of ['first prompt', 'another prompt']) {
+    const raw = `${prompt} python3 demo.py\r\n\x1b]${protocol};C;\x0718\r\n\x1b]${protocol};D;0\x07${prompt} > `;
+    await fixture.run('python3 demo.py', raw);
+  }
+  assert.equal(fixture.runs.length, 4);
+  assert.ok(fixture.runs.every(run => run.output === '18\n'));
+  await fixture.run('python3 demo.py', '18\r\n');
+  assert.equal(fixture.runs.at(-1)!.output, '18\n', 'unframed output remains usable');
   fixture.capture.dispose();
 });

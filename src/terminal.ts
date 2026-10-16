@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { basename, isAbsolute, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { stat } from 'node:fs/promises';
+import { realpath, stat } from 'node:fs/promises';
+import { platform } from 'node:os';
 import { referencedPaths } from './workspace';
 import { stripVTControlCharacters } from 'node:util';
 import { checkSource, RunSnapshot } from './teaching';
@@ -66,12 +67,28 @@ export class TerminalCapture implements vscode.Disposable {
         raw += chunk;
         if (raw.length > 16_000) { raw = raw.slice(-16_000); truncated = true; }
       }
+      const start = /\x1b\](?:133|633);C(?:;[^\x07\x1b]*)?(?:\x07|\x1b\\)/.exec(raw);
+      if (start) {
+        raw = raw.slice(start.index + start[0].length);
+        const end = raw.search(/\x1b\](?:133|633);(?:D(?:;[^\x07\x1b]*)?|A)(?:\x07|\x1b\\)/);
+        if (end >= 0) raw = raw.slice(0, end);
+      }
       const clean = stripVTControlCharacters(raw).replace(/\r\n/g, '\n').replace(/\r/g, '');
       return { output: clean.slice(-8_000), truncated: truncated || clean.length > 8_000 };
     })().catch(() => ({ output: '', truncated: true, failed: true }));
-    this.pending.set(event.execution, { document, snapshots, startedAt, command, confidence: event.execution.commandLine.confidence, terminal: event.terminal, cwd: event.execution.cwd?.fsPath ?? event.shellIntegration.cwd?.fsPath, generation, output,
+    const capture: Captured = { document, snapshots, startedAt, command, confidence: event.execution.commandLine.confidence, terminal: event.terminal, cwd: event.execution.cwd?.fsPath ?? event.shellIntegration.cwd?.fsPath, generation, output,
       run: document ? { uri: document.uri.toString(), version: document.version, language: document.languageId,
-        source, command, output: '', exitCode: null, truncated: false, reported: false, startedAt } : undefined });
+        source, command, output: '', exitCode: null, truncated: false, reported: false, startedAt } : undefined };
+    this.pending.set(event.execution, capture);
+    // shortcut: missing shell cwd is recoverable through /proc on local Linux; other hosts need shell metadata or Run with Buddy.
+    if (!capture.cwd && !/[;&|<>`\n]|\$\(/.test(command) && platform() === 'linux' && !vscode.env?.remoteName) void (async () => {
+      try {
+        const pid = await event.terminal.processId;
+        if (!pid) return;
+        const cwd = await realpath(`/proc/${pid}/cwd`);
+        if (this.pending.get(event.execution) === capture) capture.cwd = cwd;
+      } catch {}
+    })();
   }
 
   private async end(event: vscode.TerminalShellExecutionEndEvent): Promise<void> {

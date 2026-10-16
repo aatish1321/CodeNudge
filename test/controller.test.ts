@@ -12,7 +12,7 @@ import type { RunSnapshot, TeachingReply } from '../src/teaching';
 import type { ProjectSnapshot, WorkspaceContext } from '../src/workspace';
 
 type Document = { uri: ReturnType<typeof uri>; fileName: string; languageId: string; version: number; isDirty: boolean; isClosed: boolean; source: string; getText(): string };
-type Input = { source: string; allowedLevel: 'clue' | 'inline' | 'fix'; previousIssue: string; clarification: string; workspace: ProjectSnapshot['data'] & { currentFile: string } };
+type Input = { output: string; source: string; allowedLevel: 'clue' | 'inline' | 'fix'; previousIssue: string; clarification: string; workspace: ProjectSnapshot['data'] & { currentFile: string } };
 const uri = (path: string) => ({ scheme: 'file', fsPath: resolve(path), toString: () => pathToFileURL(resolve(path)).toString() });
 const disposable = () => ({ dispose() {} });
 async function until(check: () => boolean, description: string): Promise<void> {
@@ -153,10 +153,10 @@ async function controllerFixture(t: TestContext, trusted = true) {
     await writeFile(document.fileName, source);
     changedDocument?.({ document, contentChanges: [{}] }); await flush();
   }
-  async function run(document: Document, pending = false, confirmed = true) {
+  async function run(document: Document, pending = false, confirmed = true, output = 'TypeError: invalid data\n', exitCode = 1) {
     const before = collected;
     emit({ uri: document.uri.toString(), version: document.version, language: document.languageId, source: document.getText(),
-      command: `${document.languageId === 'python' ? 'python3' : 'node'} ${document.fileName}`, output: 'TypeError: invalid data\n', exitCode: 1,
+      command: `${document.languageId === 'python' ? 'python3' : 'node'} ${document.fileName}`, output, exitCode,
       sourceConfirmed: confirmed, reported: false, truncated: false });
     if (!workspace.isTrusted || !confirmed) { await flush(); return; }
     await until(() => collected > before, 'workspace collection');
@@ -404,4 +404,27 @@ test('an unlinked terminal result does not create a yes/no question or spend an 
   assert.equal(fixture.requests.length, 1);
   assert.deepEqual(fixture.state().messages, messages);
   assert.doesNotMatch(fixture.state().status, /yes|Was that result/);
+});
+
+test('correct output replaces old error clues, celebrates once, and unchanged success makes no new request', async t => {
+  const fixture = await controllerFixture(t);
+  const document = await fixture.add('expenses.py', '# Print 18.\nprices = [10, "5", 3]\nprint(sum(prices))\n');
+  fixture.respond(input => input.output.trim() === '18'
+    ? reply(input, { status: 'solved', relationship: 'same', level: 'none', category: 'unknown',
+      expectedOutcome: 'Print 18.', message: 'You got it! The total is 18.', line: null })
+    : reply(input, { category: input.output.includes('SyntaxError') ? 'syntax' : 'runtime' }));
+  await fixture.select(document); await fixture.run(document);
+  await fixture.change(document, '# Print 18.\nprices = [10, 5", 3]\nprint(sum(prices))\n');
+  await fixture.run(document, false, true, 'SyntaxError: unterminated string literal\n', 1);
+  assert.equal(fixture.state().celebration, 0);
+  await fixture.change(document, '# Print 18.\nprices = [10, 5, 3]\nprint(sum(prices))\n');
+  await fixture.run(document, false, true, '18\n', 0);
+  assert.match(fixture.state().status, /matches the stated goal/);
+  assert.equal(fixture.state().celebration, 1);
+  assert.equal(fixture.state().retries, 0);
+  assert.deepEqual(fixture.state().messages.map(message => message.text), ['You got it! The total is 18.']);
+  assert.equal(fixture.requests.length, 3);
+  await fixture.run(document, false, true, '18\n', 0);
+  assert.equal(fixture.requests.length, 3);
+  assert.equal(fixture.state().celebration, 1);
 });
