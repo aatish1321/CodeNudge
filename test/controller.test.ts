@@ -33,11 +33,13 @@ async function controllerFixture(t: TestContext, trusted = true) {
   let activeEditor: ((editor: { document: Document }) => void) | undefined;
   let changedDocument: ((event: { document: Document; contentChanges: object[] }) => void) | undefined;
   let emit!: (run: RunSnapshot) => void;
-  let action!: (name: string, text?: string) => Promise<void>;
+  let action!: (name: string, text?: string) => Promise<unknown>;
   let state!: PanelState;
   let collected = 0;
   let granted: (() => void) | undefined;
   let watching = true;
+  let finishRun!: () => void;
+  const directRuns: { document: Document; executable: string; args: string[] }[] = [];
   const executed: string[] = [];
   const hints: { run: RunSnapshot; reply: unknown }[] = [];
   const proposals: { run: RunSnapshot; reply: unknown }[] = [];
@@ -106,6 +108,17 @@ async function controllerFixture(t: TestContext, trusted = true) {
       constructor(callback: typeof emit) { emit = callback; }
       disconnect() { watching = false; } watch() { watching = true; } connect() { watching = true; } dispose() {}
     } },
+    './runner': { FileRunner: class {
+      busy = false;
+      async run(document: Document, executable: string, args: string[]): Promise<RunSnapshot> {
+        this.busy = true; directRuns.push({ document, executable, args });
+        await new Promise<void>(resolve => { finishRun = resolve; });
+        this.busy = false;
+        return { uri: document.uri.toString(), source: document.source, version: document.version, language: document.languageId,
+          command: executable, output: 'TypeError: invalid data\n', exitCode: 1, reported: false, truncated: false, sourceConfirmed: true };
+      }
+      dispose() {}
+    } },
     './providers': { analyze: async (_provider: string, _model: string, _key: string, input: Input, signal: AbortSignal) => {
       requests.push({ input: JSON.parse(JSON.stringify(input)), signal });
       return respond(input);
@@ -117,7 +130,7 @@ async function controllerFixture(t: TestContext, trusted = true) {
   runInNewContext(readFileSync(filename, 'utf8'), {
     exports: extensionExports,
     require: (name: string) => boundaries[name] ?? localRequire(name),
-    AbortController, AbortSignal,
+    AbortController, AbortSignal, process: { platform: process.platform }, setTimeout, clearTimeout,
   });
   extensionExports.activate({ extensionUri: uri(root), subscriptions,
     secrets: { get: async () => 'test-placeholder-key', onDidChange: () => disposable() } });
@@ -140,18 +153,18 @@ async function controllerFixture(t: TestContext, trusted = true) {
     await writeFile(document.fileName, source);
     changedDocument?.({ document, contentChanges: [{}] }); await flush();
   }
-  async function run(document: Document, pending = false) {
+  async function run(document: Document, pending = false, confirmed = true) {
     const before = collected;
     emit({ uri: document.uri.toString(), version: document.version, language: document.languageId, source: document.getText(),
       command: `${document.languageId === 'python' ? 'python3' : 'node'} ${document.fileName}`, output: 'TypeError: invalid data\n', exitCode: 1,
-      sourceConfirmed: true, reported: false, truncated: false });
-    if (!workspace.isTrusted) { await flush(); return; }
+      sourceConfirmed: confirmed, reported: false, truncated: false });
+    if (!workspace.isTrusted || !confirmed) { await flush(); return; }
     await until(() => collected > before, 'workspace collection');
     await flush(); await flush();
     if (!pending) await until(() => !state.working, 'analysis completion');
   }
   return { root, add, select, change, run, action: (name: string, text?: string) => action(name, text), requests, hints, proposals,
-    executed, watching: () => watching, collected: () => collected,
+    executed, directRuns, finishRun: () => finishRun(), watching: () => watching, collected: () => collected,
     grantTrust: async () => { workspace.isTrusted = true; granted?.(); await flush(); },
     state: () => state, acceptCount: () => acceptCount, respond: (handler: typeof respond) => { respond = handler; } };
 }
@@ -346,6 +359,7 @@ test('Restricted Mode keeps the panel visible but blocks watching, context and A
   await fixture.action('shareResult', 'TypeError: invalid data');
   await fixture.action('clarify', 'The expected output is 1');
   await fixture.action('connect');
+  await fixture.action('runFile');
   assert.equal(fixture.collected(), 0);
   assert.equal(fixture.requests.length, 0);
   await fixture.action('trust');
@@ -357,4 +371,37 @@ test('Restricted Mode keeps the panel visible but blocks watching, context and A
   await fixture.select(python);
   await fixture.run(python);
   assert.equal(fixture.requests.length, 1);
+});
+
+test('Run with Buddy routes saved Python/JavaScript arguments and refuses to interrupt an active run', async t => {
+  const fixture = await controllerFixture(t);
+  const python = await fixture.add('my folder/expenses.py', '# Print 18\nprint(18)\n');
+  await fixture.select(python);
+  const first = fixture.action('runFile');
+  await until(() => fixture.directRuns.length === 1, 'Python launch');
+  assert.equal(fixture.directRuns[0].executable, process.platform === 'win32' ? 'python' : 'python3');
+  assert.deepEqual(Array.from(fixture.directRuns[0].args), [python.fileName]);
+  await fixture.action('runFile');
+  assert.equal(fixture.directRuns.length, 1, 'do not interrupt the first command');
+  fixture.finishRun(); await first;
+  await until(() => fixture.requests.length === 1 && !fixture.state().working, 'Python analysis');
+  const js = await fixture.add('countdown.js', '// Print 1\nconsole.log(1);\n');
+  await fixture.select(js);
+  const second = fixture.action('runFile');
+  await until(() => fixture.directRuns.length === 2, 'JavaScript launch');
+  assert.equal(fixture.directRuns[1].executable, 'node');
+  fixture.finishRun(); await second;
+  await until(() => fixture.requests.length === 2 && !fixture.state().working, 'JavaScript analysis');
+});
+
+test('an unlinked terminal result does not create a yes/no question or spend an AI request', async t => {
+  const fixture = await controllerFixture(t);
+  const document = await fixture.add('main.py', '# Print a value.\nx = None\nprint(x.value)\n');
+  await fixture.select(document); await fixture.run(document);
+  const messages = fixture.state().messages;
+  await fixture.run(document, false, false);
+  await until(() => /Run with Buddy/.test(fixture.state().status), 'quiet unlinked-run status');
+  assert.equal(fixture.requests.length, 1);
+  assert.deepEqual(fixture.state().messages, messages);
+  assert.doesNotMatch(fixture.state().status, /yes|Was that result/);
 });

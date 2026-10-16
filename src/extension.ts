@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { resolve } from 'node:path';
+import { extname, resolve } from 'node:path';
 import { WorkspaceContext, ProjectSnapshot, sourcePath } from './workspace';
 import { analyze } from './providers';
 import { BuddyPanel, PanelState } from './panel';
@@ -9,6 +9,7 @@ import { checkSource, GuidanceValidationError, RunSnapshot, TeachingReply, valid
 import { TerminalCapture } from './terminal';
 import { EditorGuidance } from './editor';
 import { openPlayground } from './playground';
+import { FileRunner } from './runner';
 
 export function activate(context: vscode.ExtensionContext): void {
   let session = new LearningSession();
@@ -22,6 +23,7 @@ export function activate(context: vscode.ExtensionContext): void {
   let activeSnapshot: ProjectSnapshot | undefined;
   let activeHint: { run: RunSnapshot; reply: Pick<TeachingReply, 'line' | 'inlineHint'> } | undefined;
   let suppressEditorSwitch = false;
+  let launching = false;
   const memories = new Map<string, { session: LearningSession; run?: RunSnapshot; messages: PanelState['messages']; status: string; snapshot?: ProjectSnapshot; hint?: typeof activeHint }>();
   const state: PanelState = { trusted: vscode.workspace.isTrusted, provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Run your code. I’m right here if you get stuck.', working: false, retries: 0, messages: [], proposalId: '', confetti: true, celebration: 0 };
   const log = vscode.window.createOutputChannel('Coding Buddy');
@@ -76,7 +78,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   async function runAnalysis(run: RunSnapshot, attempt: boolean): Promise<void> {
     if (!vscode.workspace.isTrusted) { status('Trust this workspace before sharing coding context.'); return; }
-    if (run.sourceConfirmed === false) { status('Reply “yes” if that result came from this file before I check it.'); return; }
+    if (run.sourceConfirmed === false) { status('Use Run with Buddy, or share the result from settings, to link it to this file.'); return; }
     let mine = requestGeneration;
     try {
       checkSource(run.source, vscode.Uri.parse(run.uri).fsPath);
@@ -173,14 +175,36 @@ export function activate(context: vscode.ExtensionContext): void {
     if (!terminal.shellIntegration) status('Connected. If capture is unavailable, enable VS Code shell integration or share the result manually. Run your code next.');
   }
 
-  async function action(name: string, text?: string, proposalId?: string): Promise<void> {
+  async function runFile(): Promise<RunSnapshot> {
+    if (launching || runner.busy) throw new Error('A Buddy run is still active. Let it finish or press Ctrl+C in its terminal.');
+    launching = true;
     try {
-      if (!vscode.workspace.isTrusted && ['connect', 'retry', 'pasteResult', 'shareResult', 'clarify', 'acceptFix', 'rejectFix'].includes(name)) {
+      if (!vscode.workspace.isTrusted) throw new Error('Trust this folder before running code with Buddy.');
+      const document = vscode.window.activeTextEditor?.document;
+      if (!document || document.uri.scheme !== 'file') throw new Error('Open a Python or JavaScript file before choosing Run with Buddy.');
+      const extension = extname(document.fileName).toLowerCase();
+      const executable = extension === '.py' ? (process.platform === 'win32' ? 'python' : 'python3')
+        : ['.js', '.mjs', '.cjs'].includes(extension) ? 'node' : undefined;
+      if (!executable) throw new Error('This run button supports Python and plain JavaScript. Run other projects normally, or share their result from settings.');
+      if (!await workspace.allowed(document.fileName)) throw new Error('Choose a source file inside the opened project. Hidden, credential and generated files are excluded.');
+      if (document.isDirty && !await document.save()) throw new Error('The file could not be saved. Save it before running with Buddy.');
+      status(`Running ${vscode.workspace.asRelativePath(document.uri, false)}…`);
+      void vscode.commands.executeCommand('codingBuddy.panel.focus');
+      const run = await runner.run(document, executable, [document.fileName], vscode.workspace.getWorkspaceFolder(document.uri)!.uri.fsPath);
+      observedRun(run);
+      return run;
+    } finally { launching = false; }
+  }
+
+  async function action(name: string, text?: string, proposalId?: string): Promise<unknown> {
+    try {
+      if (!vscode.workspace.isTrusted && ['runFile', 'connect', 'retry', 'pasteResult', 'shareResult', 'clarify', 'acceptFix', 'rejectFix'].includes(name)) {
         status('Trust this folder to enable code hints.'); return;
       }
       if (text) await checkKnownKeys(context, text);
       if (name === 'ready') log.appendLine('Sidebar scripts ready.');
       else if (name === 'trust') await vscode.commands.executeCommand('workbench.trust.manage');
+      else if (name === 'runFile') return await runFile();
       else if (name === 'settings') {
         const config = configuration();
         const automatic = vscode.workspace.getConfiguration('codingBuddy').get('autoWatch', true);
@@ -242,12 +266,6 @@ export function activate(context: vscode.ExtensionContext): void {
         if (state.working) return;
         session.clarification = `${session.clarification}\n${text.trim()}`.trim().slice(-2_000);
         message('learner', text.trim());
-        if (latestRun?.sourceConfirmed === false) {
-          if (!/^(?:yes|yep|yeah|correct|it did|that’s right|that's right)\b/i.test(text.trim())) {
-            status('Open the file you ran and run it again, or share the right result from settings.'); return;
-          }
-          latestRun = { ...latestRun, sourceConfirmed: true, reported: true };
-        }
         if (latestRun && linked && !linked.isDirty && linked.version === latestRun.version) await runAnalysis(latestRun, false);
         else status('Context saved. Save and run the connected file so the buddy can check the result.');
       }
@@ -256,22 +274,20 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const panel = new BuddyPanel(context.extensionUri, action);
   const guidance = new EditorGuidance(() => { void refresh(); });
-  const capture = new TerminalCapture(run => {
+  function observedRun(run: RunSnapshot): void {
     if (!vscode.workspace.isTrusted) { status('Trust this folder to enable code hints.'); return; }
+    if (run.sourceConfirmed === false) { status('Use Run with Buddy, or share the result from settings, to link it to this file.'); return; }
     const document = vscode.workspace.textDocuments.find(document => document.uri.toString() === run.uri);
     if (!document) return;
     selectFile(document);
-    const repeatedUncertain = latestRun?.sourceConfirmed === false && latestRun.uri === run.uri && latestRun.source === run.source && latestRun.output === run.output;
     if (!latestRun || latestRun.uri !== run.uri || latestRun.source !== run.source || latestRun.output !== run.output || latestRun.exitCode !== run.exitCode) {
       cancel(); guidance.clear(); activeHint = undefined; state.messages = [];
     }
     linked = document; state.file = vscode.workspace.asRelativePath(document.uri, false); latestRun = run;
-    if (run.sourceConfirmed === false) {
-      if (!repeatedUncertain) message('buddy', `Was that result from ${state.file}? Your terminal didn’t include a file name, so I want to check before giving you a clue.`);
-      status('Reply “yes” if that result came from this file.'); return;
-    }
     void runAnalysis(run, true);
-  }, (message, clear) => {
+  }
+  const runner = new FileRunner();
+  const capture = new TerminalCapture(observedRun, (message, clear) => {
     if (clear) { cancel(); guidance.clear(); activeHint = undefined; state.messages = []; latestRun = undefined; }
     status(message);
   }, (command, output, cwd) => workspace.resolveRun(command, output, cwd));
@@ -281,10 +297,11 @@ export function activate(context: vscode.ExtensionContext): void {
   const register = (name: string, handler: () => unknown) => context.subscriptions.push(vscode.commands.registerCommand(`codingBuddy.${name}`, handler));
   for (const name of ['connect','disconnect','settings','reset','retry','acceptFix','rejectFix','toggleConfetti']) register(name, () => action(name));
   register('openPlayground', () => action('playground'));
+  register('runFile', () => action('runFile'));
   register('setKey', () => action('setKey'));
   register('chooseProvider', () => action('provider'));
   register('removeKey', async () => { cancel(); guidance.clear(); session.clearCache(); await context.secrets.delete(keyName(configuration().provider)); status('API key removed.'); });
-  context.subscriptions.push(log, capture, guidance,
+  context.subscriptions.push(log, capture, guidance, runner,
     vscode.window.registerWebviewViewProvider('codingBuddy.panel', panel),
     vscode.window.onDidChangeActiveTextEditor(editor => {
       if (vscode.workspace.isTrusted && !suppressEditorSwitch && editor?.document.uri.scheme === 'file' && sourcePath(vscode.workspace.asRelativePath(editor.document.uri, false)) && vscode.workspace.getWorkspaceFolder(editor.document.uri)) selectFile(editor.document);

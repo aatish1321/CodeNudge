@@ -12,7 +12,7 @@ export interface PanelState {
 export class BuddyPanel implements vscode.WebviewViewProvider {
   private view?: vscode.WebviewView;
   private state?: PanelState;
-  constructor(private uri: vscode.Uri, private onAction: (action: string, text?: string, proposalId?: string) => Promise<void>) {}
+  constructor(private uri: vscode.Uri, private onAction: (action: string, text?: string, proposalId?: string) => Promise<unknown>) {}
 
   resolveWebviewView(view: vscode.WebviewView): void {
     this.view = view;

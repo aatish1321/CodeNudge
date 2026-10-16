@@ -169,6 +169,38 @@ export async function run(): Promise<void> {
     console.log('HOST CHECK PASSED: multi-file invoice runtime/logic/correct output, async JavaScript/404/503, helper-only changes, cross-language focused editors, and quoted paths with spaces.');
   } finally { capture?.dispose(); terminal.dispose(); }
 
+  const directPath = join(fixtures, 'plain $(touch buddy-unwanted).py');
+  await writeFile(directPath, '# Print 18.\nprint(1)\n');
+  const directEditor = await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(directPath));
+  await directEditor.edit(edit => edit.replace(new vscode.Range(1, 0, 1, 8), 'print(18)'));
+  assert.ok(directEditor.document.isDirty, 'exercise the run button’s save step');
+  async function runWithBuddy(path: string): Promise<{ terminal: vscode.Terminal; output: string; code: number | undefined }> {
+    await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(path));
+    const run = await vscode.commands.executeCommand<RunSnapshot>('codingBuddy.runFile');
+    assert.ok(run, 'the contributed run command returns the captured result');
+    assert.equal(run.uri, vscode.Uri.file(path).toString());
+    assert.equal(run.sourceConfirmed, true);
+    assert.equal(run.reported, false);
+    const terminal = vscode.window.terminals.find(terminal => terminal.name === 'Coding Buddy Run');
+    assert.ok(terminal);
+    return { terminal, output: run.output, code: run.exitCode ?? undefined };
+  }
+  const directPython = await runWithBuddy(directPath);
+  assert.equal(directPython.code, 0);
+  assert.equal(directPython.output, '18\n');
+  assert.equal(directEditor.document.isDirty, false);
+  assert.match(await readFile(directPath, 'utf8'), /print\(18\)/);
+  assert.equal((await runWithBuddy(directPath)).output, directPython.output, 'unchanged reruns have stable output for deduplication');
+  assert.equal(existsSync(join(folder.uri.fsPath, 'buddy-unwanted')), false, 'file paths must not execute shell substitutions');
+  const directJavascript = join(fixtures, 'plain output.js');
+  await writeFile(directJavascript, '// Print 21.\nconsole.log(21);\n');
+  const directJs = await runWithBuddy(directJavascript);
+  assert.equal(directJs.code, 0);
+  assert.match(directJs.output, /21/);
+  assert.equal(directJs.terminal, directPython.terminal, 'reuse only the dedicated Buddy terminal');
+  directPython.terminal.dispose();
+  console.log('HOST CHECK PASSED: actual Run with Buddy command launches saved Python/JavaScript, reuses its terminal, and treats shell-special filenames literally.');
+
   if (existsSync('/bin/zsh')) {
     await vscode.window.showTextDocument(document);
     const zsh = vscode.window.createTerminal({ name: 'Buddy automatic zsh verification', shellPath: '/bin/zsh', cwd: folder.uri, env: { HISTFILE: '/dev/null' } });
@@ -208,6 +240,7 @@ export async function run(): Promise<void> {
       assert.match(projectRun.output, /invoice.py[\s\S]*KeyError/);
       assert.equal(projectRun.sourceConfirmed, true);
       console.log('HOST CHECK PASSED: zsh multi-file Python traceback retains entry-file ownership.');
+      capture?.dispose();
     } finally { capture?.dispose(); zsh.dispose(); }
   }
 
@@ -263,6 +296,6 @@ export async function run(): Promise<void> {
     console.log('HOST CHECK PASSED: three native provider settings and distinct secret names.');
   } finally { await config.update('provider', originalProvider, vscode.ConfigurationTarget.Global); }
   if (process.env.CODING_BUDDY_TEST_REPORT) {
-    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['activation', 'automatic-python-capture', 'automatic-javascript-capture', 'changed-retry-inline', 'successful-rerun-clears-errors', 'multi-file-invoice-runtime-logic-success', 'async-javascript-404-503', 'cross-language-execution-routing', 'helper-only-context-changes', 'quoted-paths', ...(existsSync('/bin/zsh') ? ['automatic-zsh-capture', 'zsh-multi-file-entry'] : []), 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'provider-settings'] }));
+    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['run-with-buddy-python-javascript', 'literal-shell-special-paths', 'save-before-run', 'direct-process-plain-output', 'activation', 'automatic-python-capture', 'automatic-javascript-capture', 'changed-retry-inline', 'successful-rerun-clears-errors', 'multi-file-invoice-runtime-logic-success', 'async-javascript-404-503', 'cross-language-execution-routing', 'helper-only-context-changes', 'quoted-paths', ...(existsSync('/bin/zsh') ? ['automatic-zsh-capture', 'zsh-multi-file-entry'] : []), 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'provider-settings'] }));
   }
 }

@@ -6,7 +6,7 @@ Use these tiny examples for the presentation. The invoice/API projects are optio
 
 1. Install the latest local VSIX, run **Developer: Reload Window** once, then use **Ctrl+Shift+P → Coding Buddy: Open Playground**. This opens fresh copies. If it opens in **Restricted Mode**, click Buddy’s **Trust this folder…** button (or the top banner’s **Manage**), then grant trust for this playground. The robot is visible before trust, but hints wait for that choice. Your old playground does not update automatically.
 2. Click the robot icon. In its gear menu, select your already-tested provider (Groq), check that its key is configured, enable automatic hints and celebrations.
-3. Use the terminal dropdown's **Bash** profile for this demo. Bash passed automatic command capture. No manual terminal attachment is needed. Keep the terminal at the playground root, where `demo` and `projects` are visible in Explorer.
+3. Use the editor’s **Run with Buddy** play-circle button, or **Ctrl+Shift+P → Coding Buddy: Run with Buddy**. It saves/runs the active Python or plain JavaScript file in a dedicated terminal and knows the exact file without a yes/no reply. Manual commands below remain an alternative when your shell identifies them; keep that terminal at the playground root.
 4. Open `demo/expenses.py`. Save before every run. Keep the code, terminal output and buddy visible together. Rehearse once, then open a fresh playground for the recording.
 5. Do not show the provider-key input or personal files while recording. The character, hints, arrow and diff are the useful things to show.
 
@@ -14,7 +14,7 @@ Use these tiny examples for the presentation. The invoice/API projects are optio
 
 The Python example has just four lines. Its comment states the goal: total cost **18**.
 
-Run from the playground root:
+Click **Run with Buddy** with `expenses.py` open. The equivalent manual command from the playground root is:
 
 ```sh
 python3 demo/expenses.py
@@ -22,9 +22,9 @@ python3 demo/expenses.py
 
 The initial run raises `TypeError`. Wait for Buddy's clue. This starts at **zero retries**: the first failure is the starting point, not attempt one.
 
-Run it again without changing anything. The existing hint/count should stay; an identical result should not start another provider request.
+Click Run with Buddy again without changing anything. The existing hint/count should stay; an identical result should not start another provider request.
 
-To demonstrate escalation reproducibly, replace **only line 3** with each expression below, one at a time. **Save, run the same command, and wait for Buddy after each change.** These are deliberately unsuccessful rehearsal attempts; explain that in the demo rather than presenting them as a normal way to learn.
+To demonstrate escalation reproducibly, replace **only line 3** with each expression below, one at a time. **Click Run with Buddy and wait after each change.** The button saves the file before running. These are deliberately unsuccessful rehearsal attempts; explain that in the demo rather than presenting them as a normal way to learn.
 
 | Changed retry | Put this on line 3 | What to show |
 | --- | --- | --- |
@@ -37,13 +37,13 @@ To demonstrate escalation reproducibly, replace **only line 3** with each expres
 
 All six variants still fail with the same kind of error at line 3. The exact clue text, highlighted line and proposed repair can vary by model. If Buddy needs intent clarification, reply: **“The total should be 18.”** Clarification does not add an attempt.
 
-At retry 6, show that your source is unchanged while the diff is open. Click **Keep my code** to reject it. Use **gear → Retry last result** for a fresh proposal, then review and **Accept fix**. Acceptance leaves the edit unsaved. Save and run again: the result should be **18**, followed by solved feedback and optional confetti. Accepting alone should not celebrate.
+At retry 6, show that your source is unchanged while the diff is open. Click **Keep my code** to reject it. Use **gear → Retry last result** for a fresh proposal, then review and **Accept fix**. Acceptance leaves the edit unsaved. Click Run with Buddy again: the result should be **18**, followed by solved feedback and optional confetti. Accepting alone should not celebrate.
 
 For a short video, cut waiting time or jump between the rehearsed attempts; label the cuts. Keep the three-plus-three behavior honest rather than lowering the real threshold. Open a fresh playground to reset the entire rehearsal.
 
 ## 2. JavaScript logic error, plus file switching
 
-Open `demo/countdown.js` and run:
+Open `demo/countdown.js` and click **Run with Buddy**. Equivalent manual command:
 
 ```sh
 node demo/countdown.js
@@ -57,7 +57,7 @@ Now solve the JavaScript example yourself: change `count >= 0` to `count > 0`, s
 
 ## 3. Optional: show a helper file in the same folder
 
-Open `demo/greeting.py`, which is only three lines, and run:
+Open `demo/greeting.py`, which is only three lines, and click **Run with Buddy**. Equivalent manual command:
 
 ```sh
 python3 demo/greeting.py
@@ -78,7 +78,7 @@ Do not promise an inline arrow on the very first run: arrows follow the attempt 
 
 ## If the demo pauses unexpectedly
 
-- **“Was that result from …?”** means VS Code did not identify the source. Reply **yes** only if the named file produced it. Use Bash and the explicit commands above to reduce this ambiguity. It is not a request to attach a terminal.
+- **“I couldn’t identify that run”** is a quiet status for an ambiguous manual command. Use **Run with Buddy** for these examples; there is no yes/no confirmation. If you still see the old question, update to 0.0.9 and reload the window.
 - **No new hint after an unchanged run:** expected. Make a real edit or use **gear → Retry last result** intentionally.
 - **Quota/connection failure:** wait for quota recovery or fix the provider settings, then use Retry. Do not keep rerunning unchanged code hoping it will bypass caching.
 - **Arrow/fix does not appear:** check that all edits were saved and actually run, the same issue remains, and the count reached 3/6. Reset/New Issue clears that count. Provider responses still need to validate.

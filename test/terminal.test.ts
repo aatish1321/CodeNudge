@@ -37,7 +37,7 @@ function terminalFixture() {
     end({ terminal, execution, exitCode: 0, shellIntegration: {} as vscode.TerminalShellIntegration });
     await new Promise(resolve => setImmediate(resolve));
   };
-  return { capture, document, terminal, runs, statuses, clears, run };
+  return { capture, document, terminal, runs, statuses, clears, run, start, end };
 }
 
 test('automatically observes the active saved file without attaching a terminal or prompting', async () => {
@@ -80,10 +80,29 @@ test('zsh runs with empty command names use filename evidence without a command 
   fixture.capture.dispose();
 });
 
-test('unidentified results retain uncertainty instead of claiming they came from the file', async () => {
+test('ordinary zsh runs preserve the start command when completion metadata is cleared', async () => {
+  const fixture = terminalFixture();
+  for (const output of ['Hello, Ada!!\n', 'Hello, Ada!\n']) {
+    const execution = { cwd: { fsPath: '/' }, commandLine: { value: 'python3 demo.py', confidence: 1 },
+      read: async function* () { yield output; } } as unknown as vscode.TerminalShellExecution;
+    fixture.start({ terminal: fixture.terminal, execution, shellIntegration: {} as vscode.TerminalShellIntegration });
+    Object.assign(execution.commandLine, { value: '', confidence: 0 });
+    fixture.end({ terminal: fixture.terminal, execution, exitCode: 0, shellIntegration: {} as vscode.TerminalShellIntegration });
+    await new Promise(resolve => setImmediate(resolve));
+  }
+  assert.equal(fixture.runs.length, 2);
+  assert.ok(fixture.runs.every(run => run.command === 'python3 demo.py' && run.sourceConfirmed));
+  assert.equal(fixture.runs[1].output, 'Hello, Ada!\n');
+  assert.equal(fixture.statuses.length, 0);
+  fixture.capture.dispose();
+});
+
+test('unidentified results are skipped with a quiet run-button cue, without a yes/no question', async () => {
   const fixture = terminalFixture();
   await fixture.run('', '1\n2\n3\n4', 0);
-  assert.equal(fixture.runs[0].sourceConfirmed, false);
+  assert.equal(fixture.runs.length, 0);
+  assert.match(fixture.statuses.at(-1)!, /Run with Buddy/);
+  assert.ok(fixture.statuses.every(status => !/yes|Was that result/.test(status)));
   fixture.capture.dispose();
 });
 

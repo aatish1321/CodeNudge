@@ -9,12 +9,12 @@ const report = join(temporary, 'report.json');
 const workspace = join(temporary, 'workspace');
 mkdirSync(workspace);
 const restricted = process.argv.includes('--restricted');
-if (restricted) {
-  mkdirSync(join(temporary, 'user/User'), { recursive: true });
-  writeFileSync(join(temporary, 'user/User/settings.json'), JSON.stringify({
-    'security.workspace.trust.enabled': true, 'security.workspace.trust.startupPrompt': 'never'
-  }));
-}
+mkdirSync(join(temporary, 'user/User'), { recursive: true });
+writeFileSync(join(temporary, 'user/User/settings.json'), JSON.stringify({
+  'terminal.integrated.defaultProfile.linux': 'bash',
+  'terminal.integrated.env.linux': { HISTFILE: '/dev/null', PATH: process.env.PATH },
+  ...(restricted ? { 'security.workspace.trust.enabled': true, 'security.workspace.trust.startupPrompt': 'never' } : {})
+}));
 let extensionPath = root;
 if (process.argv.includes('--package')) {
   const installed = spawnSync('code', [`--user-data-dir=${join(temporary, 'user')}`, `--extensions-dir=${join(temporary, 'extensions')}`,

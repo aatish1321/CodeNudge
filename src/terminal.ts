@@ -8,6 +8,7 @@ import { checkSource, RunSnapshot } from './teaching';
 
 interface Captured {
   document?: vscode.TextDocument; terminal: vscode.Terminal; run?: RunSnapshot; cwd?: string; startedAt: number;
+  command: string; confidence: vscode.TerminalShellExecutionCommandLineConfidence;
   snapshots: Map<string, { source: string; version: number }>;
   output: Promise<{ output: string; truncated: boolean; failed?: boolean }>; generation: number;
 }
@@ -68,7 +69,7 @@ export class TerminalCapture implements vscode.Disposable {
       const clean = stripVTControlCharacters(raw).replace(/\r\n/g, '\n').replace(/\r/g, '');
       return { output: clean.slice(-8_000), truncated: truncated || clean.length > 8_000 };
     })().catch(() => ({ output: '', truncated: true, failed: true }));
-    this.pending.set(event.execution, { document, snapshots, startedAt, terminal: event.terminal, cwd: event.execution.cwd?.fsPath ?? event.shellIntegration.cwd?.fsPath, generation, output,
+    this.pending.set(event.execution, { document, snapshots, startedAt, command, confidence: event.execution.commandLine.confidence, terminal: event.terminal, cwd: event.execution.cwd?.fsPath ?? event.shellIntegration.cwd?.fsPath, generation, output,
       run: document ? { uri: document.uri.toString(), version: document.version, language: document.languageId,
         source, command, output: '', exitCode: null, truncated: false, reported: false, startedAt } : undefined });
   }
@@ -81,7 +82,10 @@ export class TerminalCapture implements vscode.Disposable {
     if (capture.generation !== this.generation) return;
     if (result.failed) { this.onStatus('Could not read this result. You can share the output from settings.'); return; }
     if (event.exitCode === undefined) { this.onStatus('This run has not reported a result I can check yet.'); return; }
-    const command = event.execution.commandLine.value.trim();
+    // Some shells clear command metadata at completion; retain the value observed at start.
+    const completedCommand = event.execution.commandLine.value.trim();
+    const command = completedCommand || capture.command;
+    const confidence = completedCommand ? event.execution.commandLine.confidence : capture.confidence;
     let document = capture.document;
     let run = capture.run;
     if (this.resolveSource && this.automatic) {
@@ -97,6 +101,7 @@ export class TerminalCapture implements vscode.Disposable {
       } else if (referencedPaths(command, capture.cwd).length || referencedPaths(result.output, capture.cwd).length) {
         this.onStatus('That run refers to a file outside this opened folder. Open its project folder to get help.', true); return;
       }
+      if (!target) { this.onStatus('I couldn’t identify that run. Use Run with Buddy, or share its result from settings.'); return; }
       if (!document || !run || document.uri.scheme !== 'file') return;
       if (document.isDirty || document.isClosed || document.version !== run.version || document.getText() !== run.source) {
         this.onStatus('Project code changed while it ran. Save and run again.'); return;
@@ -122,12 +127,12 @@ export class TerminalCapture implements vscode.Disposable {
       }
       return paths;
     };
-    const paths = [...references(result.output), ...(event.execution.commandLine.confidence !== vscode.TerminalShellExecutionCommandLineConfidence.Low ? references(command) : [])];
+    const paths = [...references(result.output), ...(confidence !== vscode.TerminalShellExecutionCommandLineConfidence.Low ? references(command) : [])];
     const sourceConfirmed = paths.includes(normalize(document.fileName));
     if (paths.length && !sourceConfirmed) {
       this.onStatus('That command ran another copy of this file. Run the file open in your editor.', true); return;
     }
-    // shortcut: unnamed shell runs use the focused file as a candidate; require clarification before escalating or celebrating when no filename links them.
+    if (!sourceConfirmed) { this.onStatus('I couldn’t identify that run. Use Run with Buddy, or share its result from settings.'); return; }
     if (!this.automatic && command) this.command = command;
     this.onRun({ ...run, ...result, command: command || 'Terminal run (command unavailable)',
       exitCode: event.exitCode, sourceConfirmed });

@@ -49,7 +49,7 @@ Source: `scope.md > Inspiration & Identity`, expanded by the learner's character
 
 Use the code being worked on and the relevant run result to provide help automatically after a run reveals a problem. Start with a likely category, such as syntax or logic, and a clue that leaves the learner room to think. Do not reveal the complete fix in the first clue.
 
-Watch completed integrated-terminal runs automatically across the opened folder. Follow the source identified by the command or error, retaining separate progress when switching files or languages. Include relevant helper files and folder structure within documented limits. If the terminal cannot identify the command and the output does not link to that file, ask a plain-language question in the panel before diagnosing it. Do not show command-entry dialogs. Automatic hints can be paused from the settings gear.
+Watch completed integrated-terminal runs automatically across the opened folder. Follow the source identified by the command or error, retaining separate progress when switching files or languages. Include relevant helper files and folder structure within documented limits. If the terminal cannot identify the command and the output does not link to a source file, quietly skip analysis instead of asking a yes/no file-confirmation question. Offer Run with Buddy for supported scripts, which launches a known file, or explicit result sharing for other workflows. Do not show command-entry dialogs. Automatic hints can be paused from the settings gear.
 
 Read the top-of-file comment describing what the code should do. If the learner omits it, analyze the code for a tentative interpretation, presented as a guess. If intent is still unclear, ask what the learner expected; their answer in the text area becomes context. Use this same expected-outcome context for diagnosis and recognizing success. Successful execution alone does not prove that the logic is correct.
 
@@ -163,3 +163,7 @@ Source: `scope.md > Later` and `Explicitly Cut`, with the later provider require
 ## Workspace Revision
 
 Requested during learner testing: keep hints, clarification, and attempt progress when moving between files/languages in the same window; investigate relevant code across the opened folder rather than pinning normal use to one file/terminal. Provide a self-service way to open fresh practice projects. Verify harder multi-file Python and JavaScript work, including runtime failures and wrong-but-successful output. Context is bounded and secret/generated files excluded; fixes remain reviewed one-file changes. The project-idea-to-tasks workflow stays deferred.
+
+## Run with Buddy Revision (0.0.9)
+
+The learner rejected repeated yes/no file-confirmation questions. Remove that interaction. Provide an editor run action for Python/plain JavaScript, keeping exact source/run association even with plain successful output or missing shell metadata. Continue automatic analysis for identifiable manual commands across languages; quietly skip unlinked results, retaining progress. This is an optional script runner, not a universal build-tool replacement.

@@ -1,6 +1,6 @@
 # Your Coding Buddy playground
 
-Open the robot icon, use its gear to choose an AI provider and add its key, then open a project file and run it in VS Code's terminal. Buddy follows runs across this folder. Save edits before rerunning. If the window says **Restricted Mode**, use Buddy’s **Trust this folder…** button or the top banner’s **Manage** link, then grant trust for this playground to enable hints.
+Open the robot icon, use its gear to choose an AI provider and add its key, then open a project file and use **Run with Buddy** in the editor for Python/plain JavaScript. The same action is in the command palette. Identifiable manual terminal commands also work. Buddy follows runs across this folder. Save edits before rerunning. If the window says **Restricted Mode**, use Buddy’s **Trust this folder…** button or the top banner’s **Manage** link, then grant trust for this playground to enable hints.
 
 For a simple presentation, open [demo/README.md](demo/README.md). Start with four-line `demo/expenses.py` (`python3 demo/expenses.py`), then four-line `demo/countdown.js` (`node demo/countdown.js`). The walkthrough lists exactly how to show clues, retry 3’s arrow, retry 6’s reviewed fix, rejection/acceptance, success, and file switching.
 

@@ -4,19 +4,21 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install `coding-buddy-0.0.8.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
+Install `coding-buddy-0.0.9.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
 
 A fresh playground can open in **Restricted Mode**. Buddy remains visible with a **Trust this folder…** button that opens VS Code’s trust screen. Choose Trust for the playground, or use the top banner’s **Manage** link. Terminal watching and AI analysis stay disabled until you grant trust. After updating the extension, use **Developer: Reload Window** once.
 
 1. Open a trusted project in **desktop VS Code 1.93 or newer** and click the Coding Buddy robot icon.
 2. Open the **⚙ settings menu** to select Gemini, OpenAI, or Groq and add its API key. Keys use VS Code secret storage. Provider/key/model options, pause/resume, celebrations, retry/reset, and advanced terminal tools live in this menu.
 3. Open a saved code file. A top comment describing its goal helps the buddy understand your intent.
-4. Run your code normally in a VS Code terminal—for example, `python3 loop_syntax.py` in `examples`. **No terminal attachment or command-entry dialog is required.**
+4. For Python or plain JavaScript, click the editor’s **Run with Buddy** play-circle button, or use **Ctrl+Shift+P → Coding Buddy: Run with Buddy**. It saves the file and launches a linked run in its own terminal. **No terminal attachment, command-entry dialog, or yes/no reply is required.** Other project commands can still run normally in an integrated terminal.
 5. Read the clue, try your own change, save, and run again.
 
-Buddy watches completed runs across the opened folder and integrated terminals. An explicit source path in the command owns that learning session, even when a helper fails; otherwise a workspace traceback/stack frame identifies the file. Relative and quoted paths use the terminal’s working directory. You can run Python with a JavaScript tab focused. If no source is identified, Buddy asks whether the result came from the focused file before spending an AI request. Outside-folder runs are ignored. Recognized housekeeping commands such as `git status` and `ls` are ignored.
+Buddy watches completed runs across the opened folder and integrated terminals. An explicit source path in the command owns that learning session, even when a helper fails; otherwise a workspace traceback/stack frame identifies the file. Relative and quoted paths use the terminal’s working directory. You can run Python with a JavaScript tab focused. If no source is identified, Buddy quietly skips analysis and points to Run with Buddy or explicit result sharing. It never asks “Was that result from this file?” or guesses that the active tab produced unrelated output. Outside-folder runs are ignored. Recognized housekeeping commands such as `git status` and `ls` are ignored.
 
 Switch between code files and back: each file retains its hints, clarification, and attempt count for this window session. Related-file edits also invalidate cached analysis and count as changed-code attempts when the same issue remains. Buddy includes a source-file index and bounded related code, prioritizing imports and error references. It can point to a helper file and offer a reviewed fix there; each proposal changes one file. It does not read every file’s full contents.
+
+The run button supports `.py`, `.js`, `.mjs` and `.cjs` files, using `python3` (`python` on Windows) or `node` on VS Code’s PATH. It saves and launches only the active file, with the opened workspace folder as the working directory. Its dedicated terminal supports basic line input and Ctrl+C and refuses a second run while busy. Output is captured directly from the program, without shell integration, prompt text or shell evaluation of filenames. Clicking it intentionally runs code even when automatic watching is paused. It does not select a project virtual environment or run React/dev-server commands; use your normal terminal and result sharing for those workflows. Linux runtime is verified; Windows runtime is unverified.
 
 After the initial clue, three unsuccessful **changed-code retries for the same problem** unlock an inline arrow hint. Three more unlock a colored diff with an explanation. **Accept fix** applies that reviewed change; **Keep my code** rejects it. Accepted changes remain unsaved and support normal VS Code undo. Save and run again to check your result.
 
@@ -76,7 +78,7 @@ Unit tests exercise the activated controller across language switches, workspace
 
 Context limits: 12,000 characters in the run’s primary file; up to 500 source paths in its workspace-folder index; up to eight related files, 6,000 characters each and 30,000 combined; the last 8,000 output characters; 2,000 clarification/result-input characters. Omissions and truncated excerpts are labeled for the model; truncated related files cannot be replaced. Related files over 100 KB are omitted. Save related changes before rerunning. New or excluded files may not be read, so the buddy cannot prove the entire project is correct.
 
-Browser inspection, Postman capture, debugger capture, project-planning tasks, and saved chat histories remain outside this version. Long-running servers need a manually shared result. Commands without an identifiable source may need confirmation; compound shell commands and every language/toolchain have not been verified. A local guard catches obvious early edit instructions/code, but subtle answer leakage and diagnosis quality still require real-model review.
+Browser inspection, Postman capture, debugger capture, project-planning tasks, and saved chat histories remain outside this version. Long-running servers need a manually shared result. Commands without an identifiable source are skipped without confirmation; compound shell commands and every language/toolchain have not been verified. A local guard catches obvious early edit instructions/code, but subtle answer leakage and diagnosis quality still require real-model review.
 
 The implementation plan and remaining acceptance checks live in [devpost/checklist.md](devpost/checklist.md). [The app map](devpost/app-map.html) is an offline reference to the code.
 
