@@ -22,6 +22,9 @@ async function disableTestHistory(terminal: vscode.Terminal): Promise<void> {
 export async function run(): Promise<void> {
   const extension = vscode.extensions.getExtension('aatish1321.coding-buddy');
   assert.ok(extension, 'Development extension must be discovered');
+  assert.equal(extension.packageJSON.displayName, 'CodeNudge');
+  assert.ok(extension.packageJSON.contributes.commands.every((item: { title: string }) => item.title.startsWith('CodeNudge: ')));
+  assert.equal(extension.packageJSON.contributes.configuration.title, 'CodeNudge');
   const { TerminalCapture } = require(join(extension.extensionPath, 'out/src/terminal.js')) as typeof import('../src/terminal');
   const { EditorGuidance } = require(join(extension.extensionPath, 'out/src/editor.js')) as typeof import('../src/editor');
   const { configuration, keyName } = require(join(extension.extensionPath, 'out/src/settings.js')) as typeof import('../src/settings');
@@ -45,7 +48,7 @@ export async function run(): Promise<void> {
   const syntaxCommand = `python3 ${quote(syntaxPath)}`;
   const document = await vscode.workspace.openTextDocument(syntaxPath);
   await vscode.window.showTextDocument(document);
-  const terminal = vscode.window.createTerminal({ name: 'Coding Buddy verification', shellPath: '/bin/bash', cwd: folder.uri, env: { HISTFILE: '/dev/null' } });
+  const terminal = vscode.window.createTerminal({ name: 'CodeNudge verification', shellPath: '/bin/bash', cwd: folder.uri, env: { HISTFILE: '/dev/null' } });
   let capture: CaptureType | undefined;
   try {
     await new Promise<void>((resolve, reject) => {
@@ -182,7 +185,7 @@ export async function run(): Promise<void> {
     assert.equal(run.uri, vscode.Uri.file(path).toString());
     assert.equal(run.sourceConfirmed, true);
     assert.equal(run.reported, false);
-    const terminal = vscode.window.terminals.find(terminal => terminal.name === 'Coding Buddy Run');
+    const terminal = vscode.window.terminals.find(terminal => terminal.name === 'CodeNudge Run');
     assert.ok(terminal);
     return { terminal, output: run.output, code: run.exitCode ?? undefined };
   }
@@ -198,13 +201,13 @@ export async function run(): Promise<void> {
   const directJs = await runWithBuddy(directJavascript);
   assert.equal(directJs.code, 0);
   assert.match(directJs.output, /21/);
-  assert.equal(directJs.terminal, directPython.terminal, 'reuse only the dedicated Buddy terminal');
+  assert.equal(directJs.terminal, directPython.terminal, 'reuse only the dedicated CodeNudge terminal');
   directPython.terminal.dispose();
-  console.log('HOST CHECK PASSED: actual Run with Buddy command launches saved Python/JavaScript, reuses its terminal, and treats shell-special filenames literally.');
+  console.log('HOST CHECK PASSED: actual Run with CodeNudge command launches saved Python/JavaScript, reuses its terminal, and treats shell-special filenames literally.');
 
   if (existsSync('/bin/zsh')) {
     await vscode.window.showTextDocument(document);
-    const zsh = vscode.window.createTerminal({ name: 'Buddy automatic zsh verification', shellPath: '/bin/zsh', cwd: folder.uri, env: { HISTFILE: '/dev/null' } });
+    const zsh = vscode.window.createTerminal({ name: 'CodeNudge automatic zsh verification', shellPath: '/bin/zsh', cwd: folder.uri, env: { HISTFILE: '/dev/null' } });
     try {
       await new Promise<void>((resolve, reject) => {
         const timer = setTimeout(() => { listener.dispose(); reject(new Error('zsh shell integration did not activate')); }, 20_000);

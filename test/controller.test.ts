@@ -389,7 +389,7 @@ test('Restricted Mode keeps the panel visible but blocks watching, context and A
   assert.equal(fixture.requests.length, 1);
 });
 
-test('Run with Buddy routes saved Python/JavaScript arguments and refuses to interrupt an active run', async t => {
+test('Run with CodeNudge routes saved Python/JavaScript arguments and refuses to interrupt an active run', async t => {
   const fixture = await controllerFixture(t);
   const python = await fixture.add('my folder/expenses.py', '# Print 18\nprint(18)\n');
   await fixture.select(python);
@@ -416,7 +416,7 @@ test('an unlinked terminal result does not create a yes/no question or spend an 
   await fixture.select(document); await fixture.run(document);
   const messages = fixture.state().messages;
   await fixture.run(document, false, false);
-  await until(() => /Run with Buddy/.test(fixture.state().status), 'quiet unlinked-run status');
+  await until(() => /Run with CodeNudge/.test(fixture.state().status), 'quiet unlinked-run status');
   assert.equal(fixture.requests.length, 1);
   assert.deepEqual(fixture.state().messages, messages);
   assert.doesNotMatch(fixture.state().status, /yes|Was that result/);

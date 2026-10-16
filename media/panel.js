@@ -45,7 +45,7 @@
     document.getElementById('setup').hidden = state.keyConfigured || !state.trusted;
     document.getElementById('trustPrompt').hidden = state.trusted;
     document.getElementById('file').textContent = project ? '' : state.file || '';
-    document.getElementById('status').textContent = project ? (!state.trusted ? 'Trust this folder to plan and build with Buddy.' : project.status) : state.status;
+    document.getElementById('status').textContent = project ? (!state.trusted ? 'Trust this folder to plan and build with CodeNudge.' : project.status) : state.status;
     document.getElementById('working').hidden = !working;
     document.getElementById('send').disabled = working || !state.trusted || (!!project && project.phase === 'done');
     input.disabled = !state.trusted || (!!project && (working || project.phase === 'done'));
@@ -70,7 +70,7 @@
       const block = document.createElement('article'); block.className = `message ${message.role}`;
       block.dataset.category = message.category || 'unknown';
       const label = document.createElement('div'); label.className = 'message-label';
-      label.textContent = message.role === 'learner' ? 'YOUR THINKING' : `✦ BUDDY${message.category && message.category !== 'unknown' ? ' · ' + message.category.toUpperCase() : ''}`;
+      label.textContent = message.role === 'learner' ? 'YOUR THINKING' : `✦ CODENUDGE${message.category && message.category !== 'unknown' ? ' · ' + message.category.toUpperCase() : ''}`;
       const text = document.createElement('p'); text.textContent = message.text;
       block.append(label, text); return block;
       }));
@@ -102,7 +102,7 @@
       button('projectFeatures', 'I have features in mind'); button('projectSuggest', 'Suggest a plan');
     } else if (project.phase === 'features') {
       text('h2', 'A little more detail');
-      text('p', 'Reply to Buddy below. Share your must-haves, or answer the question so we can shape your plan.');
+      text('p', 'Reply to CodeNudge below. Share your must-haves, or answer the question so we can shape your plan.');
     } else if (project.phase === 'plan' && project.plan) {
       text('span', 'YOUR BUILDING BLOCKS', section, 'eyebrow'); text('h2', project.plan.title);
       const list = document.createElement('ol'); list.className = 'project-plan';

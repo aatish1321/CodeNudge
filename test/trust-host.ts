@@ -8,7 +8,7 @@ export async function run(): Promise<void> {
   assert.ok(extension);
   assert.equal(extension.packageJSON.capabilities.untrustedWorkspaces.supported, 'limited');
   await extension.activate();
-  assert.ok(extension.isActive, 'Buddy must activate before folder trust');
+  assert.ok(extension.isActive, 'CodeNudge must activate before folder trust');
   await vscode.commands.executeCommand('codingBuddy.panel.focus');
   await vscode.commands.executeCommand('workbench.trust.manage');
   assert.equal(vscode.workspace.isTrusted, false, 'Opening trust management must not grant trust');

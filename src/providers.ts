@@ -38,11 +38,11 @@ export async function projectReply(provider: Provider, model: string, key: strin
 }
 
 async function request(provider: Provider, model: string, key: string, context: object, signal: AbortSignal, policy: string, schema: object, connection: Connection): Promise<unknown> {
-  if (!key && requiresKey(provider)) throw new Error('Add your API key in Buddy settings first.');
-  if (/[\r\n]/.test(key)) throw new Error('Check your saved API key in Buddy settings.');
-  if (!modelPattern.test(model)) throw new Error('Check the model name in Coding Buddy settings.');
+  if (!key && requiresKey(provider)) throw new Error('Add your API key in CodeNudge settings first.');
+  if (/[\r\n]/.test(key)) throw new Error('Check your saved API key in CodeNudge settings.');
+  if (!modelPattern.test(model)) throw new Error('Check the model name in CodeNudge settings.');
   const input = JSON.stringify(context);
-  if (key.length >= 8 && input.includes(key)) throw new Error('Your provider key appears in the code or output. Remove it before asking the buddy to read it.');
+  if (key.length >= 8 && input.includes(key)) throw new Error('Your provider key appears in the code or output. Remove it before asking CodeNudge to read it.');
   let url: string;
   let headers: Record<string, string> = { 'Content-Type': 'application/json' };
   let payload: object;
@@ -79,7 +79,7 @@ async function request(provider: Provider, model: string, key: string, context: 
         deepseek: 'https://api.deepseek.com/chat/completions', mistral: 'https://api.mistral.ai/v1/chat/completions' };
       url = provider === 'custom' ? validateEndpoint(connection.endpoint ?? defaultEndpoints.custom) : endpoints[provider];
       if (key) headers.Authorization = `Bearer ${key}`;
-      if (connection.format !== undefined && !['json_schema', 'json_object'].includes(connection.format)) throw new Error('Choose JSON schema or JSON object output in Buddy settings.');
+      if (connection.format !== undefined && !['json_schema', 'json_object'].includes(connection.format)) throw new Error('Choose JSON schema or JSON object output in CodeNudge settings.');
       const jsonObject = provider === 'deepseek' || (provider === 'custom' && connection.format === 'json_object');
       payload = { model, messages: [{ role: 'system', content: jsonObject ? `${policy}\nReturn a JSON object matching this schema: ${JSON.stringify(schema)}` : policy }, { role: 'user', content: input }],
         stream: false, ...(provider === 'groq' ? { max_completion_tokens: 8192 } : { max_tokens: 8192 }),
@@ -87,7 +87,7 @@ async function request(provider: Provider, model: string, key: string, context: 
         response_format: jsonObject ? { type: 'json_object' } : { type: 'json_schema', json_schema: { name: 'buddy_response', strict: true, schema } } };
       break;
     }
-    default: throw new Error('Choose a supported provider in Coding Buddy settings.');
+    default: throw new Error('Choose a supported provider in CodeNudge settings.');
   }
   const response = await fetch(url, {
     method: 'POST',

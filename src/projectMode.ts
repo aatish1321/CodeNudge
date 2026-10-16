@@ -44,7 +44,7 @@ export class ProjectMode implements vscode.Disposable {
   sourceChanged(uri: string): void {
     if (this.ready) { this.ready = false; this.changed(); }
     this.run = undefined;
-    if (this.snapshot?.sources.some(source => vscode.Uri.file(source.path).toString() === uri)) this.cancel('Code changed while Buddy was thinking. Save it, then ask again.');
+    if (this.snapshot?.sources.some(source => vscode.Uri.file(source.path).toString() === uri)) this.cancel('Code changed while CodeNudge was thinking. Save it, then ask again.');
   }
 
   cancel(reason = 'Request stopped. You can retry when ready.'): void {
@@ -64,7 +64,7 @@ export class ProjectMode implements vscode.Disposable {
 
   async handle(action: string, input?: string): Promise<void> {
     await this.initialized;
-    if (!vscode.workspace.isTrusted) { this.error = 'Trust this folder before planning or sharing code with Buddy.'; this.changed(); return; }
+    if (!vscode.workspace.isTrusted) { this.error = 'Trust this folder before planning or sharing code with CodeNudge.'; this.changed(); return; }
     if (!vscode.workspace.workspaceFolders?.length) { this.error = 'Open a folder in VS Code first so your project progress can stay with it.'; this.changed(); return; }
     if (this.working && action !== 'projectCancel') return;
     try {
@@ -105,8 +105,8 @@ export class ProjectMode implements vscode.Disposable {
       } else if (action === 'projectReset' || action === 'projectCancel') {
         const label = action === 'projectCancel' ? 'Cancel project' : 'Start new plan';
         const answer = await vscode.window.showWarningMessage(action === 'projectCancel'
-          ? 'Cancel this project? This clears Buddy’s saved plan and progress. Your code files stay as they are.'
-          : 'Start a new project plan? This replaces Buddy’s saved plan and progress. Your code files stay as they are.', { modal: true }, label);
+          ? 'Cancel this project? This clears CodeNudge’s saved plan and progress. Your code files stay as they are.'
+          : 'Start a new project plan? This replaces CodeNudge’s saved plan and progress. Your code files stay as they are.', { modal: true }, label);
         if (answer !== label) return;
         this.cancel();
         this.error = '';
@@ -133,7 +133,7 @@ export class ProjectMode implements vscode.Disposable {
         if (document?.uri.scheme === 'file') {
           if (!await this.workspace.allowed(document.fileName)) throw new Error('Open a saved source file inside this folder. Hidden, credential and generated files are not shared.');
           checkSource(document.getText(), document.fileName);
-          if (document.isDirty) throw new Error('Save your code before asking Buddy to read your attempt.');
+          if (document.isDirty) throw new Error('Save your code before asking CodeNudge to read your attempt.');
           const run = this.run?.uri === document.uri.toString() && this.run.version === document.version && this.run.source === document.getText() ? this.run : undefined;
           const snapshot = await this.workspace.collect(document, run?.startedAt, run?.output ?? '');
           if (mine !== this.generation) return;
@@ -151,7 +151,7 @@ export class ProjectMode implements vscode.Disposable {
       const reply = await projectReply(config.provider, config.model, key ?? '', input, pending.signal, config);
       await checkKnownKeys(this.context, JSON.stringify(reply));
       if (mine !== this.generation) return;
-      if (this.snapshot && !await this.workspace.current(this.snapshot)) throw new Error('Project code changed while Buddy was thinking. Save it, then ask again.');
+      if (this.snapshot && !await this.workspace.current(this.snapshot)) throw new Error('Project code changed while CodeNudge was thinking. Save it, then ask again.');
       if (mine !== this.generation || !vscode.workspace.isTrusted) return;
       if (operation === 'plan') {
         const result = validatePlan(reply);

@@ -16,9 +16,9 @@ export class FileRunner implements vscode.Disposable {
   get busy(): boolean { return this.active; }
 
   async run(document: vscode.TextDocument, executable: string, args: string[], cwd: string): Promise<RunSnapshot> {
-    if (this.active) throw new Error('A Buddy run is still active. Let it finish or press Ctrl+C in its terminal.');
-    if (this.disposed || !vscode.workspace.isTrusted) throw new Error('Trust this folder before running code with Buddy.');
-    if (document.isClosed || document.isDirty || document.uri.scheme !== 'file') throw new Error('Save this file before running it with Buddy.');
+    if (this.active) throw new Error('A CodeNudge run is still active. Let it finish or press Ctrl+C in its terminal.');
+    if (this.disposed || !vscode.workspace.isTrusted) throw new Error('Trust this folder before running code with CodeNudge.');
+    if (document.isClosed || document.isDirty || document.uri.scheme !== 'file') throw new Error('Save this file before running it with CodeNudge.');
     checkSource(document.getText(), document.fileName);
     const version = document.version;
     const source = document.getText();
@@ -27,10 +27,10 @@ export class FileRunner implements vscode.Disposable {
       if (!this.terminal) {
         this.ready = new Promise<void>((resolve, reject) => {
           this.rejectReady = reject;
-          this.terminal = vscode.window.createTerminal({ name: 'Coding Buddy Run', pty: {
+          this.terminal = vscode.window.createTerminal({ name: 'CodeNudge Run', pty: {
             onDidWrite: this.write.event,
             open: () => { this.rejectReady = undefined; resolve(); },
-            close: () => { this.rejectReady?.(new Error('Buddy terminal closed. Click Run with Buddy to try again.')); this.child?.kill(); this.terminal = undefined; },
+            close: () => { this.rejectReady?.(new Error('CodeNudge terminal closed. Click Run with CodeNudge to try again.')); this.child?.kill(); this.terminal = undefined; },
             handleInput: (text: string) => this.handleInput(text)
           } });
         });
@@ -38,7 +38,7 @@ export class FileRunner implements vscode.Disposable {
       this.terminal!.show();
       await this.ready;
       if (!this.terminal || this.disposed || !vscode.workspace.isTrusted || document.isClosed || document.isDirty || document.version !== version || document.getText() !== source) {
-        throw new Error('The file or window changed while starting. Click Run with Buddy again when ready.');
+        throw new Error('The file or window changed while starting. Click Run with CodeNudge again when ready.');
       }
       this.input = '';
       this.write.fire(`\r\n▶ ${executable} ${vscode.workspace.asRelativePath(document.uri, false)}\r\n`);
@@ -86,7 +86,7 @@ export class FileRunner implements vscode.Disposable {
 
   dispose(): void {
     this.disposed = true;
-    this.rejectReady?.(new Error('Buddy stopped.'));
+    this.rejectReady?.(new Error('CodeNudge stopped.'));
     this.child?.kill(); this.terminal?.dispose(); this.write.dispose();
   }
 }

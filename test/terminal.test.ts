@@ -104,7 +104,7 @@ test('unidentified results are skipped with a quiet run-button cue, without a ye
   const fixture = terminalFixture();
   await fixture.run('', '1\n2\n3\n4', 0);
   assert.equal(fixture.runs.length, 0);
-  assert.match(fixture.statuses.at(-1)!, /Run with Buddy/);
+  assert.match(fixture.statuses.at(-1)!, /Run with CodeNudge/);
   assert.ok(fixture.statuses.every(status => !/yes|Was that result/.test(status)));
   fixture.capture.dispose();
 });
@@ -182,7 +182,7 @@ test('remote, inaccessible and too-late process cwd never become guessed success
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(fixture.runs.length, 0);
     assert.equal(reads, ['remote', 'compound'].includes(mode) ? 0 : 1);
-    assert.match(fixture.statuses.at(-1)!, /Run with Buddy/);
+    assert.match(fixture.statuses.at(-1)!, /Run with CodeNudge/);
     fixture.capture.dispose();
   }
 });

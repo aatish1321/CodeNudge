@@ -62,7 +62,7 @@ While building, use **Check my attempt** when you want a review. Switch to **Deb
 | **Help inside your editor** | Keep your code, terminal, and learning companion together in a VS Code sidebar. |
 | **Context across files** | Investigate entry files and relevant helpers using bounded workspace context; retain Debug conversations and attempts when switching files within the window. |
 | **Support beyond Python** | Work across source languages and identifiable completed terminal runs. Python and JavaScript are the verified demo paths. |
-| **Run with Buddy** | Save and run a Python or plain JavaScript file directly, with its source and output linked automatically. |
+| **Run with CodeNudge** | Save and run a Python or plain JavaScript file directly, with its source and output linked automatically. |
 | **Bring your own AI** | Choose a hosted provider, a local Ollama model, or a compatible custom server. |
 | **A companion with character** | Meet an animated robot with a patient teaching voice, optional celebrations, and reduced-motion support. |
 | **Your work stays yours** | Review proposed edits, control task completion, and keep provider keys in VS Code’s secure storage. |
@@ -91,15 +91,13 @@ npm ci
 npm run package
 ```
 
-1. In VS Code, open **Extensions → … → Install from VSIX** and select the generated `coding-buddy-0.0.15.vsix`.
+1. In VS Code, open **Extensions → … → Install from VSIX** and select the generated `codenudge-0.0.16.vsix`.
 2. Run **Developer: Reload Window**, then open a folder and click the robot icon.
 3. Open **⚙** to choose your provider, configure its model/connection, and add a key if needed.
-4. For a fresh practice folder, run **Coding Buddy: Open Playground** from the Command Palette. Grant folder trust when you are ready; CodeNudge stays visible in Restricted Mode but code sharing and execution require trust.
+4. For a fresh practice folder, run **CodeNudge: Open Playground** from the Command Palette. Grant folder trust when you are ready; CodeNudge stays visible in Restricted Mode but code sharing and execution require trust.
 5. Choose **Debug** and open `demo/expenses.py`, or choose **Project** and describe an idea.
 
-**Naming note:** the project is CodeNudge; the current extension, command names, settings prefix, and VSIX filename still use **Coding Buddy**. Use the command names shown above in VS Code.
-
-For Python and plain JavaScript, the editor’s **Run with Buddy** button saves and runs the active file without manually attaching a terminal. For browser results, Postman responses, or long-running servers, use **⚙ → Share a run result**. Automatic browser/API inspection is outside this prototype.
+For Python and plain JavaScript, the editor’s **Run with CodeNudge** button saves and runs the active file without manually attaching a terminal. For browser results, Postman responses, or long-running servers, use **⚙ → Share a run result**. Automatic browser/API inspection is outside this prototype.
 
 ## Presenting CodeNudge
 
@@ -141,7 +139,7 @@ CodeNudge does not execute AI-supplied commands or automatically apply project c
 npm test
 ```
 
-To run from source, open this repository in VS Code and press **F5 → Run Coding Buddy**. The Extension Development Host opens the examples folder. Additional checks:
+To run from source, open this repository in VS Code and press **F5 → Run CodeNudge**. The Extension Development Host opens the examples folder. Additional checks:
 
 ```sh
 npm run test:host

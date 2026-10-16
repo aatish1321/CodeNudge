@@ -80,7 +80,7 @@ export class TerminalCapture implements vscode.Disposable {
       run: document ? { uri: document.uri.toString(), version: document.version, language: document.languageId,
         source, command, output: '', exitCode: null, truncated: false, reported: false, startedAt } : undefined };
     this.pending.set(event.execution, capture);
-    // shortcut: missing shell cwd is recoverable through /proc on local Linux; other hosts need shell metadata or Run with Buddy.
+    // shortcut: missing shell cwd is recoverable through /proc on local Linux; other hosts need shell metadata or Run with CodeNudge.
     if (!capture.cwd && !/[;&|<>`\n]|\$\(/.test(command) && platform() === 'linux' && !vscode.env?.remoteName) void (async () => {
       try {
         const pid = await event.terminal.processId;
@@ -118,7 +118,7 @@ export class TerminalCapture implements vscode.Disposable {
       } else if (referencedPaths(command, capture.cwd).length || referencedPaths(result.output, capture.cwd).length) {
         this.onStatus('That run refers to a file outside this opened folder. Open its project folder to get help.', true); return;
       }
-      if (!target) { this.onStatus('I couldn’t identify that run. Use Run with Buddy, or share its result from settings.'); return; }
+      if (!target) { this.onStatus('I couldn’t identify that run. Use Run with CodeNudge, or share its result from settings.'); return; }
       if (!document || !run || document.uri.scheme !== 'file') return;
       if (document.isDirty || document.isClosed || document.version !== run.version || document.getText() !== run.source) {
         this.onStatus('Project code changed while it ran. Save and run again.'); return;
@@ -149,7 +149,7 @@ export class TerminalCapture implements vscode.Disposable {
     if (paths.length && !sourceConfirmed) {
       this.onStatus('That command ran another copy of this file. Run the file open in your editor.', true); return;
     }
-    if (!sourceConfirmed) { this.onStatus('I couldn’t identify that run. Use Run with Buddy, or share its result from settings.'); return; }
+    if (!sourceConfirmed) { this.onStatus('I couldn’t identify that run. Use Run with CodeNudge, or share its result from settings.'); return; }
     if (!this.automatic && command) this.command = command;
     this.onRun({ ...run, ...result, command: command || 'Terminal run (command unavailable)',
       exitCode: event.exitCode, sourceConfirmed });

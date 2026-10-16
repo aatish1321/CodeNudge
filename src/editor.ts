@@ -49,7 +49,7 @@ export class EditorGuidance implements vscode.Disposable {
     this.documents.set(proposed.toString(), reply.replacement);
     this.proposal = { id, run, replacement: reply.replacement };
     this.changed();
-    await vscode.commands.executeCommand('vscode.diff', original, proposed, 'Your code ↔ Buddy suggestion', { preview: true });
+    await vscode.commands.executeCommand('vscode.diff', original, proposed, 'Your code ↔ CodeNudge suggestion', { preview: true });
   }
 
   async accept(id: string): Promise<void> {

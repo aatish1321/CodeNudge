@@ -1,12 +1,12 @@
-# A simple Coding Buddy demo
+# A simple CodeNudge demo
 
 Use these tiny examples for the presentation. The invoice/API projects are optional advanced examples. These files deliberately contain bugs.
 
 ## Prepare before recording
 
-1. Install the latest local VSIX, run **Developer: Reload Window** once, then use **Ctrl+Shift+P → Coding Buddy: Open Playground**. This opens fresh copies. If it opens in **Restricted Mode**, click Buddy’s **Trust this folder…** button (or the top banner’s **Manage**), then grant trust for this playground. The robot is visible before trust, but hints wait for that choice. Your old playground does not update automatically.
+1. Install the latest local VSIX, run **Developer: Reload Window** once, then use **Ctrl+Shift+P → CodeNudge: Open Playground**. This opens fresh copies. If it opens in **Restricted Mode**, click CodeNudge’s **Trust this folder…** button (or the top banner’s **Manage**), then grant trust for this playground. The robot is visible before trust, but hints wait for that choice. Your old playground does not update automatically.
 2. Click the robot icon. In its gear menu, select your already-tested provider (Groq), check that its key is configured, enable automatic hints and celebrations.
-3. Use the editor’s **Run with Buddy** play-circle button, or **Ctrl+Shift+P → Coding Buddy: Run with Buddy**. It saves/runs the active Python or plain JavaScript file in a dedicated terminal and knows the exact file without a yes/no reply. Manual commands below remain an alternative when your shell identifies them; keep that terminal at the playground root.
+3. Use the editor’s **Run with CodeNudge** play-circle button, or **Ctrl+Shift+P → CodeNudge: Run with CodeNudge**. It saves/runs the active Python or plain JavaScript file in a dedicated terminal and knows the exact file without a yes/no reply. Manual commands below remain an alternative when your shell identifies them; keep that terminal at the playground root.
 4. Open `demo/expenses.py`. Save before every run. Keep the code, terminal output and buddy visible together. Rehearse once, then open a fresh playground for the recording.
 5. Do not show the provider-key input or personal files while recording. The character, hints, arrow and diff are the useful things to show.
 
@@ -14,17 +14,17 @@ Use these tiny examples for the presentation. The invoice/API projects are optio
 
 The Python example has just four lines. Its comment states the goal: total cost **18**.
 
-Click **Run with Buddy** with `expenses.py` open. The equivalent manual command from the playground root is:
+Click **Run with CodeNudge** with `expenses.py` open. The equivalent manual command from the playground root is:
 
 ```sh
 python3 demo/expenses.py
 ```
 
-The initial run raises `TypeError`. Wait for Buddy's clue. This starts at **zero retries**: the first failure is the starting point, not attempt one.
+The initial run raises `TypeError`. Wait for CodeNudge's clue. This starts at **zero retries**: the first failure is the starting point, not attempt one.
 
-Click Run with Buddy again without changing anything. The existing hint/count should stay; an identical result should not start another provider request.
+Click Run with CodeNudge again without changing anything. The existing hint/count should stay; an identical result should not start another provider request.
 
-To demonstrate escalation reproducibly, replace **only line 3** with each expression below, one at a time. **Click Run with Buddy and wait after each change.** The button saves the file before running. These are deliberately unsuccessful rehearsal attempts; explain that in the demo rather than presenting them as a normal way to learn.
+To demonstrate escalation reproducibly, replace **only line 3** with each expression below, one at a time. **Click Run with CodeNudge and wait after each change.** The button saves the file before running. These are deliberately unsuccessful rehearsal attempts; explain that in the demo rather than presenting them as a normal way to learn.
 
 | Changed retry | Put this on line 3 | What to show |
 | --- | --- | --- |
@@ -35,21 +35,21 @@ To demonstrate escalation reproducibly, replace **only line 3** with each expres
 | 5 | `total = sum(prices, 0)` | Still no automatic edit. |
 | 6 | `total = sum(prices.copy())` | A colored fix proposal and explanation. |
 
-All six variants still fail with the same kind of error at line 3. The exact clue text, highlighted line and proposed repair can vary by model. If Buddy needs intent clarification, reply: **“The total should be 18.”** Clarification does not add an attempt.
+All six variants still fail with the same kind of error at line 3. The exact clue text, highlighted line and proposed repair can vary by model. If CodeNudge needs intent clarification, reply: **“The total should be 18.”** Clarification does not add an attempt.
 
-At retry 6, show that your source is unchanged while the diff is open. Click **Keep my code** to reject it. Use **gear → Retry last result** for a fresh proposal, then review and **Accept fix**. Acceptance leaves the edit unsaved. Click Run with Buddy again: the result should be **18**, followed by solved feedback and optional confetti. Accepting alone should not celebrate.
+At retry 6, show that your source is unchanged while the diff is open. Click **Keep my code** to reject it. Use **gear → Retry last result** for a fresh proposal, then review and **Accept fix**. Acceptance leaves the edit unsaved. Click Run with CodeNudge again: the result should be **18**, followed by solved feedback and optional confetti. Accepting alone should not celebrate.
 
 For a short video, cut waiting time or jump between the rehearsed attempts; label the cuts. Keep the three-plus-three behavior honest rather than lowering the real threshold. Open a fresh playground to reset the entire rehearsal.
 
 ## 2. JavaScript logic error, plus file switching
 
-Open `demo/countdown.js` and click **Run with Buddy**. Equivalent manual command:
+Open `demo/countdown.js` and click **Run with CodeNudge**. Equivalent manual command:
 
 ```sh
 node demo/countdown.js
 ```
 
-It runs successfully but prints **3, 2, 1, 0**. Its comment says **3, 2, 1**. Show that Buddy can discuss a logic problem even with no crash.
+It runs successfully but prints **3, 2, 1, 0**. Its comment says **3, 2, 1**. Show that CodeNudge can discuss a logic problem even with no crash.
 
 Switch back to `expenses.py` and then back to `countdown.js`: each file's conversation and attempt progress should return. Switching tabs does not itself spend a request. To demonstrate a nonzero saved count, do this switch after Python retry 2, without fixing the JavaScript yet, then continue Python retry 3.
 
@@ -57,13 +57,13 @@ Now solve the JavaScript example yourself: change `count >= 0` to `count > 0`, s
 
 ## 3. Optional: show a helper file in the same folder
 
-Open `demo/greeting.py`, which is only three lines, and click **Run with Buddy**. Equivalent manual command:
+Open `demo/greeting.py`, which is only three lines, and click **Run with CodeNudge**. Equivalent manual command:
 
 ```sh
 python3 demo/greeting.py
 ```
 
-It calls `words.py`, where a `NameError` occurs. Show that Buddy receives the helper's code, not just the open entry file. Ask for clarification if needed: **“I expected Hello, Ada!”** Fix the mismatched name in `words.py`, save and rerun. Expected output: **Hello, Ada!**
+It calls `words.py`, where a `NameError` occurs. Show that CodeNudge receives the helper's code, not just the open entry file. Ask for clarification if needed: **“I expected Hello, Ada!”** Fix the mismatched name in `words.py`, save and rerun. Expected output: **Hello, Ada!**
 
 Do not promise an inline arrow on the very first run: arrows follow the attempt rule. The failing helper is visible in the traceback immediately.
 
@@ -78,7 +78,7 @@ Do not promise an inline arrow on the very first run: arrows follow the attempt 
 
 ## If the demo pauses unexpectedly
 
-- **“I couldn’t identify that run”** is a quiet status for an ambiguous manual command. Use **Run with Buddy** for these examples; there is no yes/no confirmation. If you still see the old question, update to 0.0.9 and reload the window.
+- **“I couldn’t identify that run”** is a quiet status for an ambiguous manual command. Use **Run with CodeNudge** for these examples; there is no yes/no confirmation. If you still see the old question, update to 0.0.9 and reload the window.
 - **No new hint after an unchanged run:** expected. Make a real edit or use **gear → Retry last result** intentionally.
 - **Quota/connection failure:** wait for quota recovery or fix the provider settings, then use Retry. Do not keep rerunning unchanged code hoping it will bypass caching.
 - **Arrow/fix does not appear:** check that all edits were saved and actually run, the same issue remains, and the count reached 3/6. Reset/New Issue clears that count. Provider responses still need to validate.
@@ -91,10 +91,10 @@ Real model wording and quota behavior can vary. Rehearse with the same provider/
 
 Use a trusted folder you intend to keep. Choose **Project**, then type: **“I want a tiny expense tracker in JavaScript that runs in the terminal.”**
 
-1. Show Buddy’s choice. Select **I have features in mind** and reply: **“Enter prices, show the total, and handle empty input.”** For a separate rehearsal, choose **Suggest a plan** instead. Answer a clarification if asked.
+1. Show CodeNudge’s choice. Select **I have features in mind** and reply: **“Enter prices, show the total, and handle empty input.”** For a separate rehearsal, choose **Suggest a plan** instead. Answer a clarification if asked.
 2. Show the small task list and its checks. You can ask to simplify it before clicking **Start building**.
 3. Explain that you write the code yourself. Try the first task, open/save its source, and use **Nudge me** if stuck. The hint should leave you thinking about the implementation.
-4. Run your attempt and click **Check my attempt**. Buddy reviews the current task and available code/output. Feedback is advice; it does not advance the task automatically.
+4. Run your attempt and click **Check my attempt**. CodeNudge reviews the current task and available code/output. Feedback is advice; it does not advance the task automatically.
 5. Try the task’s check yourself, click **Mark done**, and show the next small step. Switch to Debug for the progressive error-help loop and back to show the project is still there.
 6. Reopen the same folder and choose Project to show saved progress. Use the gear’s **Start a new project plan** only when you want to replace it; source files remain yours.
 

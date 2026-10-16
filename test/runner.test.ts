@@ -107,7 +107,7 @@ test('trust, dirty files and changes during terminal startup block execution', a
   assert.equal(f.runner.busy, false);
 });
 
-test('closing the Buddy terminal stops its own process and a later run opens a fresh terminal', async t => {
+test('closing the CodeNudge terminal stops its own process and a later run opens a fresh terminal', async t => {
   const f = await fixture(t);
   const doc = await f.file("console.log('alive'); setInterval(() => {}, 1000);");
   const stopped = assert.rejects(f.run(doc), /Run stopped/);

@@ -27,7 +27,7 @@ export function activate(context: vscode.ExtensionContext): void {
   let launching = false;
   const memories = new Map<string, { session: LearningSession; run?: RunSnapshot; messages: PanelState['messages']; status: string; snapshot?: ProjectSnapshot; hint?: typeof activeHint }>();
   const state: PanelState = { mode: 'debug', trusted: vscode.workspace.isTrusted, provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Run your code. I’m right here if you get stuck.', working: false, retries: 0, hasIssue: false, messages: [], proposalId: '', confetti: true, animateCharacter: true, celebration: 0 };
-  const log = vscode.window.createOutputChannel('Coding Buddy');
+  const log = vscode.window.createOutputChannel('CodeNudge');
 
   async function refresh(): Promise<void> {
     const mine = ++refreshGeneration;
@@ -82,7 +82,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   async function runAnalysis(run: RunSnapshot, attempt: boolean): Promise<void> {
     if (!vscode.workspace.isTrusted) { status('Trust this workspace before sharing coding context.'); return; }
-    if (run.sourceConfirmed === false) { status('Use Run with Buddy, or share the result from settings, to link it to this file.'); return; }
+    if (run.sourceConfirmed === false) { status('Use Run with CodeNudge, or share the result from settings, to link it to this file.'); return; }
     let mine = requestGeneration;
     try {
       checkSource(run.source, vscode.Uri.parse(run.uri).fsPath);
@@ -116,7 +116,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (mine !== requestGeneration || !linked || linked.isClosed || linked.isDirty || linked.version !== run.version || linked.getText() !== run.source) return;
       const current = await workspace.current(snapshot);
       if (mine !== requestGeneration) return;
-      if (!current) { session.clearCache(); status('Project code changed while Buddy was thinking. Save and run again.'); return; }
+      if (!current) { session.clearCache(); status('Project code changed while CodeNudge was thinking. Save and run again.'); return; }
       let targetRun = run;
       const targetFile = result && typeof result === 'object' ? (result as { targetFile?: unknown }).targetFile : null;
       if ((result as { status?: unknown })?.status === 'issue' && typeof targetFile === 'string' && targetFile !== vscode.workspace.asRelativePath(linked.uri, false)) {
@@ -148,7 +148,7 @@ export function activate(context: vscode.ExtensionContext): void {
         if (mine !== requestGeneration) return;
         message('buddy', reply.explanation ?? 'Review the proposed change before deciding.');
       }
-      state.status = reply.status === 'needs_clarification' ? 'Your turn — tell the buddy what you expected.'
+      state.status = reply.status === 'needs_clarification' ? 'Your turn — tell CodeNudge what you expected.'
         : reply.status === 'solved' ? 'This result matches the stated goal. Nice work!'
         : run.reported ? 'Learner-shared result checked. Try your next change.' : 'Your turn. Try a change, save, and run again.';
     } catch (error) {
@@ -172,7 +172,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const choice = terminals.length ? await vscode.window.showQuickPick(terminals.map(terminal => ({ label: terminal.name, terminal })),
       { title: 'Choose the terminal for this file', placeHolder: 'Only this terminal and its next code command will be watched.' }) : undefined;
     if (terminals.length && !choice) return;
-    const terminal = choice?.terminal ?? vscode.window.createTerminal('Coding Buddy');
+    const terminal = choice?.terminal ?? vscode.window.createTerminal('CodeNudge');
     selectFile(document);
     state.file = vscode.workspace.asRelativePath(document.uri, false);
     capture.connect(document, terminal); terminal.show();
@@ -180,18 +180,18 @@ export function activate(context: vscode.ExtensionContext): void {
   }
 
   async function runFile(): Promise<RunSnapshot> {
-    if (launching || runner.busy) throw new Error('A Buddy run is still active. Let it finish or press Ctrl+C in its terminal.');
+    if (launching || runner.busy) throw new Error('A CodeNudge run is still active. Let it finish or press Ctrl+C in its terminal.');
     launching = true;
     try {
-      if (!vscode.workspace.isTrusted) throw new Error('Trust this folder before running code with Buddy.');
+      if (!vscode.workspace.isTrusted) throw new Error('Trust this folder before running code with CodeNudge.');
       const document = vscode.window.activeTextEditor?.document;
-      if (!document || document.uri.scheme !== 'file') throw new Error('Open a Python or JavaScript file before choosing Run with Buddy.');
+      if (!document || document.uri.scheme !== 'file') throw new Error('Open a Python or JavaScript file before choosing Run with CodeNudge.');
       const extension = extname(document.fileName).toLowerCase();
       const executable = extension === '.py' ? (process.platform === 'win32' ? 'python' : 'python3')
         : ['.js', '.mjs', '.cjs'].includes(extension) ? 'node' : undefined;
       if (!executable) throw new Error('This run button supports Python and plain JavaScript. Run other projects normally, or share their result from settings.');
       if (!await workspace.allowed(document.fileName)) throw new Error('Choose a source file inside the opened project. Hidden, credential and generated files are excluded.');
-      if (document.isDirty && !await document.save()) throw new Error('The file could not be saved. Save it before running with Buddy.');
+      if (document.isDirty && !await document.save()) throw new Error('The file could not be saved. Save it before running with CodeNudge.');
       status(`Running ${vscode.workspace.asRelativePath(document.uri, false)}…`);
       void vscode.commands.executeCommand('codingBuddy.panel.focus');
       const run = await runner.run(document, executable, [document.fileName], vscode.workspace.getWorkspaceFolder(document.uri)!.uri.fsPath);
@@ -239,7 +239,7 @@ export function activate(context: vscode.ExtensionContext): void {
           { label: '$(clippy) Share a run result', action: 'pasteResult' },
           { label: '$(terminal) Choose a specific file and terminal', description: 'Advanced', action: 'connect' },
           { label: '$(settings-gear) Models and all settings', action: 'openSettings' }
-        ], { title: 'Coding Buddy settings', placeHolder: `${config.provider} · ${config.model} · Code and run results are sent to this provider` });
+        ], { title: 'CodeNudge settings', placeHolder: `${config.provider} · ${config.model} · Code and run results are sent to this provider` });
         if (choice) await action(choice.action);
       }
       else if (name === 'playground') await openPlayground(context.extensionUri);
@@ -288,7 +288,7 @@ export function activate(context: vscode.ExtensionContext): void {
         session.clarification = `${session.clarification}\n${text.trim()}`.trim().slice(-2_000);
         message('learner', text.trim());
         if (latestRun && linked && !linked.isDirty && linked.version === latestRun.version) await runAnalysis(latestRun, false);
-        else status('Context saved. Save and run the connected file so the buddy can check the result.');
+        else status('Context saved. Save and run the connected file so CodeNudge can check the result.');
       }
     } catch (error) { status((error as Error).message); }
   }
@@ -297,7 +297,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const guidance = new EditorGuidance(() => { void refresh(); });
   function observedRun(run: RunSnapshot): void {
     if (!vscode.workspace.isTrusted) { status('Trust this folder to enable code hints.'); return; }
-    if (run.sourceConfirmed === false) { status('Use Run with Buddy, or share the result from settings, to link it to this file.'); return; }
+    if (run.sourceConfirmed === false) { status('Use Run with CodeNudge, or share the result from settings, to link it to this file.'); return; }
     project.observe(run);
     if (state.mode === 'project') { void refresh(); return; }
     const document = vscode.workspace.textDocuments.find(document => document.uri.toString() === run.uri);

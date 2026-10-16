@@ -18,7 +18,7 @@ writeFileSync(join(temporary, 'user/User/settings.json'), JSON.stringify({
 let extensionPath = root;
 if (process.argv.includes('--package')) {
   const installed = spawnSync('code', [`--user-data-dir=${join(temporary, 'user')}`, `--extensions-dir=${join(temporary, 'extensions')}`,
-    '--install-extension', join(root, `coding-buddy-${require('../package.json').version}.vsix`), '--force'], { stdio: 'inherit', timeout: 60_000 });
+    '--install-extension', join(root, `codenudge-${require('../package.json').version}.vsix`), '--force'], { stdio: 'inherit', timeout: 60_000 });
   if (installed.error || installed.status !== 0) { console.error('Package installation failed.'); process.exit(1); }
   const folder = readdirSync(join(temporary, 'extensions')).find(name => name.startsWith('aatish1321.coding-buddy-'));
   if (!folder) { console.error('Installed extension was not found.'); process.exit(1); }

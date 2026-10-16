@@ -67,13 +67,13 @@ test('Project mode asks for an idea, offers features or generated plan, and star
   ui.state.project.phase = 'features'; ui.render();
   assert.equal(ui.element('clarification').disabled, false);
   assert.ok(descendants(ui.element('project')).some(child => child.textContent === 'A little more detail'));
-  assert.ok(descendants(ui.element('project')).some(child => child.textContent.startsWith('Reply to Buddy below.')));
+  assert.ok(descendants(ui.element('project')).some(child => child.textContent.startsWith('Reply to CodeNudge below.')));
   ui.state.project = project('plan'); ui.render();
   assert.equal(action(ui, 'projectStart').disabled, false);
   assert.ok(descendants(ui.element('project')).some(child => child.className === 'project-plan' && child.children.length === 2));
 });
 
-test('Cancel project is visible throughout an active project and stays usable while Buddy is thinking', () => {
+test('Cancel project is visible throughout an active project and stays usable while CodeNudge is thinking', () => {
   const ui = panel(); ui.state.mode = 'project';
   for (const phase of ['choice', 'features', 'plan', 'building'] as const) {
     ui.state.project = project(phase); ui.state.project.working = true; ui.render();
@@ -125,7 +125,7 @@ test('Project work and Restricted Mode disable actions while mode switches remai
   assert.equal(ui.element('modeDebug').disabled, false); assert.equal(ui.element('modeProject').disabled, false);
   ui.state.project.working = false; ui.state.trusted = false; ui.render();
   assert.equal(action(ui, 'projectDone').disabled, true); assert.equal(ui.element('trustPrompt').hidden, false);
-  assert.equal(ui.element('status').textContent, 'Trust this folder to plan and build with Buddy.');
+  assert.equal(ui.element('status').textContent, 'Trust this folder to plan and build with CodeNudge.');
   ui.state.trusted = true; ui.render(); assert.equal(ui.element('status').textContent, ui.state.project.status);
 });
 
