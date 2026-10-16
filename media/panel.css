@@ -20,7 +20,7 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--vscode-f
 .buddy-scene { position: relative; width: 100%; max-width: 240px; height: 219px; margin: 0 auto 10px; overflow: hidden; }
 .buddy-scene::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, color-mix(in srgb, var(--accent) 16%, transparent) 1px, transparent 1px); background-size: 18px 18px; mask-image: linear-gradient(transparent, black 10%, black 93%, transparent); }
 .orbit { position: absolute; width: 166px; height: 166px; top: 22px; left: 50%; transform: translateX(-50%); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent); border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%); box-shadow: 0 0 0 15px color-mix(in srgb, var(--accent) 3%, transparent), 0 0 0 16px color-mix(in srgb, var(--accent) 7%, transparent); }
-.mascot { position: absolute; display: block; width: 400px; height: 225px; max-width: none; object-fit: contain; left: 50%; top: -8px; transform: translateX(-50%); filter: drop-shadow(0 8px 15px #0b7c7933); animation: buddy-arrive .7s ease-out both; }
+.mascot { position: absolute; display: block; width: 400px; height: 225px; max-width: none; object-fit: contain; left: 50%; top: -8px; transform: translateX(-50%); filter: drop-shadow(0 8px 15px #0b7c7933); transform-origin: 52% 65%; animation: buddy-idle 5s ease-in-out infinite; }
 .scene-code, .scene-spark { position: absolute; z-index: 1; font-weight: 600; }
 .scene-code { top: 70px; left: 5%; color: var(--accent); font: 16px/1.4 var(--vscode-editor-font-family, monospace); transform: rotate(-12deg); }
 .scene-spark { top: 32px; right: 9%; color: var(--warm); font-size: 21px; }
@@ -35,7 +35,7 @@ h1 { font-size: 25px; letter-spacing: -.9px; line-height: 1.2; font-weight: 700;
 #setup { margin: 14px 0 0; font-size: 12px; color: var(--muted); }
 body.has-messages .buddy-intro { padding-top: 0; margin-bottom: 17px; }
 body.has-messages .buddy-scene { height: 157px; max-width: 210px; margin-bottom: 10px; }
-body.has-messages .mascot { width: 300px; height: 169px; top: -12px; }
+body.has-messages .mascot { width: 300px; height: 169px; top: -4px; }
 body.has-messages .orbit { width: 120px; height: 120px; top: 12px; }
 body.has-messages .scene-code { top: 48px; left: 6%; font-size: 13px; }
 body.has-messages .scene-spark { top: 15px; right: 12%; font-size: 16px; }
@@ -56,6 +56,7 @@ body.has-messages .eyebrow { font-size: 8px; letter-spacing: 1px; }
 .message p { margin: 0; color: var(--ink); font-size: 1em; line-height: 1.75; }
 .working { margin-top: 20px; font-size: 12px; color: var(--muted); }
 .thinking-dot { display: inline-block; width: 6px; height: 6px; margin-right: 6px; background: var(--accent); border-radius: 50%; animation: pulse 1s infinite alternate; }
+.is-working .mascot { animation: buddy-think 2.4s ease-in-out infinite; }
 .is-working .orbit { border-style: dashed; border-color: var(--accent); }
 .is-working .mood::before { animation: pulse 1s infinite alternate; }
 .progress { margin: 12px 0 0; color: var(--muted); font-size: 10px; }
@@ -82,7 +83,7 @@ body.vscode-light .send-button { color: white; }
 .fix-actions button + button { margin-left: 6px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .is-celebrating .buddy-scene::after { content: '✦ You figured it out!'; position: absolute; z-index: 3; bottom: 3px; left: 50%; transform: translateX(-50%); padding: 5px 12px; width: max-content; max-width: 100%; border-radius: 20px; color: var(--base); background: var(--accent); font-size: 11px; font-weight: 700; }
-.is-celebrating .mascot { animation: buddy-cheer .7s ease-in-out; }
+.is-celebrating .mascot { animation: buddy-cheer .7s ease-in-out 2; }
 .is-celebrating .orbit { border-color: var(--warm); box-shadow: 0 0 0 15px color-mix(in srgb, var(--warm) 8%, transparent), 0 0 32px color-mix(in srgb, var(--accent) 20%, transparent); }
 .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 10; }
 .confetti-piece { position: absolute; top: -15px; width: 6px; height: 11px; left: 50%; background: var(--accent); animation: confetti-fall 1.9s ease-in forwards; }
@@ -95,11 +96,13 @@ body.vscode-light .send-button { color: white; }
 .confetti-piece:nth-child(7n) { left: 94%; animation-delay: .35s; background: var(--violet); }
 .confetti-piece:nth-child(even) { width: 9px; height: 5px; animation-duration: 1.65s; }
 @keyframes pulse { to { opacity: .25; } }
-@keyframes buddy-arrive { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
-@keyframes buddy-cheer { 35% { transform: translate(-50%, -7px) rotate(-3deg); } 70% { transform: translate(-50%, -3px) rotate(2deg); } }
+@keyframes buddy-idle { 0%, 100% { transform: translate(-50%, 0) rotate(0); } 50% { transform: translate(-50%, -4px) rotate(1deg); } }
+@keyframes buddy-think { 0%, 100% { transform: translate(-50%, 0) rotate(-2deg); } 50% { transform: translate(-50%, -3px) rotate(2deg); } }
+@keyframes buddy-cheer { 35% { transform: translate(-50%, -5px) rotate(-3deg); } 70% { transform: translate(-50%, -3px) rotate(2deg); } }
 @keyframes confetti-fall { to { transform: translate(-26px, 85vh) rotate(540deg); opacity: 0; } }
 @media (max-width: 250px) { .topbar { padding: 14px 12px; }.conversation { padding: 0 10px 18px; }footer { padding: 11px 10px; }.buddy-intro { padding-inline: 9px; border-radius: 17px; }.buddy-scene { height: 193px; }.mascot { width: 350px; height: 197px; }.scene-code { left: 0; }.scene-spark { right: 3%; }h1 { font-size: 22px; }.message { padding: 13px; }.learning-trail { gap: 5px; }.trail-step span { display: none; }.footer-note { font-size: 8px; } }
-@media (max-height: 550px) { .buddy-scene { height: 157px; }.mascot { width: 300px; height: 169px; top: -12px; }.orbit { width: 120px; height: 120px; top: 12px; }.buddy-intro { padding-bottom: 14px; }.topbar { padding-block: 11px; } }
+@media (max-height: 550px) { .buddy-scene { height: 157px; }.mascot { width: 300px; height: 169px; top: -4px; }.orbit { width: 120px; height: 120px; top: 12px; }.buddy-intro { padding-bottom: 14px; }.topbar { padding-block: 11px; } }
+body.character-motion-off .mascot { animation: none; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 body.vscode-high-contrast, body.vscode-high-contrast-light { --ink: var(--vscode-editor-foreground, var(--vscode-foreground)); --accent: var(--vscode-textLink-foreground); --warm: var(--vscode-textLink-foreground); --violet: var(--vscode-textLink-foreground); --line: var(--vscode-contrastBorder, var(--ink)); --muted: var(--ink); }
 body.vscode-high-contrast .send-button, body.vscode-high-contrast-light .send-button { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }

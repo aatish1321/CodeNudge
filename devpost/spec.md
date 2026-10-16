@@ -80,7 +80,7 @@ The examples must be saved before running. Exercise the learning loop using genu
 
 ```sh
 npm run package
-code --install-extension coding-buddy-0.0.11.vsix
+code --install-extension coding-buddy-0.0.12.vsix
 ```
 
 `npm run package` will compile and invoke `vsce package`; use the actual generated versioned filename if it differs. Inspect package contents so learner profiles, keys, local logs, course material, and development-only files do not ship.
@@ -377,3 +377,7 @@ A learner’s relative zsh command produced `18` but retained an old syntax clue
 ## Sidebar Personality (0.0.11)
 
 Use the existing HTML/CSS/plain-JavaScript webview and cutout PNG. Scale the padded asset within a bounded scene rather than editing the character. Theme-aware teal, amber and violet accents distinguish the buddy, syntax and logic cards; keep text tied to VS Code foreground colours. The scene, framing, focus styles and composer adapt to narrow/short panels and light/high-contrast themes. `PanelState.hasIssue` is derived from `LearningSession.issue` during refresh; display the clue/closer-look/review trail only while it is true. Mood copy follows working/trust/proposal states. Reuse the existing celebration counter, setting and reduced-motion guard for a brief mascot flourish. Preserve CSP, literal text rendering and the settings/review/trust actions. No additional runtime dependency or network resource. An offline `devpost/sidebar-preview.html` uses real panel markup/styles with sample states; it is excluded from the VSIX.
+
+## Character Motion (0.0.12)
+
+Animate the existing image with CSS transforms: a five-second 4px idle bob, a small 2.4-second thinking tilt, and two short celebration bounces using the existing event/setting guard. Keep the image baseline clear of the scene edge. `codingBuddy.animateCharacter` defaults to true at application scope and has a gear-menu pause/resume action; send it through PanelState and disable mascot animation with a body class. The existing reduced-motion media rule overrides all animation. Presentation-only configuration updates refresh the panel; changes to provider/models/automatic watching still cancel/invalidate guidance. No new image asset, animation dependency, model call, or frame-by-frame JavaScript loop.

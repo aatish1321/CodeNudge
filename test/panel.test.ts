@@ -33,7 +33,7 @@ function panel() {
     matchMedia: () => ({ matches: reducedMotion }), setTimeout: (callback: () => void) => timers.push(callback)
   });
   const state = { type: 'state', trusted: true, provider: 'gemini', model: 'fixture-model', keyConfigured: false, file: 'example.py', status: 'Ready', working: false,
-    retries: 0, hasIssue: false, messages: [] as { role: string; text: string; category?: string }[], proposalId: '', confetti: true, celebration: 0 };
+    retries: 0, hasIssue: false, messages: [] as { role: string; text: string; category?: string }[], proposalId: '', confetti: true, animateCharacter: true, celebration: 0 };
   const render = () => listeners.message({ data: state });
   return { element, state, render, sent, timers, listeners, classes, reduce: () => { reducedMotion = true; } };
 }
@@ -128,4 +128,15 @@ test('buddy mood and help trail follow actual issue stages and disappear after r
   ui.state.hasIssue = false; ui.state.retries = 0; ui.state.proposalId = ''; ui.render();
   assert.equal(ui.element('learningTrail').hidden, true);
   assert.equal(ui.classes.has('is-working'), false);
+});
+
+test('character motion can pause while thinking without turning off the separate celebration setting', () => {
+  const ui = panel(); ui.render();
+  assert.equal(ui.classes.has('character-motion-off'), false);
+  ui.state.working = true; ui.state.animateCharacter = false; ui.render();
+  assert.equal(ui.classes.has('is-working'), true);
+  assert.equal(ui.classes.has('character-motion-off'), true);
+  assert.equal(ui.state.confetti, true);
+  ui.state.animateCharacter = true; ui.render();
+  assert.equal(ui.classes.has('character-motion-off'), false);
 });

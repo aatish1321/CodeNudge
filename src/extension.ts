@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext): void {
   let suppressEditorSwitch = false;
   let launching = false;
   const memories = new Map<string, { session: LearningSession; run?: RunSnapshot; messages: PanelState['messages']; status: string; snapshot?: ProjectSnapshot; hint?: typeof activeHint }>();
-  const state: PanelState = { trusted: vscode.workspace.isTrusted, provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Run your code. I’m right here if you get stuck.', working: false, retries: 0, hasIssue: false, messages: [], proposalId: '', confetti: true, celebration: 0 };
+  const state: PanelState = { trusted: vscode.workspace.isTrusted, provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Run your code. I’m right here if you get stuck.', working: false, retries: 0, hasIssue: false, messages: [], proposalId: '', confetti: true, animateCharacter: true, celebration: 0 };
   const log = vscode.window.createOutputChannel('Coding Buddy');
 
   async function refresh(): Promise<void> {
@@ -42,6 +42,7 @@ export function activate(context: vscode.ExtensionContext): void {
       state.hasIssue = !!session.issue;
       state.proposalId = guidance.proposalId;
       state.confetti = vscode.workspace.getConfiguration('codingBuddy').get('confetti', true);
+      state.animateCharacter = vscode.workspace.getConfiguration('codingBuddy').get('animateCharacter', true);
       panel.update(state);
     } catch (error) { state.status = (error as Error).message; panel.update(state); }
   }
@@ -215,6 +216,7 @@ export function activate(context: vscode.ExtensionContext): void {
           { label: '$(key) Add or update API key', action: 'setKey' },
           { label: '$(trash) Remove API key', action: 'removeKey' },
           { label: automatic ? '$(debug-pause) Pause automatic hints' : '$(play) Resume automatic hints', action: 'toggleWatching' },
+          { label: state.animateCharacter ? '$(debug-pause) Pause character animation' : '$(play) Resume character animation', action: 'toggleCharacterAnimation' },
           { label: state.confetti ? '$(star) Turn celebrations off' : '$(star) Turn celebrations on', action: 'toggleConfetti' },
           { label: '$(refresh) Retry last result', action: 'retry' },
           { label: '$(clear-all) Start a new issue', action: 'reset' },
@@ -240,6 +242,7 @@ export function activate(context: vscode.ExtensionContext): void {
       else if (name === 'connect') await connect();
       else if (name === 'disconnect') { cancel(); guidance.clear(); capture.disconnect(); linked = undefined; latestRun = undefined; session = new LearningSession(); state.file = ''; status('Hints paused. Resume automatic hints in settings.'); }
       else if (name === 'reset') { cancel(); guidance.clear(); activeHint = undefined; session = new LearningSession(); latestRun = undefined; state.messages = []; status('Fresh start. Run your code when you are ready.'); }
+      else if (name === 'toggleCharacterAnimation') { const config = vscode.workspace.getConfiguration('codingBuddy'); await config.update('animateCharacter', !config.get('animateCharacter', true), vscode.ConfigurationTarget.Global); }
       else if (name === 'toggleConfetti') { const config = vscode.workspace.getConfiguration('codingBuddy'); await config.update('confetti', !config.get('confetti', true), vscode.ConfigurationTarget.Global); }
       else if (name === 'acceptFix') {
         if (!latestRun || !linked || linked.isDirty || linked.getText() !== latestRun.source || (activeSnapshot && !await workspace.current(activeSnapshot))) {
@@ -310,6 +313,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.workspace.onDidChangeTextDocument(event => { if (event.contentChanges.length && (linked?.uri.toString() === event.document.uri.toString() || activeSnapshot?.sources.some(source => source.path === event.document.uri.fsPath))) { if (state.working) session.clearCache(); cancel(); guidance.clear(); activeHint = undefined; status('Code changed. Save and run it again to check your idea.'); } }),
     vscode.workspace.onDidChangeConfiguration(event => {
       if (!event.affectsConfiguration('codingBuddy')) return;
+      if (!['provider', 'models', 'autoWatch'].some(key => event.affectsConfiguration(`codingBuddy.${key}`))) { void refresh(); return; }
       cancel(); guidance.clear(); activeHint = undefined; session.clearCache();
       for (const saved of memories.values()) { saved.session.clearCache(); saved.hint = undefined; }
       if (event.affectsConfiguration('codingBuddy.autoWatch')) {

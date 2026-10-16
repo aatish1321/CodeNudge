@@ -2,7 +2,7 @@
   "name": "coding-buddy",
   "displayName": "Coding Buddy",
   "description": "A patient coding companion: clues first, answers when you need them.",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "publisher": "aatish1321",
   "license": "UNLICENSED",
   "repository": { "type": "git", "url": "https://github.com/aatish1321/coding-buddy.git" },
@@ -40,6 +40,7 @@
         "codingBuddy.models.gemini": { "type": "string", "default": "gemini-3.5-flash-lite", "scope": "application", "description": "Gemini model with structured-output support. Model availability depends on your account." },
         "codingBuddy.models.openai": { "type": "string", "default": "gpt-6-luna", "scope": "application", "description": "OpenAI model with Responses API structured-output support." },
         "codingBuddy.models.groq": { "type": "string", "default": "openai/gpt-oss-120b", "scope": "application", "description": "Groq-hosted model with strict structured-output support." },
+        "codingBuddy.animateCharacter": { "type": "boolean", "default": true, "scope": "application", "description": "Animate the buddy character while idle, thinking and celebrating. Reduced-motion preferences are always respected." },
         "codingBuddy.confetti": { "type": "boolean", "default": true, "scope": "application", "description": "Celebrate a solved issue with confetti. Reduced-motion preferences are always respected." }
       }
     }
@@ -52,7 +53,7 @@
     "test:trust": "npm run compile && node scripts/test-host.cjs --restricted",
     "test:package": "node scripts/test-host.cjs --package",
     "vscode:prepublish": "npm run compile",
-    "package": "vsce package --no-dependencies --skip-license --out coding-buddy-0.0.11.vsix"
+    "package": "vsce package --no-dependencies --skip-license --out coding-buddy-0.0.12.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

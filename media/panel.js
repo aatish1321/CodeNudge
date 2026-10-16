@@ -23,6 +23,7 @@
     if (state.type !== 'state') return;
     document.body.classList.toggle('has-messages', state.messages.length > 0 || !!state.file);
     document.body.classList.toggle('is-working', state.working);
+    document.body.classList.toggle('character-motion-off', state.animateCharacter === false);
     document.getElementById('buddyMood').textContent = !state.trusted ? 'Let’s get set up' : state.working ? 'Thinking with you…' : state.proposalId ? 'A little backup, if you need it' : 'Right here with you';
     document.getElementById('eyebrow').textContent = state.proposalId ? 'YOUR CODE. YOUR CALL.' : state.retries >= 3 ? 'ONE LINE AT A TIME.' : 'SMALL CLUES. BIG DISCOVERIES.';
     document.getElementById('learningTrail').hidden = !state.hasIssue;

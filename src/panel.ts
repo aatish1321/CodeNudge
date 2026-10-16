@@ -6,7 +6,7 @@ export interface PanelState {
   provider: string; model: string; keyConfigured: boolean; file: string; status: string; working: boolean;
   retries: number; hasIssue: boolean; messages: { role: 'buddy' | 'learner'; text: string; category?: string }[];
   proposalId: string;
-  confetti: boolean; celebration: number;
+  confetti: boolean; animateCharacter: boolean; celebration: number;
 }
 
 export class BuddyPanel implements vscode.WebviewViewProvider {

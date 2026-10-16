@@ -339,6 +339,14 @@ export async function run(): Promise<void> {
     assert.equal(vscode.workspace.getConfiguration('codingBuddy').get('confetti'), true);
     console.log('HOST CHECK PASSED: persistent confetti setting and native toggle command.');
   } finally { await config.update('confetti', originalConfetti, vscode.ConfigurationTarget.Global); }
+  const originalMotion = config.inspect<boolean>('animateCharacter')?.globalValue;
+  try {
+    await config.update('animateCharacter', false, vscode.ConfigurationTarget.Global);
+    assert.equal(config.get('animateCharacter'), false);
+    await config.update('animateCharacter', true, vscode.ConfigurationTarget.Global);
+    assert.equal(config.get('animateCharacter'), true);
+    console.log('HOST CHECK PASSED: native character-animation preference can pause and resume.');
+  } finally { await config.update('animateCharacter', originalMotion, vscode.ConfigurationTarget.Global); }
   const originalProvider = config.inspect<string>('provider')?.globalValue;
   try {
     const providers = Object.keys(defaults) as Provider[];
@@ -351,6 +359,6 @@ export async function run(): Promise<void> {
     console.log('HOST CHECK PASSED: three native provider settings and distinct secret names.');
   } finally { await config.update('provider', originalProvider, vscode.ConfigurationTarget.Global); }
   if (process.env.CODING_BUDDY_TEST_REPORT) {
-    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['run-with-buddy-python-javascript', 'literal-shell-special-paths', 'save-before-run', 'direct-process-plain-output', 'activation', 'automatic-python-capture', 'automatic-javascript-capture', 'changed-retry-inline', 'successful-rerun-clears-errors', 'multi-file-invoice-runtime-logic-success', 'async-javascript-404-503', 'cross-language-execution-routing', 'helper-only-context-changes', 'quoted-paths', ...(existsSync('/bin/zsh') ? ['automatic-zsh-capture', 'zsh-multi-file-entry', 'relative-zsh-error-to-success', 'zsh-cd-same-name-routing'] : []), 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'provider-settings'] }));
+    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['run-with-buddy-python-javascript', 'literal-shell-special-paths', 'save-before-run', 'direct-process-plain-output', 'activation', 'automatic-python-capture', 'automatic-javascript-capture', 'changed-retry-inline', 'successful-rerun-clears-errors', 'multi-file-invoice-runtime-logic-success', 'async-javascript-404-503', 'cross-language-execution-routing', 'helper-only-context-changes', 'quoted-paths', ...(existsSync('/bin/zsh') ? ['automatic-zsh-capture', 'zsh-multi-file-entry', 'relative-zsh-error-to-success', 'zsh-cd-same-name-routing'] : []), 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'character-animation-setting', 'provider-settings'] }));
   }
 }

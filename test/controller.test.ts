@@ -38,6 +38,9 @@ async function controllerFixture(t: TestContext, trusted = true) {
   let collected = 0;
   let granted: (() => void) | undefined;
   let watching = true;
+  let configurationChanged: ((event: { affectsConfiguration(key: string): boolean }) => void) | undefined;
+  const preferences = new Map<string, unknown>();
+  const emitConfiguration = (...keys: string[]) => configurationChanged?.({ affectsConfiguration: section => section === 'codingBuddy' || keys.some(key => `codingBuddy.${key}` === section || `codingBuddy.${key}`.startsWith(`${section}.`)) });
   let finishRun!: () => void;
   const directRuns: { document: Document; executable: string; args: string[] }[] = [];
   const executed: string[] = [];
@@ -58,11 +61,12 @@ async function controllerFixture(t: TestContext, trusted = true) {
       const part = relative(root, target.fsPath);
       return part !== '..' && !part.startsWith(`..${sep}`) && !isAbsolute(part) ? folder : undefined;
     },
-    getConfiguration: () => ({ get: (_key: string, fallback: unknown) => fallback }),
+    getConfiguration: () => ({ get: (key: string, fallback: unknown) => preferences.get(key) ?? fallback,
+      update: async (key: string, value: unknown) => { preferences.set(key, value); emitConfiguration(key); } }),
     findFiles: async () => (await sourceFiles(root)).map(uri),
     openTextDocument: async (target: ReturnType<typeof uri>) => documents.find(document => document.uri.fsPath === target.fsPath)!,
     onDidChangeTextDocument: (callback: typeof changedDocument) => { changedDocument = callback; return disposable(); },
-    onDidChangeConfiguration: () => disposable(),
+    onDidChangeConfiguration: (callback: typeof configurationChanged) => { configurationChanged = callback; return disposable(); },
     onDidGrantWorkspaceTrust: (callback: () => void) => { granted = callback; return disposable(); },
   };
   const window = {
@@ -74,7 +78,7 @@ async function controllerFixture(t: TestContext, trusted = true) {
   };
   const vscode = {
     workspace, window, Uri: { file: uri, parse: (value: string) => uri(fileURLToPath(value)) },
-    RelativePattern: class {},
+    RelativePattern: class {}, ConfigurationTarget: { Global: 1 },
     commands: { executeCommand: async (command: string) => { executed.push(command); }, registerCommand: (name: string, handler: () => unknown) => { commands.set(name, handler); return disposable(); } },
   };
   const filename = resolve(__dirname, '../src/extension.js');
@@ -164,7 +168,7 @@ async function controllerFixture(t: TestContext, trusted = true) {
     if (!pending) await until(() => !state.working, 'analysis completion');
   }
   return { root, add, select, change, run, action: (name: string, text?: string) => action(name, text), requests, hints, proposals,
-    executed, directRuns, finishRun: () => finishRun(), watching: () => watching, collected: () => collected,
+    executed, directRuns, emitConfiguration, finishRun: () => finishRun(), watching: () => watching, collected: () => collected,
     grantTrust: async () => { workspace.isTrusted = true; granted?.(); await flush(); },
     state: () => state, acceptCount: () => acceptCount, respond: (handler: typeof respond) => { respond = handler; } };
 }
@@ -429,4 +433,31 @@ test('correct output replaces old error clues, celebrates once, and unchanged su
   await fixture.run(document, false, true, '18\n', 0);
   assert.equal(fixture.requests.length, 3);
   assert.equal(fixture.state().celebration, 1);
+});
+
+test('animation preferences refresh without cancelling guidance, while a combined provider change still cancels it', async t => {
+  const fixture = await controllerFixture(t);
+  const document = await fixture.add('main.py', '# Print the value.\nx = None\nprint(x.value)\n');
+  let finish!: (value: TeachingReply) => void;
+  fixture.respond(() => new Promise(resolve => { finish = resolve; }));
+  await fixture.select(document); await fixture.run(document, true);
+  await until(() => fixture.requests.length === 1, 'pending guidance');
+  await fixture.action('toggleCharacterAnimation');
+  await until(() => fixture.state().animateCharacter === false, 'paused motion');
+  assert.equal(fixture.requests[0].signal.aborted, false);
+  assert.equal(fixture.state().working, true);
+  finish(reply(fixture.requests[0].input));
+  await until(() => !fixture.state().working, 'completed guidance');
+  const messages = fixture.state().messages;
+  await fixture.action('toggleCharacterAnimation');
+  await until(() => fixture.state().animateCharacter, 'resumed motion');
+  assert.deepEqual(fixture.state().messages, messages);
+  assert.equal(fixture.requests.length, 1);
+  await fixture.change(document, document.source + '# Try again\n');
+  await fixture.run(document, true);
+  await until(() => fixture.requests.length === 2, 'second pending guidance');
+  fixture.emitConfiguration('animateCharacter', 'provider');
+  assert.equal(fixture.requests[1].signal.aborted, true);
+  finish(reply(fixture.requests[1].input));
+  await flush(); await flush();
 });
