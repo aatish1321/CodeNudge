@@ -171,3 +171,7 @@ The learner rejected repeated yes/no file-confirmation questions. Remove that in
 ## Sidebar Personality Revision (0.0.11)
 
 The learner confirmed the successful-run fix and asked to spice up the bland sidebar. Keep the supplied robot and the settings-only home for secondary actions. Add a welcoming mascot scene, richer but theme-aware accent colours, distinct hint cards, a clear thinking space and a small current-help trail. The trail reflects unlocked help rather than changing the attempt rules, and disappears when the issue is solved. Existing confetti/reduced-motion preferences also govern the new brief celebratory flourish.
+
+## Project Mode Revision
+
+Promoted from deferred work at the learner’s explicit request. Project mode asks for an idea, then offers “I have features” and “Suggest a plan”. Buddy may ask a short clarification question; it proposes a bounded task plan for review before the learner starts. Each active task has a light implementation prompt and a concrete way to test it. The learner can request a conceptual nudge, ask questions or ask Buddy to review saved code/current run context, then explicitly mark tasks done. Reviews are advisory; progress is learner-reported, and no files are automatically written or executed. Plans/progress survive reloads in local workspace storage, independently of per-file debugging conversations. Keep the provider/settings, character and existing error-help mode. AI errors, missing keys, stale source and cancellation retain the last usable plan.

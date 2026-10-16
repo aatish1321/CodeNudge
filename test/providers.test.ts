@@ -1,6 +1,6 @@
 import { test, mock } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyze, Provider } from '../src/providers';
+import { analyze, projectReply, Provider } from '../src/providers';
 import { clue } from './fixtures';
 
 const key = 'fixture-provider-key-123456789';
@@ -153,5 +153,23 @@ test('each provider schema prevents locked edit fields before the fix stage', as
       try { await analyze(provider, 'fixture-model', key, { allowedLevel: level }, signal()); }
       finally { fetchMock.mock.restore(); }
     }
+  }
+});
+
+test('all three providers reuse secure transport with separate project planning and coaching schemas', async () => {
+  for (const provider of ['gemini', 'openai', 'groq'] as const) for (const operation of ['plan', 'hint', 'review']) {
+    const response = operation === 'plan' ? { kind: 'question', title: '', tasks: [], message: 'Browser or terminal?' } : { message: 'What happens with one entry?', ready: false };
+    const fetchMock = mock.method(globalThis, 'fetch', async (_url: string, options: RequestInit) => {
+      const body = JSON.parse(options.body as string);
+      const schema = provider === 'gemini' ? body.generationConfig.responseJsonSchema : provider === 'openai' ? body.text.format.schema : body.response_format.json_schema.schema;
+      assert.equal(schema.additionalProperties, false);
+      assert.equal(!!schema.properties.tasks, operation === 'plan');
+      assert.equal(schema.properties.replacement, undefined);
+      const policy = provider === 'gemini' ? body.systemInstruction.parts[0].text : provider === 'openai' ? body.instructions : body.messages[0].content;
+      assert.match(policy, /Never write the project/);
+      return Response.json(responseFor(provider, response));
+    });
+    try { assert.deepEqual(await projectReply(provider, 'fixture-model', key, { operation, idea: 'A tracker' }, signal()), response); }
+    finally { fetchMock.mock.restore(); }
   }
 });

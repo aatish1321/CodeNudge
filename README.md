@@ -4,7 +4,7 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install `coding-buddy-0.0.12.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
+Install `coding-buddy-0.0.13.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
 
 A fresh playground can open in **Restricted Mode**. Buddy remains visible with a **Trust this folder…** button that opens VS Code’s trust screen. Choose Trust for the playground, or use the top banner’s **Manage** link. Terminal watching and AI analysis stay disabled until you grant trust. After updating the extension, use **Developer: Reload Window** once.
 
@@ -26,6 +26,20 @@ Rerunning identical code with the same result/context does not spend another AI 
 
 When the same exception type and source line persist, the extension counts changed-code retries locally; the model cannot reset that count just by rephrasing the issue. At the inline threshold, a known error line gets an arrow even if the model fails to supply its own line hint. Other diagnostic formats still rely on the model identifying the same issue and its line. Each new source/result replaces the old guidance. Successful execution removes outdated execution-error advice while the intended output is checked separately for logic mistakes.
 
+## Build an idea with Buddy
+
+Choose **Project** at the top of the sidebar, or **Ctrl+Shift+P → Coding Buddy: Project Mode**.
+
+1. Describe your idea. Buddy asks whether you have features in mind or want a suggested plan.
+2. Choose **I have features in mind** and describe them, or **Suggest a plan**. Mention your preferred language/tools. Buddy may ask a short clarification question.
+3. Review the 3–8 small tasks, refine the plan in the reply box, then click **Start building**.
+4. Work on the current task yourself. **Nudge me** gives a conceptual hint. Open and save your attempt, run it, then click **Check my attempt** for feedback using bounded related-folder context and the latest matching captured run. You can also explain what you tried in the reply box.
+5. Try the task’s check and click **Mark done** when satisfied. Buddy suggests; you decide when to advance. Finishing the last step celebrates your progress.
+
+One plan and its progress are saved locally with the opened VS Code workspace. Return to Project after reopening the same folder to continue. **Gear → Start a new project plan** replaces the saved plan after confirmation; it keeps your code. Project mode uses your existing selected provider/key. Planning shares your idea, feature notes and plan conversation; task coaching also shares saved code/context when available. It guides you without creating files, running AI commands or writing your implementation.
+
+Terminal runs in Project mode do not automatically request debugging advice. Request **Check my attempt** when ready; use **Debug** for the progressive clue → inline → reviewed-fix loop. With automatic watching paused, use Run with Buddy or explicitly share a result. Code-only review is not proof that a task works, and AI review never marks tasks done. Source files still need to be saved normally.
+
 ## Browser, API, and other results
 
 Automatic observation covers completed commands in integrated terminals with working [VS Code shell integration](https://code.visualstudio.com/docs/terminal/shell-integration). It is not tied to Python; `examples/loop_logic.js` can be run with `node loop_logic.js`.
@@ -46,7 +60,7 @@ Model names are configurable in Coding Buddy settings. Use a model supporting th
 
 The run’s source, related source excerpts, relative source-file index, relevant output, and your clarification are sent directly to the **selected provider**. Git-ignored sources, hidden files, credential filenames, dependencies, generated directories, and symlinks escaping the folder are excluded from related context. Without Git, built-in directory exclusions apply. Coding Buddy does not execute AI commands or operate a separate backend. Avoid putting secrets into code or chat. Known saved keys and credential files are blocked from being used as coding context; this is not a universal secret detector.
 
-Provider/model preferences, confetti, and encrypted keys survive restarting VS Code. Current conversation, captured output, active file/session, and attempt counts stay in memory and reset on restart. Closing the panel alone preserves that session.
+Provider/model preferences, confetti, and encrypted keys survive restarting VS Code. Project plans, recent project messages and task progress persist locally in workspace storage; they are not written into your repository. Debug conversation, captured output, active file/session, and attempt counts stay in memory and reset on restart. Closing the panel alone preserves that session.
 
 ## Develop and test
 
@@ -74,11 +88,13 @@ npm run test:package
 
 `test:host` opens an isolated VS Code profile and verifies actual extension activation, automatic Python/JavaScript/Bash/zsh capture, multi-file invoice runtime/logic/correct results, asynchronous JavaScript and 404/503 cases, cross-language execution routing, quoted paths, helper changes, editor arrows, native diffs, accept/reject, undo, stale-edit protection, and preferences. `test:package` repeats those checks against the installed VSIX. `test:trust` separately starts a truly untrusted window with trust enabled and verifies pre-trust activation/view access and the native trust screen without auto-trusting. Run `node scripts/test-host.cjs --package --restricted` for that check against the installed VSIX. The automated terminal checks use Bash/Python/Node on Linux and also check zsh when installed; the extension itself is intended for desktop VS Code with supported shells. The normal `code` command must be available on PATH.
 
+Project tests cover custom/suggested planning, approval, progress restoration, learner-controlled completion, trust and stale/cancelled replies. The native suite also checks the actual Project Mode command and saved-source coaching with HTTP fixture replies; this is not live AI acceptance.
+
 Unit tests exercise the activated controller across language switches, workspace boundaries/freshness, fresh playground copies, attempt rules, early-answer guards, and HTTP fixtures for all three provider contracts. Live Groq checks now use the key already stored in VS Code without exposing it. They found early-answer leakage, prompting stricter stage schemas and a local hint guard. See the [verification report](devpost/verification.md) for the exact live and automated coverage. Gemini/OpenAI teaching quality and account access remain unverified; HTTP fixtures alone do not establish them.
 
 Context limits: 12,000 characters in the run’s primary file; up to 500 source paths in its workspace-folder index; up to eight related files, 6,000 characters each and 30,000 combined; the last 8,000 output characters; 2,000 clarification/result-input characters. Omissions and truncated excerpts are labeled for the model; truncated related files cannot be replaced. Related files over 100 KB are omitted. Save related changes before rerunning. New or excluded files may not be read, so the buddy cannot prove the entire project is correct.
 
-Browser inspection, Postman capture, debugger capture, project-planning tasks, and saved chat histories remain outside this version. Long-running servers need a manually shared result. Commands without an identifiable source are skipped without confirmation; compound shell commands and every language/toolchain have not been verified. A local guard catches obvious early edit instructions/code, but subtle answer leakage and diagnosis quality still require real-model review.
+Browser inspection, Postman capture, debugger capture, saved Debug chat histories remain outside this version. Long-running servers need a manually shared result. Commands without an identifiable source are skipped without confirmation; compound shell commands and every language/toolchain have not been verified. A local guard catches obvious early edit instructions/code, but subtle answer leakage and diagnosis quality still require real-model review.
 
 The implementation plan and remaining acceptance checks live in [devpost/checklist.md](devpost/checklist.md). [The app map](devpost/app-map.html) is an offline reference to the code.
 

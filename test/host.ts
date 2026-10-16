@@ -7,6 +7,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { clue, run as fixtureRun } from './fixtures';
 import type { Provider } from '../src/providers';
+import { checkProjectMode } from './project-host';
 
 async function disableTestHistory(terminal: vscode.Terminal): Promise<void> {
   await new Promise<void>((resolve, reject) => {
@@ -358,7 +359,11 @@ export async function run(): Promise<void> {
     }
     console.log('HOST CHECK PASSED: three native provider settings and distinct secret names.');
   } finally { await config.update('provider', originalProvider, vscode.ConfigurationTarget.Global); }
+  await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(directPath));
+  await checkProjectMode(extension.extensionPath, workspace, { uri: directEditor.document.uri.toString(), version: directEditor.document.version,
+    source: directEditor.document.getText(), language: 'python', command: 'python3 expense.py', output: directPython.output,
+    exitCode: directPython.code, truncated: false, reported: false, sourceConfirmed: true });
   if (process.env.CODING_BUDDY_TEST_REPORT) {
-    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['run-with-buddy-python-javascript', 'literal-shell-special-paths', 'save-before-run', 'direct-process-plain-output', 'activation', 'automatic-python-capture', 'automatic-javascript-capture', 'changed-retry-inline', 'successful-rerun-clears-errors', 'multi-file-invoice-runtime-logic-success', 'async-javascript-404-503', 'cross-language-execution-routing', 'helper-only-context-changes', 'quoted-paths', ...(existsSync('/bin/zsh') ? ['automatic-zsh-capture', 'zsh-multi-file-entry', 'relative-zsh-error-to-success', 'zsh-cd-same-name-routing'] : []), 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'character-animation-setting', 'provider-settings'] }));
+    await writeFile(process.env.CODING_BUDDY_TEST_REPORT, JSON.stringify({ passed: true, checks: ['project-mode-command-and-workflow-http-fixtures', 'run-with-buddy-python-javascript', 'literal-shell-special-paths', 'save-before-run', 'direct-process-plain-output', 'activation', 'automatic-python-capture', 'automatic-javascript-capture', 'changed-retry-inline', 'successful-rerun-clears-errors', 'multi-file-invoice-runtime-logic-success', 'async-javascript-404-503', 'cross-language-execution-routing', 'helper-only-context-changes', 'quoted-paths', ...(existsSync('/bin/zsh') ? ['automatic-zsh-capture', 'zsh-multi-file-entry', 'relative-zsh-error-to-success', 'zsh-cd-same-name-routing'] : []), 'inline-guidance', 'diff', 'accept', 'reject', 'undo', 'stale-edit', 'confetti-setting', 'character-animation-setting', 'provider-settings'] }));
   }
 }

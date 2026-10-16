@@ -61,3 +61,7 @@ Detailed run behavior, how run results reach the buddy across languages, what co
 ## Workspace Revision
 
 Requested during learner testing: keep hints, clarification, and attempt progress when moving between files/languages in the same window; investigate relevant code across the opened folder rather than pinning normal use to one file/terminal. Provide a self-service way to open fresh practice projects. Verify harder multi-file Python and JavaScript work, including runtime failures and wrong-but-successful output. Context is bounded and secret/generated files excluded; fixes remain reviewed one-file changes. The project-idea-to-tasks workflow stays deferred.
+
+## Project Mode Revision
+
+After confirming debugging and interface polish, the learner explicitly requested the previously deferred project workflow. Add a separate Project mode: describe an idea, choose whether to supply features or ask Buddy to suggest a small plan, approve that plan, then build through bite-sized tasks with conceptual hints and attempt reviews. Keep the same think-first kernel and the existing debugging workflow. Save the plan/progress locally for the opened workspace. No automatic project code generation or execution.

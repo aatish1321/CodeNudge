@@ -85,3 +85,17 @@ Do not promise an inline arrow on the very first run: arrows follow the attempt 
 - **Fresh demo files missing:** open a new playground after installing the newer package. Existing copies keep your edits.
 
 Real model wording and quota behavior can vary. Rehearse with the same provider/model you will record. This guide's program outputs and six unsuccessful variants are checked mechanically; the exact new examples are not a guarantee of every live model reply.
+
+
+## 4. Show Project mode: from idea to your first step
+
+Use a trusted folder you intend to keep. Choose **Project**, then type: **“I want a tiny expense tracker in JavaScript that runs in the terminal.”**
+
+1. Show Buddy’s choice. Select **I have features in mind** and reply: **“Enter prices, show the total, and handle empty input.”** For a separate rehearsal, choose **Suggest a plan** instead. Answer a clarification if asked.
+2. Show the small task list and its checks. You can ask to simplify it before clicking **Start building**.
+3. Explain that you write the code yourself. Try the first task, open/save its source, and use **Nudge me** if stuck. The hint should leave you thinking about the implementation.
+4. Run your attempt and click **Check my attempt**. Buddy reviews the current task and available code/output. Feedback is advice; it does not advance the task automatically.
+5. Try the task’s check yourself, click **Mark done**, and show the next small step. Switch to Debug for the progressive error-help loop and back to show the project is still there.
+6. Reopen the same folder and choose Project to show saved progress. Use the gear’s **Start a new project plan** only when you want to replace it; source files remain yours.
+
+Do not promise identical generated tasks or successful tests from code-only feedback. Rehearse this with your demo provider/model and allow for one clarification and quota limits. These steps demonstrate coaching, not automatic project generation.

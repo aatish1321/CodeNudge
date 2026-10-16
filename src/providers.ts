@@ -1,12 +1,10 @@
 import { replySchema, teachingPolicy } from './teaching';
+import { projectCoachSchema, projectPlanSchema, projectPolicy } from './project';
 
 export type Provider = 'gemini' | 'openai' | 'groq';
 export const defaults: Record<Provider, string> = { gemini: 'gemini-3.5-flash-lite', openai: 'gpt-6-luna', groq: 'openai/gpt-oss-120b' };
 
 export async function analyze(provider: Provider, model: string, key: string, context: object, signal: AbortSignal): Promise<unknown> {
-  if (!key) throw new Error('Add your API key using the key button first.');
-  if (!/^[a-zA-Z0-9._/-]{1,100}$/.test(model)) throw new Error('Check the model name in Coding Buddy settings.');
-  const input = JSON.stringify(context);
   const { allowedLevel, sameDiagnostic } = context as { allowedLevel?: unknown; sameDiagnostic?: unknown };
   const level = allowedLevel === 'inline' || allowedLevel === 'fix' ? allowedLevel : 'clue';
   const schema = { ...replySchema, properties: { ...replySchema.properties,
@@ -14,6 +12,18 @@ export async function analyze(provider: Provider, model: string, key: string, co
     ...(level !== 'fix' ? { replacement: { type: 'null' }, explanation: { type: 'null' } } : {}),
     ...(level === 'clue' ? { inlineHint: { type: 'null' } } : {})
   } };
+  return request(provider, model, key, context, signal, teachingPolicy, schema);
+}
+
+export async function projectReply(provider: Provider, model: string, key: string, context: object, signal: AbortSignal): Promise<unknown> {
+  const operation = (context as { operation?: string }).operation;
+  return request(provider, model, key, context, signal, projectPolicy, operation === 'plan' ? projectPlanSchema : projectCoachSchema);
+}
+
+async function request(provider: Provider, model: string, key: string, context: object, signal: AbortSignal, policy: string, schema: object): Promise<unknown> {
+  if (!key) throw new Error('Add your API key in Buddy settings first.');
+  if (!/^[a-zA-Z0-9._/-]{1,100}$/.test(model)) throw new Error('Check the model name in Coding Buddy settings.');
+  const input = JSON.stringify(context);
   if (key.length >= 8 && input.includes(key)) throw new Error('Your provider key appears in the code or output. Remove it before asking the buddy to read it.');
   let url: string;
   let headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -23,7 +33,7 @@ export async function analyze(provider: Provider, model: string, key: string, co
       url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
       headers['x-goog-api-key'] = key;
       payload = {
-        systemInstruction: { parts: [{ text: teachingPolicy }] },
+        systemInstruction: { parts: [{ text: policy }] },
         contents: [{ role: 'user', parts: [{ text: input }] }],
         generationConfig: { responseMimeType: 'application/json', responseJsonSchema: schema, maxOutputTokens: 8192 }
       };
@@ -31,13 +41,13 @@ export async function analyze(provider: Provider, model: string, key: string, co
     case 'openai':
       url = 'https://api.openai.com/v1/responses';
       headers.Authorization = `Bearer ${key}`;
-      payload = { model, instructions: teachingPolicy, input, store: false, max_output_tokens: 8192,
+      payload = { model, instructions: policy, input, store: false, max_output_tokens: 8192,
         text: { format: { type: 'json_schema', name: 'buddy_response', strict: true, schema } } };
       break;
     case 'groq':
       url = 'https://api.groq.com/openai/v1/chat/completions';
       headers.Authorization = `Bearer ${key}`;
-      payload = { model, messages: [{ role: 'system', content: teachingPolicy }, { role: 'user', content: input }],
+      payload = { model, messages: [{ role: 'system', content: policy }, { role: 'user', content: input }],
         stream: false, max_completion_tokens: 8192,
         response_format: { type: 'json_schema', json_schema: { name: 'buddy_response', strict: true, schema } } };
       break;

@@ -24,7 +24,7 @@ async function until(check: () => boolean, description: string): Promise<void> {
 }
 const flush = () => new Promise<void>(resolve => setImmediate(resolve));
 
-async function controllerFixture(t: TestContext, trusted = true) {
+async function controllerFixture(t: TestContext, trusted = true, storage = new Map<string, unknown>()) {
   const root = await mkdtemp(join(tmpdir(), 'coding-buddy-controller-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const documents: Document[] = [];
@@ -47,6 +47,9 @@ async function controllerFixture(t: TestContext, trusted = true) {
   const hints: { run: RunSnapshot; reply: unknown }[] = [];
   const proposals: { run: RunSnapshot; reply: unknown }[] = [];
   let acceptCount = 0;
+  let confirmReset = false;
+  const projectRequests: { input: Record<string, unknown>; signal: AbortSignal }[] = [];
+  let respondProject: (input: Record<string, unknown>) => unknown | Promise<unknown> = input => input.operation === 'plan' ? projectPlan() : { message: 'Follow one value through your attempt. What changes?', ready: false };
   const requests: { input: Input; signal: AbortSignal }[] = [];
   let respond: (input: Input) => unknown | Promise<unknown> = input => reply(input);
   const folder = { uri: uri(root), name: 'project', index: 0 };
@@ -55,7 +58,7 @@ async function controllerFixture(t: TestContext, trusted = true) {
       ? sourceFiles(join(path, entry.name)) : [join(path, entry.name)]))).flat();
   }
   const workspace = {
-    isTrusted: trusted, textDocuments: documents,
+    isTrusted: trusted, textDocuments: documents, workspaceFolders: [folder],
     asRelativePath: (target: ReturnType<typeof uri>) => relative(root, target.fsPath).split(sep).join('/'),
     getWorkspaceFolder: (target: ReturnType<typeof uri>) => {
       const part = relative(root, target.fsPath);
@@ -70,6 +73,7 @@ async function controllerFixture(t: TestContext, trusted = true) {
     onDidGrantWorkspaceTrust: (callback: () => void) => { granted = callback; return disposable(); },
   };
   const window = {
+    showWarningMessage: async () => confirmReset ? 'Start new plan' : undefined,
     activeTextEditor: undefined as { document: Document } | undefined,
     createOutputChannel: () => ({ appendLine() {}, dispose() {} }),
     registerWebviewViewProvider: () => disposable(),
@@ -123,7 +127,7 @@ async function controllerFixture(t: TestContext, trusted = true) {
       }
       dispose() {}
     } },
-    './providers': { analyze: async (_provider: string, _model: string, _key: string, input: Input, signal: AbortSignal) => {
+    './providers': { projectReply: async (_provider: string, _model: string, _key: string, input: Record<string, unknown>, signal: AbortSignal) => { projectRequests.push({ input: JSON.parse(JSON.stringify(input)), signal }); return respondProject(input); }, analyze: async (_provider: string, _model: string, _key: string, input: Input, signal: AbortSignal) => {
       requests.push({ input: JSON.parse(JSON.stringify(input)), signal });
       return respond(input);
     } },
@@ -131,12 +135,16 @@ async function controllerFixture(t: TestContext, trusted = true) {
       checkKnownKeys: async () => {}, chooseProvider: async () => {}, setKey: async () => {} },
     './playground': { openPlayground: async () => {} },
   };
+  const projectModeExports = {};
+  runInNewContext(readFileSync(resolve(__dirname, '../src/projectMode.js'), 'utf8'), { exports: projectModeExports,
+    require: (name: string) => boundaries[name] ?? localRequire(name), AbortController, AbortSignal });
+  boundaries['./projectMode'] = projectModeExports;
   runInNewContext(readFileSync(filename, 'utf8'), {
     exports: extensionExports,
     require: (name: string) => boundaries[name] ?? localRequire(name),
     AbortController, AbortSignal, process: { platform: process.platform }, setTimeout, clearTimeout,
   });
-  extensionExports.activate({ extensionUri: uri(root), subscriptions,
+  extensionExports.activate({ extensionUri: uri(root), subscriptions, workspaceState: { get: (key: string) => storage.get(key), update: async (key: string, value: unknown) => { storage.set(key, value); } },
     secrets: { get: async () => 'test-placeholder-key', onDidChange: () => disposable() } });
   t.after(() => subscriptions.forEach(subscription => subscription.dispose()));
   await until(() => !!state, 'initial panel state');
@@ -162,13 +170,14 @@ async function controllerFixture(t: TestContext, trusted = true) {
     emit({ uri: document.uri.toString(), version: document.version, language: document.languageId, source: document.getText(),
       command: `${document.languageId === 'python' ? 'python3' : 'node'} ${document.fileName}`, output, exitCode,
       sourceConfirmed: confirmed, reported: false, truncated: false });
-    if (!workspace.isTrusted || !confirmed) { await flush(); return; }
+    if (!workspace.isTrusted || !confirmed || state.mode === 'project') { await flush(); return; }
     await until(() => collected > before, 'workspace collection');
     await flush(); await flush();
     if (!pending) await until(() => !state.working, 'analysis completion');
   }
   return { root, add, select, change, run, action: (name: string, text?: string) => action(name, text), requests, hints, proposals,
-    executed, directRuns, emitConfiguration, finishRun: () => finishRun(), watching: () => watching, collected: () => collected,
+    executed, directRuns, projectRequests, storage, respondProject: (handler: typeof respondProject) => { respondProject = handler; },
+    confirmReset: (value: boolean) => { confirmReset = value; }, project: () => state.project!, emitConfiguration, finishRun: () => finishRun(), watching: () => watching, collected: () => collected,
     grantTrust: async () => { workspace.isTrusted = true; granted?.(); await flush(); },
     state: () => state, acceptCount: () => acceptCount, respond: (handler: typeof respond) => { respond = handler; } };
 }
@@ -460,4 +469,108 @@ test('animation preferences refresh without cancelling guidance, while a combine
   assert.equal(fixture.requests[1].signal.aborted, true);
   finish(reply(fixture.requests[1].input));
   await flush(); await flush();
+});
+
+function projectPlan() {
+  return { kind: 'plan', title: 'A tiny tracker', message: 'Here is a small first version. Change anything before starting.', tasks: [
+    { title: 'Choose an entry', prompt: 'Think about the smallest useful piece of information to keep.', check: 'Describe one example entry you want to track.' },
+    { title: 'Show the entries', prompt: 'Find a way to present the entries clearly.', check: 'Two different entries are visible.' },
+    { title: 'Try an empty list', prompt: 'Think about what someone should see before adding anything.', check: 'An empty list has a helpful message.' }
+  ] };
+}
+
+test('Project mode collects custom features, requires plan approval, persists tasks and keeps Debug separate', async t => {
+  const fixture = await controllerFixture(t);
+  const doc = await fixture.add('app.py', '# Track entries.\nprint("ready")\n');
+  await fixture.select(doc); await fixture.run(doc);
+  const debugMessages = fixture.state().messages;
+  await fixture.action('modeProject'); await fixture.action('clarify', 'A tiny habit tracker');
+  await until(() => fixture.project().phase === 'choice', 'feature choice');
+  assert.equal(fixture.projectRequests.length, 0);
+  await fixture.action('projectFeatures'); await fixture.action('clarify', 'I want to add and show habits. Practise Python.');
+  await until(() => fixture.project().phase === 'plan', 'reviewable plan');
+  assert.match(String(fixture.projectRequests[0].input.features), /Practise Python/);
+  assert.equal(fixture.projectRequests[0].input.code, undefined, 'planning sends no project code');
+  await fixture.run(doc);
+  assert.equal(fixture.requests.length, 1, 'Project mode does not trigger automatic Debug AI calls');
+  assert.equal(fixture.project().phase, 'plan');
+  await fixture.action('projectDone');
+  assert.equal(fixture.project().current, 0, 'a plan cannot advance before approval');
+  await fixture.action('projectStart'); await fixture.action('projectDone');
+  await until(() => fixture.project().current === 1, 'next task');
+  const reopened = await controllerFixture(t, true, fixture.storage);
+  await reopened.action('modeProject');
+  await until(() => reopened.project().current === 1, 'restored task');
+  assert.equal(reopened.project().phase, 'building');
+  await fixture.action('modeDebug'); await until(() => fixture.state().mode === 'debug', 'Debug restored');
+  assert.deepEqual(fixture.state().messages, debugMessages);
+});
+
+test('suggested plans can clarify/refine and tasks complete only when the learner marks them done', async t => {
+  const fixture = await controllerFixture(t);
+  await fixture.action('modeProject'); await fixture.action('clarify', 'A small game');
+  fixture.respondProject(() => ({ kind: 'question', title: '', tasks: [], message: 'Would you like to play it in a terminal or a browser?' }));
+  await fixture.action('projectSuggest'); await until(() => fixture.project().phase === 'features', 'one planning question');
+  fixture.respondProject(() => projectPlan());
+  await fixture.action('clarify', 'In a browser, using JavaScript.');
+  await until(() => fixture.project().phase === 'plan', 'suggested plan');
+  await fixture.action('clarify', 'Keep it very small, with no sign-in.');
+  assert.match(String(fixture.projectRequests.at(-1)!.input.features), /no sign-in/);
+  await fixture.action('projectStart');
+  fixture.respondProject(() => ({ message: 'Try the task check and tell me what happened.', ready: true }));
+  await fixture.action('projectReview');
+  await until(() => !fixture.project().working, 'advisory review');
+  assert.equal(fixture.project().current, 0);
+  assert.equal(fixture.project().ready, false, 'no observed successful run is not verified evidence');
+  await fixture.action('projectDone'); await fixture.action('projectDone'); await fixture.action('projectDone');
+  await until(() => fixture.project().phase === 'done', 'learner completion');
+  assert.equal(fixture.state().celebration, 1);
+  await fixture.action('projectReset'); assert.equal(fixture.project().phase, 'done', 'cancelled reset retains progress');
+  fixture.confirmReset(true); await fixture.action('projectReset');
+  await until(() => fixture.project().phase === 'idea', 'new idea');
+});
+
+test('Project coaching sends bounded saved context and rejects dirty, protected, stale and cancelled attempts', async t => {
+  const fixture = await controllerFixture(t);
+  const doc = await fixture.add('main.py', '# Show entries.\nimport helper\nprint(helper.VALUE)\n');
+  const helper = await fixture.add('helper.py', '# Supply an entry.\nVALUE = 1\n');
+  await fixture.select(doc); await fixture.action('modeProject'); await fixture.action('clarify', 'Track a few entries');
+  await fixture.action('projectSuggest'); await fixture.action('projectStart');
+  await fixture.run(doc, false, true, '1\n', 0);
+  await fixture.action('projectReview');
+  const input = fixture.projectRequests.at(-1)!.input;
+  const code = input.code as { source: string; workspace: { relatedFiles: {path: string}[] }; run: { output: string } };
+  assert.equal(code.source, doc.source); assert.ok(code.workspace.relatedFiles.some(file => file.path === 'helper.py'));
+  assert.equal(code.run.output, '1\n');
+  const before = fixture.projectRequests.length;
+  doc.isDirty = true; await fixture.action('projectHint'); doc.isDirty = false;
+  assert.equal(fixture.projectRequests.length, before);
+  const secret = await fixture.add('credentials.py', 'token = "private"\n'); await fixture.select(secret); await fixture.action('projectHint');
+  assert.equal(fixture.projectRequests.length, before);
+  await fixture.select(doc);
+  let finish!: (value: unknown) => void;
+  fixture.respondProject(() => new Promise(resolve => { finish = resolve; }));
+  const pending = fixture.action('projectReview');
+  await until(() => fixture.projectRequests.length === before + 1, 'pending project review');
+  await fixture.change(helper, '# Supply an entry.\nVALUE = 2\n');
+  assert.equal(fixture.projectRequests.at(-1)!.signal.aborted, true);
+  finish({ message: 'STALE PROJECT RESPONSE', ready: true }); await pending;
+  assert.ok(!fixture.project().messages.some(message => message.text.includes('STALE')));
+  assert.equal(fixture.project().current, 0);
+});
+
+test('Project mode blocks untrusted workspaces and ignores a late provider response after switching modes', async t => {
+  const restricted = await controllerFixture(t, false);
+  await restricted.action('modeProject'); await restricted.action('clarify', 'A tracker'); await restricted.action('projectSuggest');
+  assert.equal(restricted.projectRequests.length, 0); assert.equal(restricted.storage.size, 0);
+  const fixture = await controllerFixture(t);
+  await fixture.action('modeProject'); await fixture.action('clarify', 'A tracker');
+  let finish!: (value: unknown) => void;
+  fixture.respondProject(() => new Promise(resolve => { finish = resolve; }));
+  const pending = fixture.action('projectSuggest');
+  await until(() => fixture.projectRequests.length === 1, 'pending plan');
+  await fixture.action('modeDebug'); assert.equal(fixture.projectRequests[0].signal.aborted, true);
+  finish(projectPlan()); await pending;
+  await fixture.action('modeProject');
+  assert.equal(fixture.project().phase, 'choice'); assert.equal(fixture.project().plan, null);
 });

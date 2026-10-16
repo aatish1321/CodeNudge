@@ -96,6 +96,8 @@ Activity mode: Reference map and factual verification recap; no interactive tour
 
 ## Revisions
 
+- Project mode: the learner explicitly promoted the deferred idea-to-tasks workflow after confirming debugging and UI polish. Add idea → feature choice → reviewable plan → one task at a time, with hint-first coaching, learner-controlled completion and local workspace persistence. Preserve debugging, source/credential exclusions, cancellation and provider choice. Agent verification replaces further approval checkpoints under the standing fast-mode request.
+
 - Character motion (0.0.12): the learner requested animation for the supplied character. Use small transform-only idle/thinking loops and the existing celebration trigger, with room above the cropped artwork. Provide a persistent pause/resume option in the gear and honour reduced motion. Presentation-only preference changes refresh the panel without cancelling active guidance; provider/model/watching changes retain cancellation. Validate state/settings paths and installed behaviour; visual playback remains unreviewed without a computer/browser surface.
 
 - Sidebar personality (0.0.11): after confirming successful runs now work, the learner asked for a less bland interface. Keep the provided cutout character and quiet settings gear; add a larger mascot scene, teal/amber/violet category accents, clearer cards/composer, a current-help trail, and a brief celebration accent. Expose the existing session issue flag for display so the trail disappears on resolution. Keep literal model text, reduced-motion support, trust and fix controls. Agent behavior checks and an offline sample preview are recorded in verification.md; actual theme/size visual review remains pending because no browser/native surface is available.
@@ -123,3 +125,13 @@ Activity mode: Reference map and factual verification recap; no interactive tour
 - Slice 5 agent checks passed: 21 tests across session, provider, and shipped-panel behavior; a 19-file VSIX with no private/development material; actual isolated installation; and real packaged-code activation, Python/JavaScript capture, inline hints, diff acceptance/rejection, undo, stale-edit protection, and preferences. Package/runtime bytes match compiled source. Browser visual inspection was unavailable; the real webview reported its script ready.
 - The packager's dependency discovery omitted the root when there were no production dependencies. Packaging now uses `--no-dependencies`, matching the extension's empty runtime-dependency set; the installed package test confirms the entrypoint is included and usable.
 - A clean archive of committed source 7c4f2e2 passed lockfile installation, all unit tests, VSIX packaging, isolated installation, and the real packaged VS Code integration suite. The delivered VSIX was rebuilt from this archive and its runtime bytes/content exclusions verified. The offline app map references this code snapshot; live AI acceptance and Marketplace/license work remain pending.
+
+
+## Project Mode delivery (0.0.13)
+
+- [x] Idea → supplied features/suggested plan → optional clarification → plan approval → one task at a time.
+- [x] Conceptual nudges, saved-code/related-context review, learner-controlled completion and workspace-local progress restoration.
+- [x] Trust, known-key, input bounds, source exclusions/freshness, provider/key/mode cancellation and literal UI text; Debug remains independently usable.
+- [x] 96 source tests pass, including both planning paths, approval/refinement, progress restoration, advisory reviews, completion/reset, source freshness and safe mode switching. Source native VS Code suite passes with Project HTTP fixtures and existing Python/JavaScript/editor regressions.
+- [ ] Final clean VSIX/native verification and local installation — record evidence in verification.md.
+- [ ] New Project-mode live-provider teaching and visual layout rehearsal. Fixture replies are not live acceptance.

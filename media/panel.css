@@ -15,6 +15,24 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--vscode-f
 .brand-caption { display: block; margin: 3px 0 0 15px; color: var(--muted); font-size: 10px; letter-spacing: .15px; }
 .icon-button { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; padding: 6px; color: var(--muted); border: 1px solid var(--line); border-radius: 11px; background: color-mix(in srgb, var(--surface) 50%, transparent); }
 .icon-button:hover { color: var(--accent); border-color: var(--accent); background: var(--vscode-toolbar-hoverBackground); }
+.mode-tabs { display: flex; flex-shrink: 0; gap: 4px; margin: 0 16px 15px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.mode-tabs button { flex: 1; padding: 6px 9px; border: 0; border-radius: 8px; color: var(--muted); background: transparent; font-size: 12px; }
+.mode-tabs button[aria-pressed="true"] { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); font-weight: 700; }
+.project-card { padding: 17px; margin: 18px 0; border: 1px solid color-mix(in srgb, var(--violet) 35%, var(--line)); border-radius: 17px; background: linear-gradient(140deg, color-mix(in srgb, var(--violet) 7%, transparent), transparent), var(--surface); overflow-wrap: anywhere; }
+.project-card h2 { font-size: 17px; line-height: 1.4; margin: 0 0 10px; letter-spacing: -.3px; }
+.project-card h3 { font-size: 12px; line-height: 1.5; margin: 0 0 5px; }
+.project-card p { margin: 0 0 12px; white-space: pre-wrap; }
+.project-card .eyebrow { display: block; margin: 0 0 8px; color: var(--violet); }
+.project-plan { padding-left: 19px; margin: 0 0 15px; }
+.project-plan li { padding-left: 3px; margin: 0 0 17px; }
+.project-plan li::marker { color: var(--violet); font-weight: 700; }
+.project-card .task-check { padding: 9px 11px; border-radius: 8px; border: 1px dashed var(--line); color: var(--muted); font-size: 11px; }
+.project-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.project-actions:empty { display: none; }
+.project-actions .primary { flex: 1; min-width: 95px; }
+.project-card details { margin-bottom: 14px; font-size: 11px; color: var(--muted); }
+.project-card summary { cursor: pointer; color: var(--violet); }
+.project-card .project-error { padding: 10px; border: 1px solid var(--warm); border-radius: 8px; color: var(--warm); font-size: 12px; }
 .conversation { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; padding: 0 16px 24px; }
 .buddy-intro { position: relative; isolation: isolate; text-align: center; margin: 0 0 22px; padding: 6px 13px 20px; border: 1px solid color-mix(in srgb, var(--accent) 15%, var(--line)); border-radius: 22px; background: radial-gradient(ellipse at 50% 22%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 65%), color-mix(in srgb, var(--surface) 45%, transparent); }
 .buddy-scene { position: relative; width: 100%; max-width: 240px; height: 219px; margin: 0 auto 10px; overflow: hidden; }

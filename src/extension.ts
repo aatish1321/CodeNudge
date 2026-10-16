@@ -10,6 +10,7 @@ import { TerminalCapture } from './terminal';
 import { EditorGuidance } from './editor';
 import { openPlayground } from './playground';
 import { FileRunner } from './runner';
+import { ProjectMode } from './projectMode';
 
 export function activate(context: vscode.ExtensionContext): void {
   let session = new LearningSession();
@@ -25,7 +26,7 @@ export function activate(context: vscode.ExtensionContext): void {
   let suppressEditorSwitch = false;
   let launching = false;
   const memories = new Map<string, { session: LearningSession; run?: RunSnapshot; messages: PanelState['messages']; status: string; snapshot?: ProjectSnapshot; hint?: typeof activeHint }>();
-  const state: PanelState = { trusted: vscode.workspace.isTrusted, provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Run your code. I’m right here if you get stuck.', working: false, retries: 0, hasIssue: false, messages: [], proposalId: '', confetti: true, animateCharacter: true, celebration: 0 };
+  const state: PanelState = { mode: 'debug', trusted: vscode.workspace.isTrusted, provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Run your code. I’m right here if you get stuck.', working: false, retries: 0, hasIssue: false, messages: [], proposalId: '', confetti: true, animateCharacter: true, celebration: 0 };
   const log = vscode.window.createOutputChannel('Coding Buddy');
 
   async function refresh(): Promise<void> {
@@ -40,6 +41,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (!state.trusted) state.status = 'Trust this folder to enable code hints. Nothing is sent to AI until you do.';
       state.retries = session.retries;
       state.hasIssue = !!session.issue;
+      state.project = project.view;
       state.proposalId = guidance.proposalId;
       state.confetti = vscode.workspace.getConfiguration('codingBuddy').get('confetti', true);
       state.animateCharacter = vscode.workspace.getConfiguration('codingBuddy').get('animateCharacter', true);
@@ -204,6 +206,19 @@ export function activate(context: vscode.ExtensionContext): void {
         status('Trust this folder to enable code hints.'); return;
       }
       if (text) await checkKnownKeys(context, text);
+      if (name === 'modeProject') {
+        if (state.working) session.clearCache();
+        cancel(); guidance.clear(); state.mode = 'project'; void refresh(); return;
+      }
+      if (name === 'modeDebug') {
+        project.cancel(); state.mode = 'debug';
+        if (activeHint) guidance.showHint(activeHint.run, activeHint.reply);
+        void refresh(); return;
+      }
+      if (state.mode === 'project' && ['retry', 'reset', 'shareResult'].includes(name)) {
+        await project.handle(name === 'retry' ? 'projectRetry' : name === 'reset' ? 'projectReset' : 'projectReview', name === 'shareResult' ? `Learner-reported output:\n${text ?? ''}`.slice(0, 2_000) : undefined); return;
+      }
+      if (name.startsWith('project') || (name === 'clarify' && state.mode === 'project')) { await project.handle(name, text); return; }
       if (name === 'ready') log.appendLine('Sidebar scripts ready.');
       else if (name === 'trust') await vscode.commands.executeCommand('workbench.trust.manage');
       else if (name === 'runFile') return await runFile();
@@ -218,8 +233,8 @@ export function activate(context: vscode.ExtensionContext): void {
           { label: automatic ? '$(debug-pause) Pause automatic hints' : '$(play) Resume automatic hints', action: 'toggleWatching' },
           { label: state.animateCharacter ? '$(debug-pause) Pause character animation' : '$(play) Resume character animation', action: 'toggleCharacterAnimation' },
           { label: state.confetti ? '$(star) Turn celebrations off' : '$(star) Turn celebrations on', action: 'toggleConfetti' },
-          { label: '$(refresh) Retry last result', action: 'retry' },
-          { label: '$(clear-all) Start a new issue', action: 'reset' },
+          { label: state.mode === 'project' ? '$(refresh) Retry project request' : '$(refresh) Retry last result', action: 'retry' },
+          { label: state.mode === 'project' ? '$(clear-all) Start a new project plan' : '$(clear-all) Start a new issue', action: 'reset' },
           { label: '$(clippy) Share a run result', action: 'pasteResult' },
           { label: '$(terminal) Choose a specific file and terminal', description: 'Advanced', action: 'connect' },
           { label: '$(settings-gear) Models and all settings', action: 'openSettings' }
@@ -281,6 +296,8 @@ export function activate(context: vscode.ExtensionContext): void {
   function observedRun(run: RunSnapshot): void {
     if (!vscode.workspace.isTrusted) { status('Trust this folder to enable code hints.'); return; }
     if (run.sourceConfirmed === false) { status('Use Run with Buddy, or share the result from settings, to link it to this file.'); return; }
+    project.observe(run);
+    if (state.mode === 'project') { void refresh(); return; }
     const document = vscode.workspace.textDocuments.find(document => document.uri.toString() === run.uri);
     if (!document) return;
     selectFile(document);
@@ -290,6 +307,7 @@ export function activate(context: vscode.ExtensionContext): void {
     linked = document; state.file = vscode.workspace.asRelativePath(document.uri, false); latestRun = run;
     void runAnalysis(run, true);
   }
+  const project = new ProjectMode(context, workspace, celebrate => { if (celebrate) state.celebration++; void refresh(); });
   const runner = new FileRunner();
   const capture = new TerminalCapture(observedRun, (message, clear) => {
     if (clear) { cancel(); guidance.clear(); activeHint = undefined; state.messages = []; latestRun = undefined; }
@@ -302,18 +320,22 @@ export function activate(context: vscode.ExtensionContext): void {
   for (const name of ['connect','disconnect','settings','reset','retry','acceptFix','rejectFix','toggleConfetti']) register(name, () => action(name));
   register('openPlayground', () => action('playground'));
   register('runFile', () => action('runFile'));
+  register('projectMode', async () => { await vscode.commands.executeCommand('codingBuddy.panel.focus'); await action('modeProject'); });
   register('setKey', () => action('setKey'));
   register('chooseProvider', () => action('provider'));
   register('removeKey', async () => { cancel(); guidance.clear(); session.clearCache(); await context.secrets.delete(keyName(configuration().provider)); status('API key removed.'); });
-  context.subscriptions.push(log, capture, guidance, runner,
+  context.subscriptions.push(log, capture, guidance, runner, project,
     vscode.window.registerWebviewViewProvider('codingBuddy.panel', panel),
     vscode.window.onDidChangeActiveTextEditor(editor => {
       if (vscode.workspace.isTrusted && !suppressEditorSwitch && editor?.document.uri.scheme === 'file' && sourcePath(vscode.workspace.asRelativePath(editor.document.uri, false)) && vscode.workspace.getWorkspaceFolder(editor.document.uri)) selectFile(editor.document);
     }),
-    vscode.workspace.onDidChangeTextDocument(event => { if (event.contentChanges.length && (linked?.uri.toString() === event.document.uri.toString() || activeSnapshot?.sources.some(source => source.path === event.document.uri.fsPath))) { if (state.working) session.clearCache(); cancel(); guidance.clear(); activeHint = undefined; status('Code changed. Save and run it again to check your idea.'); } }),
+    vscode.workspace.onDidChangeTextDocument(event => {
+      if (event.contentChanges.length && vscode.workspace.getWorkspaceFolder(event.document.uri)) project.sourceChanged(event.document.uri.toString());
+      if (event.contentChanges.length && (linked?.uri.toString() === event.document.uri.toString() || activeSnapshot?.sources.some(source => source.path === event.document.uri.fsPath))) { if (state.working) session.clearCache(); cancel(); guidance.clear(); activeHint = undefined; status('Code changed. Save and run it again to check your idea.'); } }),
     vscode.workspace.onDidChangeConfiguration(event => {
       if (!event.affectsConfiguration('codingBuddy')) return;
       if (!['provider', 'models', 'autoWatch'].some(key => event.affectsConfiguration(`codingBuddy.${key}`))) { void refresh(); return; }
+      project.cancel('Provider or watching settings changed. Retry your project request when ready.');
       cancel(); guidance.clear(); activeHint = undefined; session.clearCache();
       for (const saved of memories.values()) { saved.session.clearCache(); saved.hint = undefined; }
       if (event.affectsConfiguration('codingBuddy.autoWatch')) {
@@ -323,6 +345,7 @@ export function activate(context: vscode.ExtensionContext): void {
       } else status('Settings updated. Run your code when you’re ready.');
     }),
     context.secrets.onDidChange(() => {
+      project.cancel('Provider or watching settings changed. Retry your project request when ready.');
       cancel(); guidance.clear(); activeHint = undefined; session.clearCache();
       for (const saved of memories.values()) { saved.session.clearCache(); saved.hint = undefined; }
       void refresh();
