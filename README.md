@@ -4,7 +4,7 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install `coding-buddy-0.0.10.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
+Install `coding-buddy-0.0.11.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
 
 A fresh playground can open in **Restricted Mode**. Buddy remains visible with a **Trust this folder…** button that opens VS Code’s trust screen. Choose Trust for the playground, or use the top banner’s **Manage** link. Terminal watching and AI analysis stay disabled until you grant trust. After updating the extension, use **Developer: Reload Window** once.
 

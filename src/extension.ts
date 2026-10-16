@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext): void {
   let suppressEditorSwitch = false;
   let launching = false;
   const memories = new Map<string, { session: LearningSession; run?: RunSnapshot; messages: PanelState['messages']; status: string; snapshot?: ProjectSnapshot; hint?: typeof activeHint }>();
-  const state: PanelState = { trusted: vscode.workspace.isTrusted, provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Run your code. I’m right here if you get stuck.', working: false, retries: 0, messages: [], proposalId: '', confetti: true, celebration: 0 };
+  const state: PanelState = { trusted: vscode.workspace.isTrusted, provider: 'gemini', model: '', keyConfigured: false, file: '', status: 'Run your code. I’m right here if you get stuck.', working: false, retries: 0, hasIssue: false, messages: [], proposalId: '', confetti: true, celebration: 0 };
   const log = vscode.window.createOutputChannel('Coding Buddy');
 
   async function refresh(): Promise<void> {
@@ -39,6 +39,7 @@ export function activate(context: vscode.ExtensionContext): void {
       state.trusted = vscode.workspace.isTrusted;
       if (!state.trusted) state.status = 'Trust this folder to enable code hints. Nothing is sent to AI until you do.';
       state.retries = session.retries;
+      state.hasIssue = !!session.issue;
       state.proposalId = guidance.proposalId;
       state.confetti = vscode.workspace.getConfiguration('codingBuddy').get('confetti', true);
       panel.update(state);

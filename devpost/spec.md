@@ -80,7 +80,7 @@ The examples must be saved before running. Exercise the learning loop using genu
 
 ```sh
 npm run package
-code --install-extension coding-buddy-0.0.10.vsix
+code --install-extension coding-buddy-0.0.11.vsix
 ```
 
 `npm run package` will compile and invoke `vsce package`; use the actual generated versioned filename if it differs. Inspect package contents so learner profiles, keys, local logs, course material, and development-only files do not ship.
@@ -373,3 +373,7 @@ An editor/title play-circle and palette command launch `.py` with python3 (pytho
 ## Successful manual runs (0.0.10)
 
 A learner’s relative zsh command produced `18` but retained an old syntax clue. A native reproduction confirmed that Powerlevel10k supplied a medium-confidence command at start, an empty command at completion, and no cwd. Full error tracebacks had hidden the missing cwd because their paths were absolute. When shell cwd is missing on local Linux, read `/proc/<terminal-process-id>/cwd` while the execution is still pending. Ignore inaccessible, remote, compound-command and late results; never reuse a prior run’s directory or guess from the active editor. Existing source and freshness boundaries remain. Recognized OSC 133/633 command-output markers exclude command echo and later prompts when present. Successful linked output returns through the existing teaching path, replacing obsolete clues and celebrating once only after goal validation. Retain Run with Buddy and explicit sharing for environments without reliable metadata. Other platforms and remote cwd recovery remain unverified.
+
+## Sidebar Personality (0.0.11)
+
+Use the existing HTML/CSS/plain-JavaScript webview and cutout PNG. Scale the padded asset within a bounded scene rather than editing the character. Theme-aware teal, amber and violet accents distinguish the buddy, syntax and logic cards; keep text tied to VS Code foreground colours. The scene, framing, focus styles and composer adapt to narrow/short panels and light/high-contrast themes. `PanelState.hasIssue` is derived from `LearningSession.issue` during refresh; display the clue/closer-look/review trail only while it is true. Mood copy follows working/trust/proposal states. Reuse the existing celebration counter, setting and reduced-motion guard for a brief mascot flourish. Preserve CSP, literal text rendering and the settings/review/trust actions. No additional runtime dependency or network resource. An offline `devpost/sidebar-preview.html` uses real panel markup/styles with sample states; it is excluded from the VSIX.

@@ -417,10 +417,12 @@ test('correct output replaces old error clues, celebrates once, and unchanged su
   await fixture.change(document, '# Print 18.\nprices = [10, 5", 3]\nprint(sum(prices))\n');
   await fixture.run(document, false, true, 'SyntaxError: unterminated string literal\n', 1);
   assert.equal(fixture.state().celebration, 0);
+  assert.equal(fixture.state().hasIssue, true);
   await fixture.change(document, '# Print 18.\nprices = [10, 5, 3]\nprint(sum(prices))\n');
   await fixture.run(document, false, true, '18\n', 0);
   assert.match(fixture.state().status, /matches the stated goal/);
   assert.equal(fixture.state().celebration, 1);
+  assert.equal(fixture.state().hasIssue, false);
   assert.equal(fixture.state().retries, 0);
   assert.deepEqual(fixture.state().messages.map(message => message.text), ['You got it! The total is 18.']);
   assert.equal(fixture.requests.length, 3);

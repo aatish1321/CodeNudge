@@ -167,3 +167,7 @@ Requested during learner testing: keep hints, clarification, and attempt progres
 ## Run with Buddy Revision (0.0.9)
 
 The learner rejected repeated yes/no file-confirmation questions. Remove that interaction. Provide an editor run action for Python/plain JavaScript, keeping exact source/run association even with plain successful output or missing shell metadata. Continue automatic analysis for identifiable manual commands across languages; quietly skip unlinked results, retaining progress. This is an optional script runner, not a universal build-tool replacement.
+
+## Sidebar Personality Revision (0.0.11)
+
+The learner confirmed the successful-run fix and asked to spice up the bland sidebar. Keep the supplied robot and the settings-only home for secondary actions. Add a welcoming mascot scene, richer but theme-aware accent colours, distinct hint cards, a clear thinking space and a small current-help trail. The trail reflects unlocked help rather than changing the attempt rules, and disappears when the issue is solved. Existing confetti/reduced-motion preferences also govern the new brief celebratory flourish.
