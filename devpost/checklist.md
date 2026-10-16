@@ -133,5 +133,5 @@ Activity mode: Reference map and factual verification recap; no interactive tour
 - [x] Conceptual nudges, saved-code/related-context review, learner-controlled completion and workspace-local progress restoration.
 - [x] Trust, known-key, input bounds, source exclusions/freshness, provider/key/mode cancellation and literal UI text; Debug remains independently usable.
 - [x] 96 source tests pass, including both planning paths, approval/refinement, progress restoration, advisory reviews, completion/reset, source freshness and safe mode switching. Source native VS Code suite passes with Project HTTP fixtures and existing Python/JavaScript/editor regressions.
-- [ ] Final clean VSIX/native verification and local installation — record evidence in verification.md.
+- [x] Final clean 35-entry VSIX, installed native Project/Debug suite, actual Restricted Mode activation, normal-profile installation and byte matching. Built from 5552afd; see verification.md.
 - [ ] New Project-mode live-provider teaching and visual layout rehearsal. Fixture replies are not live acceptance.
