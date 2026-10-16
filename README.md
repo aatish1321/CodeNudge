@@ -113,6 +113,8 @@ A short demo can follow this story:
 
 The [complete rehearsal guide](examples/demo/README.md) includes exact commands, retry variants, expected outputs, and what to show at each stage. The [multi-file practice projects](examples/projects/README.md) provide a harder Python invoice report and an asynchronous JavaScript account client. Their bugs are intentional learning material.
 
+For the hackathon recording, prioritize the complete Debug journey and its successful rerun. The [hackathon readiness guide](docs/hackathon-readiness.md) maps the judging criteria to observable behavior, tracks remaining checks and provides a 2½-minute recording shot list.
+
 Use a provider/model you have rehearsed with. Real replies and latency vary; selecting a provider in the menu alone is not a live demonstration of that provider. If you cut between attempts for a short recording, label the cuts.
 
 ## Built with
@@ -134,6 +136,8 @@ Hidden files, known credential filenames, dependencies, generated files, Git-ign
 CodeNudge does not execute AI-supplied commands or automatically apply project code. Full context limits and connection safeguards are documented in the [usage guide](docs/usage.md).
 
 ## Development and verification
+
+The Devpost Learn Skill Pack planning documents are available in the repository: [scope](devpost/scope.md), [product requirements](devpost/prd.md) and [technical spec](devpost/spec.md). The [build checklist](devpost/checklist.md) records implementation, revisions and remaining final-review work.
 
 ```sh
 npm test
