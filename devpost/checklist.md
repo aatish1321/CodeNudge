@@ -143,3 +143,11 @@ Activity mode: Reference map and factual verification recap; no interactive tour
 - [x] 107 source tests, all-provider stage/Project schemas, key/endpoint/envelope guards, real loopback HTTP with fixture replies, cancellation and setup tests.
 - [x] Clean 35-entry package from e54c8cc, installed native provider/Project/Debug suite, actual Restricted Mode, normal-profile installation and runtime-byte matching.
 - [ ] Live new-provider account access, local-model inference and teaching-quality rehearsal. No fixture test is a live-model result.
+
+
+## CodeNudge branding delivery (0.0.16)
+
+- [x] CodeNudge display/sidebar/command/settings/terminal/diff/playground names, model identity, current docs and codenudge VSIX filename.
+- [x] Original extension/command/view/config identifiers, setting defaults, provider key slots, Project storage key, conversation roles and URI scheme retained; compatibility checks pass.
+- [x] 107 source tests, final installed native workflows with brand metadata assertions, actual Restricted Mode, clean 36-entry package, installed byte matching and same-ID upgrade verified.
+- [ ] Exact-theme visual review and new live-model wording rehearsal remain pending.
