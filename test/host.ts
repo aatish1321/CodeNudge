@@ -317,6 +317,8 @@ export async function run(): Promise<void> {
     await review.accept(review.proposalId);
     assert.equal(editDocument.getText(), 'print(2)\n');
     assert.ok(editDocument.isDirty, 'accepted code should remain unsaved for learner review');
+    await vscode.window.showTextDocument(editDocument);
+    await vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
     await vscode.commands.executeCommand('undo');
     assert.equal(editDocument.getText(), 'print(1)\n', 'accepted fix must be undoable');
     await editDocument.save();
