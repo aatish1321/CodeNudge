@@ -342,9 +342,9 @@ export async function run(): Promise<void> {
   const originalMotion = config.inspect<boolean>('animateCharacter')?.globalValue;
   try {
     await config.update('animateCharacter', false, vscode.ConfigurationTarget.Global);
-    assert.equal(config.get('animateCharacter'), false);
+    assert.equal(vscode.workspace.getConfiguration('codingBuddy').get('animateCharacter'), false);
     await config.update('animateCharacter', true, vscode.ConfigurationTarget.Global);
-    assert.equal(config.get('animateCharacter'), true);
+    assert.equal(vscode.workspace.getConfiguration('codingBuddy').get('animateCharacter'), true);
     console.log('HOST CHECK PASSED: native character-animation preference can pause and resume.');
   } finally { await config.update('animateCharacter', originalMotion, vscode.ConfigurationTarget.Global); }
   const originalProvider = config.inspect<string>('provider')?.globalValue;
