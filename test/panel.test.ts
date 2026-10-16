@@ -73,6 +73,20 @@ test('Project mode asks for an idea, offers features or generated plan, and star
   assert.ok(descendants(ui.element('project')).some(child => child.className === 'project-plan' && child.children.length === 2));
 });
 
+test('Cancel project is visible throughout an active project and stays usable while Buddy is thinking', () => {
+  const ui = panel(); ui.state.mode = 'project';
+  for (const phase of ['choice', 'features', 'plan', 'building'] as const) {
+    ui.state.project = project(phase); ui.state.project.working = true; ui.render();
+    const cancel = action(ui, 'projectCancel');
+    assert.equal(cancel.textContent, 'Cancel project'); assert.equal(cancel.disabled, false);
+    ui.listeners.click({ target: { closest: () => cancel } });
+    assert.equal((ui.sent.at(-1) as { action: string }).action, 'projectCancel');
+  }
+  ui.state.trusted = false; ui.render(); assert.equal(action(ui, 'projectCancel').disabled, true);
+  ui.state.trusted = true; ui.state.project = project(); ui.render();
+  assert.ok(!descendants(ui.element('project')).some(child => child.dataset.action === 'projectCancel'));
+});
+
 test('Project tasks and conversation render as literal text and Debug issue controls stay hidden', () => {
   const ui = panel(); ui.state.mode = 'project'; const data = project('plan');
   data.plan!.title = '<img src=x onerror=alert(1)>';

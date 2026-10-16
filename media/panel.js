@@ -133,6 +133,9 @@
       button('projectReset', 'New idea');
     }
     if (project.error) { text('p', project.error, section, 'project-error').setAttribute('role', 'alert'); button('projectRetry', 'Try again'); }
+    if (project.phase !== 'idea' && project.phase !== 'done') {
+      const cancel = button('projectCancel', 'Cancel project'); cancel.className = 'text-button'; cancel.disabled = !trusted;
+    }
     section.append(actions);
   }
   vscode.postMessage({ action: 'ready' });

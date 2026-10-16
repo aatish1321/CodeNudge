@@ -73,7 +73,7 @@ async function controllerFixture(t: TestContext, trusted = true, storage = new M
     onDidGrantWorkspaceTrust: (callback: () => void) => { granted = callback; return disposable(); },
   };
   const window = {
-    showWarningMessage: async () => confirmReset ? 'Start new plan' : undefined,
+    showWarningMessage: async (_message: string, _options: unknown, label: string) => confirmReset ? label : undefined,
     activeTextEditor: undefined as { document: Document } | undefined,
     createOutputChannel: () => ({ appendLine() {}, dispose() {} }),
     registerWebviewViewProvider: () => disposable(),
@@ -528,6 +528,30 @@ test('suggested plans can clarify/refine and tasks complete only when the learne
   await fixture.action('projectReset'); assert.equal(fixture.project().phase, 'done', 'cancelled reset retains progress');
   fixture.confirmReset(true); await fixture.action('projectReset');
   await until(() => fixture.project().phase === 'idea', 'new idea');
+});
+
+test('cancelling a project confirms first, stops pending coaching and persists a fresh start without changing code', async t => {
+  const fixture = await controllerFixture(t);
+  const doc = await fixture.add('app.js', '// Show a total.\nconsole.log(18);\n');
+  await fixture.select(doc); await fixture.action('modeProject'); await fixture.action('clarify', 'An expense tracker');
+  await fixture.action('projectSuggest'); await fixture.action('projectStart'); await fixture.action('projectDone');
+  await fixture.action('projectCancel');
+  assert.equal(fixture.project().phase, 'building'); assert.equal(fixture.project().current, 1, 'dismissal retains progress');
+  let finish!: (value: unknown) => void;
+  fixture.respondProject(() => new Promise(resolve => { finish = resolve; }));
+  const pending = fixture.action('projectReview');
+  await until(() => fixture.projectRequests.length === 2, 'pending coaching');
+  fixture.confirmReset(true); await fixture.action('projectCancel');
+  assert.equal(fixture.projectRequests.at(-1)!.signal.aborted, true);
+  finish({ message: 'OLD PROJECT RESPONSE', ready: true }); await pending;
+  assert.equal(fixture.project().phase, 'idea'); assert.equal(fixture.project().plan, null);
+  assert.equal(fixture.project().working, false); assert.equal(fixture.project().error, '');
+  assert.ok(!fixture.project().messages.some(message => message.text.includes('OLD PROJECT')));
+  assert.equal(doc.source, '// Show a total.\nconsole.log(18);\n');
+  const reopened = await controllerFixture(t, true, fixture.storage);
+  await reopened.action('modeProject'); await reopened.action('projectRetry');
+  assert.equal(reopened.project().phase, 'idea'); assert.equal(reopened.project().plan, null);
+  assert.equal(reopened.projectRequests.length, 0, 'cancelled work cannot be retried after reopening');
 });
 
 test('Project coaching sends bounded saved context and rejects dirty, protected, stale and cancelled attempts', async t => {

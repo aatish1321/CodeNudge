@@ -66,7 +66,7 @@ export class ProjectMode implements vscode.Disposable {
     await this.initialized;
     if (!vscode.workspace.isTrusted) { this.error = 'Trust this folder before planning or sharing code with Buddy.'; this.changed(); return; }
     if (!vscode.workspace.workspaceFolders?.length) { this.error = 'Open a folder in VS Code first so your project progress can stay with it.'; this.changed(); return; }
-    if (this.working) return;
+    if (this.working && action !== 'projectCancel') return;
     try {
       this.error = '';
       const text = input?.trim();
@@ -102,9 +102,14 @@ export class ProjectMode implements vscode.Disposable {
         await this.save(); this.changed(); return;
       } else if (action === 'projectRetry' && this.lastRequest) {
         await this.ask(this.lastRequest.operation, this.lastRequest.text); return;
-      } else if (action === 'projectReset') {
-        const answer = await vscode.window.showWarningMessage('Start a new project plan? This replaces Buddy’s saved plan and progress. Your code files stay as they are.', { modal: true }, 'Start new plan');
-        if (answer !== 'Start new plan') return;
+      } else if (action === 'projectReset' || action === 'projectCancel') {
+        const label = action === 'projectCancel' ? 'Cancel project' : 'Start new plan';
+        const answer = await vscode.window.showWarningMessage(action === 'projectCancel'
+          ? 'Cancel this project? This clears Buddy’s saved plan and progress. Your code files stay as they are.'
+          : 'Start a new project plan? This replaces Buddy’s saved plan and progress. Your code files stay as they are.', { modal: true }, label);
+        if (answer !== label) return;
+        this.cancel();
+        this.error = '';
         this.data = newProject(); this.ready = false; this.run = undefined; this.lastRequest = undefined;
       } else return;
       await this.save();

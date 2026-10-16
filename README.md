@@ -4,7 +4,7 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install `coding-buddy-0.0.13.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
+Install `coding-buddy-0.0.14.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
 
 A fresh playground can open in **Restricted Mode**. Buddy remains visible with a **Trust this folder…** button that opens VS Code’s trust screen. Choose Trust for the playground, or use the top banner’s **Manage** link. Terminal watching and AI analysis stay disabled until you grant trust. After updating the extension, use **Developer: Reload Window** once.
 
@@ -35,6 +35,8 @@ Choose **Project** at the top of the sidebar, or **Ctrl+Shift+P → Coding Buddy
 3. Review the 3–8 small tasks, refine the plan in the reply box, then click **Start building**.
 4. Work on the current task yourself. **Nudge me** gives a conceptual hint. Open and save your attempt, run it, then click **Check my attempt** for feedback using bounded related-folder context and the latest matching captured run. You can also explain what you tried in the reply box.
 5. Try the task’s check and click **Mark done** when satisfied. Buddy suggests; you decide when to advance. Finishing the last step celebrates your progress.
+
+**Cancel project** is visible throughout planning and building, even while Buddy is thinking. After confirmation, it stops the pending request and clears the saved plan/progress, keeping your source files.
 
 One plan and its progress are saved locally with the opened VS Code workspace. Return to Project after reopening the same folder to continue. **Gear → Start a new project plan** replaces the saved plan after confirmation; it keeps your code. Project mode uses your existing selected provider/key. Planning shares your idea, feature notes and plan conversation; task coaching also shares saved code/context when available. It guides you without creating files, running AI commands or writing your implementation.
 

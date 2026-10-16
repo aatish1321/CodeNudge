@@ -37,7 +37,7 @@ export class BuddyPanel implements vscode.WebviewViewProvider {
       if (!message || typeof message !== 'object') return;
       const { action, text, proposalId } = message as { action?: unknown; text?: unknown; proposalId?: unknown };
       if (action === 'ready') { this.send(); void this.onAction('ready'); return; }
-      if (typeof action !== 'string' || !['trust','settings','clarify','acceptFix','rejectFix','modeDebug','modeProject','projectFeatures','projectSuggest','projectStart','projectHint','projectReview','projectDone','projectReset','projectRetry'].includes(action)) return;
+      if (typeof action !== 'string' || !['trust','settings','clarify','acceptFix','rejectFix','modeDebug','modeProject','projectFeatures','projectSuggest','projectStart','projectHint','projectReview','projectDone','projectReset','projectCancel','projectRetry'].includes(action)) return;
       if (text !== undefined && (typeof text !== 'string' || text.length > 2_000)) return;
       if (proposalId !== undefined && (typeof proposalId !== 'string' || proposalId.length > 64)) return;
       void this.onAction(action, text as string | undefined, proposalId as string | undefined);
