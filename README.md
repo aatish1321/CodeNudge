@@ -1,119 +1,160 @@
-# Coding Buddy
+<h1 align="center">CodeNudge</h1>
 
-A VS Code learning companion that helps you think through a problem before showing an answer. A friendly robot gives a clue, points toward the relevant line when you remain stuck, and eventually offers an explained fix you can accept or reject.
+<p align="center">
+  <img src="media/buddy.png" alt="CodeNudge’s friendly robot mascot typing at a keyboard" width="480">
+</p>
+
+<p align="center"><strong>A little nudge. A lot of learning.</strong></p>
+
+<p align="center">
+  An AI coding companion inside VS Code that helps beginners think through errors<br>
+  and turn their project ideas into small, achievable steps.
+</p>
+
+<p align="center">
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#try-it">Try it</a> ·
+  <a href="examples/demo/README.md">Demo walkthrough</a>
+</p>
+
+## Why CodeNudge?
+
+You have an idea. You write a few lines. An error appears—and suddenly you have no idea what to try next.
+
+CodeNudge is built for that moment. It sits beside your code like a patient senior helping a junior: a small clue first, a closer look when you remain stuck, and an explained fix you can review when you need more help. You still get to investigate, experiment, and make the discovery yourself.
+
+It is designed for people starting to code, learners building their first projects, and anyone who wants support while developing the confidence to solve problems independently.
+
+## How it works
+
+### Debug mode: learn through the error
+
+Run your code, read a clue, try a change, and run again. Help becomes more specific as you work through the same problem.
+
+| Stage | What you see | When it appears |
+| --- | --- | --- |
+| **A clue** | A short, beginner-friendly question or hint about the issue. | The first linked run that needs help. |
+| **A closer look** | An inline arrow and a hint beside the relevant line. | After three unsuccessful changed-code retries for the same issue. |
+| **A little backup** | A colored diff showing a proposed fix, plus an explanation of what changed and why. | After three more unsuccessful changed-code retries. |
+| **Your discovery** | Solved feedback and optional confetti. | When the run’s evidence supports the intended result. |
+
+**You control the fix.** Accept the proposal or keep your code. Accepted edits stay unsaved and support VS Code undo; save and run again to check the result. A successful exit alone does not prove the output is correct.
+
+Rerunning identical code with the same result and context reuses the previous analysis. It does not spend another AI request or advance the help stage. You can explicitly retry from settings.
+
+### Project mode: build an idea one step at a time
+
+1. **Describe your idea.** A rough starting point is enough.
+2. **Choose how to plan.** Share features you already have in mind, or ask CodeNudge to suggest a plan.
+3. **Make it yours.** Review and refine a plan of 3–8 small tasks before starting.
+4. **Try the current task.** Write your own code, ask for a conceptual nudge, or request feedback on your saved attempt and available run output.
+5. **Decide when to move on.** Try the task’s check, then mark it done yourself.
+
+Your plan and progress stay saved with the opened workspace. **Cancel project** lets you change your mind, including while a request is pending; it clears the plan after confirmation and keeps your code files.
+
+While building, use **Check my attempt** when you want a review. Switch to **Debug** for the automatic error-help loop. AI feedback never marks a task complete for you.
+
+## Features
+
+| Feature | What it helps you do |
+| --- | --- |
+| **Help inside your editor** | Keep your code, terminal, and learning companion together in a VS Code sidebar. |
+| **Context across files** | Investigate entry files and relevant helpers using bounded workspace context; retain Debug conversations and attempts when switching files within the window. |
+| **Support beyond Python** | Work across source languages and identifiable completed terminal runs. Python and JavaScript are the verified demo paths. |
+| **Run with Buddy** | Save and run a Python or plain JavaScript file directly, with its source and output linked automatically. |
+| **Bring your own AI** | Choose a hosted provider, a local Ollama model, or a compatible custom server. |
+| **A companion with character** | Meet an animated robot with a patient teaching voice, optional celebrations, and reduced-motion support. |
+| **Your work stays yours** | Review proposed edits, control task completion, and keep provider keys in VS Code’s secure storage. |
+
+## Choose your AI
+
+The same selected connection works in both Debug and Project mode.
+
+| Hosted providers | Local and custom options |
+| --- | --- |
+| Google Gemini · OpenAI · Groq | **Ollama** with a locally installed model |
+| Anthropic Claude · OpenRouter · DeepSeek · Mistral | **Custom OpenAI-compatible** chat completions, including the documented LM Studio interface |
+
+Use **⚙ → AI provider** to choose a connection, then **Model and connection** to set its model and, where applicable, full endpoint. Named hosted services require your own API key; Ollama/custom can work without a key when the server allows it.
+
+Models must support the connection’s JSON output format. CodeNudge validates replies before using them. It does not automatically switch providers, retry failed calls, or download local models. See the [provider setup guide](docs/usage.md#providers-and-privacy) for defaults, endpoint examples, compatibility, and privacy details.
 
 ## Try it
 
-Install `coding-buddy-0.0.15.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
-
-A fresh playground can open in **Restricted Mode**. Buddy remains visible with a **Trust this folder…** button that opens VS Code’s trust screen. Choose Trust for the playground, or use the top banner’s **Manage** link. Terminal watching and AI analysis stay disabled until you grant trust. After updating the extension, use **Developer: Reload Window** once.
-
-1. Open a trusted project in **desktop VS Code 1.93 or newer** and click the Coding Buddy robot icon.
-2. Open the **⚙ settings menu** to choose an AI provider, configure its model/connection, and add a key if required. Keys use VS Code secret storage. Provider/key/model options, pause/resume, celebrations, retry/reset, and advanced terminal tools live in this menu.
-3. Open a saved code file. A top comment describing its goal helps the buddy understand your intent.
-4. For Python or plain JavaScript, click the editor’s **Run with Buddy** play-circle button, or use **Ctrl+Shift+P → Coding Buddy: Run with Buddy**. It saves the file and launches a linked run in its own terminal. **No terminal attachment, command-entry dialog, or yes/no reply is required.** Other project commands can still run normally in an integrated terminal.
-5. Read the clue, try your own change, save, and run again.
-
-Buddy watches completed runs across the opened folder and integrated terminals. An explicit source path in the command owns that learning session, even when a helper fails; otherwise a workspace traceback/stack frame identifies the file. Relative and quoted paths use the terminal’s working directory. When local Linux shells omit that metadata, Buddy reads the running shell’s actual folder from `/proc` before the command ends; it does not infer the folder from the active editor. This fallback skips remote windows and compound commands. Shell command markers remove echoed commands/prompts when available. You can run Python with a JavaScript tab focused. If no source is identified, Buddy quietly skips analysis and points to Run with Buddy or explicit result sharing. It never asks “Was that result from this file?” or guesses that the active tab produced unrelated output. Outside-folder runs are ignored. Recognized housekeeping commands such as `git status` and `ls` are ignored.
-
-Switch between code files and back: each file retains its hints, clarification, and attempt count for this window session. Related-file edits also invalidate cached analysis and count as changed-code attempts when the same issue remains. Buddy includes a source-file index and bounded related code, prioritizing imports and error references. It can point to a helper file and offer a reviewed fix there; each proposal changes one file. It does not read every file’s full contents.
-
-The run button supports `.py`, `.js`, `.mjs` and `.cjs` files, using `python3` (`python` on Windows) or `node` on VS Code’s PATH. It saves and launches only the active file, with the opened workspace folder as the working directory. Its dedicated terminal supports basic line input and Ctrl+C and refuses a second run while busy. Output is captured directly from the program, without shell integration, prompt text or shell evaluation of filenames. Clicking it intentionally runs code even when automatic watching is paused. It does not select a project virtual environment or run React/dev-server commands; use your normal terminal and result sharing for those workflows. Linux runtime is verified; Windows runtime is unverified.
-
-After the initial clue, three unsuccessful **changed-code retries for the same problem** unlock an inline arrow hint. Three more unlock a colored diff with an explanation. **Accept fix** applies that reviewed change; **Keep my code** rejects it. Accepted changes remain unsaved and support normal VS Code undo. Save and run again to check your result.
-
-Rerunning identical code with the same result/context does not spend another AI request or advance the attempt count, including after a failed provider response. Use **⚙ → Retry last result** for an intentional retry. Clarification messages do not count as code attempts. A new problem starts with a fresh clue.
-
-When the same exception type and source line persist, the extension counts changed-code retries locally; the model cannot reset that count just by rephrasing the issue. At the inline threshold, a known error line gets an arrow even if the model fails to supply its own line hint. Other diagnostic formats still rely on the model identifying the same issue and its line. Each new source/result replaces the old guidance. Successful execution removes outdated execution-error advice while the intended output is checked separately for logic mistakes.
-
-## Build an idea with Buddy
-
-Choose **Project** at the top of the sidebar, or **Ctrl+Shift+P → Coding Buddy: Project Mode**.
-
-1. Describe your idea. Buddy asks whether you have features in mind or want a suggested plan.
-2. Choose **I have features in mind** and describe them, or **Suggest a plan**. Mention your preferred language/tools. Buddy may ask a short clarification question.
-3. Review the 3–8 small tasks, refine the plan in the reply box, then click **Start building**.
-4. Work on the current task yourself. **Nudge me** gives a conceptual hint. Open and save your attempt, run it, then click **Check my attempt** for feedback using bounded related-folder context and the latest matching captured run. You can also explain what you tried in the reply box.
-5. Try the task’s check and click **Mark done** when satisfied. Buddy suggests; you decide when to advance. Finishing the last step celebrates your progress.
-
-**Cancel project** is visible throughout planning and building, even while Buddy is thinking. After confirmation, it stops the pending request and clears the saved plan/progress, keeping your source files.
-
-One plan and its progress are saved locally with the opened VS Code workspace. Return to Project after reopening the same folder to continue. **Gear → Start a new project plan** replaces the saved plan after confirmation; it keeps your code. Project mode uses your existing selected provider/key. Planning shares your idea, feature notes and plan conversation; task coaching also shares saved code/context when available. It guides you without creating files, running AI commands or writing your implementation.
-
-Terminal runs in Project mode do not automatically request debugging advice. Request **Check my attempt** when ready; use **Debug** for the progressive clue → inline → reviewed-fix loop. With automatic watching paused, use Run with Buddy or explicitly share a result. Code-only review is not proof that a task works, and AI review never marks tasks done. Source files still need to be saved normally.
-
-## Browser, API, and other results
-
-Automatic observation covers completed commands in integrated terminals with working [VS Code shell integration](https://code.visualstudio.com/docs/terminal/shell-integration). It is not tied to Python; `examples/loop_logic.js` can be run with `node loop_logic.js`.
-
-For browser results, Postman responses, long-running servers, or unavailable terminal capture, use **⚙ → Share a run result** and paste the relevant output. Open and save the corresponding code file first. These are treated as results you report, not results the extension automatically observed. Use the reply box to answer a question or explain the expected outcome instead.
-
-The buddy checks the intended behavior in the top comment, tentatively infers intent if it is missing, and asks for clarification if needed. A successful exit alone does not mean a logic problem is solved. Confetti celebrates a resolved issue; disable it with the panel toggle or `codingBuddy.confetti` in settings. Reduced-motion preferences are respected. The robot gently bobs while idle and tilts while thinking; pause or resume this from **⚙ → Pause/Resume character animation**, independently of confetti.
-
-## Providers and privacy
-
-| Provider | Default model | Credentials |
-| --- | --- | --- |
-| Google Gemini | `gemini-3.5-flash-lite` | Gemini API key |
-| OpenAI | `gpt-6-luna` | OpenAI API key with model access/billing |
-| Groq | `openai/gpt-oss-120b` | Groq API key |
-| [Anthropic Claude](https://platform.claude.com/docs/en/build-with-claude/structured-outputs) | `claude-sonnet-4-6` | Anthropic API key |
-| [OpenRouter](https://openrouter.ai/docs/guides/features/structured-outputs) | `openai/gpt-oss-120b` | OpenRouter API key |
-| [DeepSeek](https://api-docs.deepseek.com/guides/json_mode/) | `deepseek-flash` | DeepSeek API key |
-| [Mistral](https://docs.mistral.ai/api/endpoint/chat) | `mistral-large-latest` | Mistral API key |
-| [Ollama (local)](https://docs.ollama.com/capabilities/structured-outputs) | `qwen3:8b` | Optional; local server/model must already be installed |
-| Custom OpenAI-compatible | Set your server’s model ID | Optional, depending on your server |
-
-These are configurable starting values, not guarantees of model access or availability. **Gear → Model and connection** (also **Coding Buddy: Configure Model and Connection** in the palette) changes the selected provider’s model. Ollama/custom also ask for the full request URL. Hosted providers require their own API keys; a chat subscription is not an API key. Existing Gemini/OpenAI/Groq keys stay in their original secret-storage slots.
-
-For **Ollama**, install/start Ollama and download a model yourself before selecting it. The [default model](https://ollama.com/library/qwen3:8b) is `qwen3:8b`; you can enter another downloaded model tag. The default full endpoint is `http://localhost:11434/api/chat`. No key is required for a normal local installation. Buddy does not install models or start the server; local performance and context capacity depend on your hardware/model. Ollama Cloud is not the local structured-output connection offered here.
-
-For **Custom OpenAI-compatible**, enter your server’s exact model ID and full `/v1/chat/completions` URL. The default `http://localhost:1234/v1/chat/completions` follows [LM Studio’s documented interface](https://lmstudio.ai/docs/developer/openai-compat/structured-output); replace `local-model` with your loaded model ID and start the server. Use **JSON schema** where supported, or explicitly choose **JSON object** for a compatible server without schema support. This is an API compatibility option, not a promise that every service/model works. Servers must return completed, non-streaming chat-completion JSON, with a JSON string in `choices[0].message.content`.
-
-Endpoint settings are application-wide. Full HTTPS URLs are accepted; unencrypted HTTP is limited to loopback (`localhost`, `127.x.x.x`, `::1`). Credentials, query parameters and fragments in URLs are rejected. Store an optional Ollama/custom token using **Add or update API key**; that provider’s saved token is sent to its configured endpoint, including after you deliberately change it. Redirects are not followed. The extension runs on the desktop side, so localhost means your desktop even in a remote VS Code workspace.
-
-Use a model supporting the relevant structured-output API. Access, quotas, prices, and data policies belong to your provider; the extension does not supply shared credentials. DeepSeek uses JSON object output with the schema in its instructions; other built-in cloud connections request schema output. All replies still pass Buddy’s local teaching/plan validation. OpenRouter routes to a compatible model host through your OpenRouter account. A failed request does not automatically retry, downgrade output format or switch providers.
-
-The run’s source, related source excerpts, relative source-file index, relevant output, and your clarification are sent directly to the **selected provider**. Git-ignored sources, hidden files, credential filenames, dependencies, generated directories, and symlinks escaping the folder are excluded from related context. Without Git, built-in directory exclusions apply. Coding Buddy does not execute AI commands or operate a separate backend. Avoid putting secrets into code or chat. Known saved keys and credential files are blocked from being used as coding context; this is not a universal secret detector.
-
-Provider/model preferences, confetti, and encrypted keys survive restarting VS Code. Project plans, recent project messages and task progress persist locally in workspace storage; they are not written into your repository. Debug conversation, captured output, active file/session, and attempt counts stay in memory and reset on restart. Closing the panel alone preserves that session.
-
-## Develop and test
+You need desktop VS Code, Node.js/npm to build the extension, and access to your chosen AI provider or local server. The manifest’s VS Code minimum is 1.93. Install Python or Node.js separately to run the corresponding practice examples.
 
 ```sh
+git clone https://github.com/aatish1321/CodeNudge.git
+cd CodeNudge
 npm ci
+npm run package
+```
+
+1. In VS Code, open **Extensions → … → Install from VSIX** and select the generated `coding-buddy-0.0.15.vsix`.
+2. Run **Developer: Reload Window**, then open a folder and click the robot icon.
+3. Open **⚙** to choose your provider, configure its model/connection, and add a key if needed.
+4. For a fresh practice folder, run **Coding Buddy: Open Playground** from the Command Palette. Grant folder trust when you are ready; CodeNudge stays visible in Restricted Mode but code sharing and execution require trust.
+5. Choose **Debug** and open `demo/expenses.py`, or choose **Project** and describe an idea.
+
+**Naming note:** the project is CodeNudge; the current extension, command names, settings prefix, and VSIX filename still use **Coding Buddy**. Use the command names shown above in VS Code.
+
+For Python and plain JavaScript, the editor’s **Run with Buddy** button saves and runs the active file without manually attaching a terminal. For browser results, Postman responses, or long-running servers, use **⚙ → Share a run result**. Automatic browser/API inspection is outside this prototype.
+
+## Presenting CodeNudge
+
+**The pitch:** “CodeNudge helps you practise the thinking behind coding. It gives you a clue, guides you closer when you remain stuck, and helps you build your own ideas one small task at a time.”
+
+A short demo can follow this story:
+
+1. **Get unstuck.** Run the four-line Python expenses example and show the first clue.
+2. **Show help growing with effort.** Demonstrate changed-code retries, the inline pointer, and the explained diff. Review the fix, rerun, and show the result.
+3. **Show understanding beyond crashes.** Switch to the JavaScript countdown: it runs, but the output differs from its stated goal.
+4. **Build something of your own.** In Project mode, describe a tiny JavaScript expense tracker, choose features or a suggested plan, and show the first task and a nudge.
+5. **Show the freedom to choose.** Open provider settings and explain the hosted, local, and custom options.
+
+The [complete rehearsal guide](examples/demo/README.md) includes exact commands, retry variants, expected outputs, and what to show at each stage. The [multi-file practice projects](examples/projects/README.md) provide a harder Python invoice report and an asynchronous JavaScript account client. Their bugs are intentional learning material.
+
+Use a provider/model you have rehearsed with. Real replies and latency vary; selecting a provider in the menu alone is not a live demonstration of that provider. If you cut between attempts for a short recording, label the cuts.
+
+## Built with
+
+- **TypeScript + the VS Code Extension API** for workspace access, commands, terminal observation, and local progress.
+- **HTML, CSS, and JavaScript** for the sidebar and character animation.
+- **Native editor decorations and diff review** for inline hints and proposed changes.
+- **Direct provider HTTP requests** with JSON response contracts, validation, and cancellation; no separate application backend.
+- **Node’s test runner** plus isolated VS Code integration checks.
+
+The local learning controller manages attempts, duplicate runs, source freshness, and help stages. The selected model supplies guidance within those boundaries. Project plans and progress are saved in workspace storage; Debug conversations and attempt counts last for the current window session.
+
+## Privacy and control
+
+API keys are stored in **VS Code SecretStorage**. Relevant code, bounded related-file excerpts, a source-file index, run output, and your clarification go to the selected provider or configured server when needed. Initial Project planning shares your idea and feature notes without collecting source code.
+
+Hidden files, known credential filenames, dependencies, generated files, Git-ignored sources, and paths escaping the workspace are excluded from coding context. Known saved keys are checked before sharing. These checks are not a universal secret detector, so keep credentials out of code and messages. A local endpoint receives the context locally; where it processes data depends on how you configure that server.
+
+CodeNudge does not execute AI-supplied commands or automatically apply project code. Full context limits and connection safeguards are documented in the [usage guide](docs/usage.md).
+
+## Development and verification
+
+```sh
 npm test
 ```
 
-To launch the extension yourself:
-
-- **From this repository:** open it in VS Code, press **F5** (or **Run → Start Debugging**), and choose **Run Coding Buddy** if asked. The new **Extension Development Host** opens `examples` automatically. Close that window and press F5 again after changing extension source.
-- **From the installed extension:** press **Ctrl+Shift+P** and run **Coding Buddy: Open Playground**, also available under the buddy’s gear. It opens fresh practice copies in a new window, preserving your earlier work and configured provider key. Playground folders are temporary; copy work into your own project to keep it long-term.
-- **For your own project:** use **File → Open Folder**, open the robot, and run your code normally. No development window or terminal attachment is needed.
-
-For the presentation, start with the [simple demo walkthrough](examples/demo/README.md): four-line Python expenses, four-line JavaScript countdown, and an optional tiny helper-file example. It includes exact commands, six saved/run retries, and what to show at each stage.
-
-The harder [practice projects](examples/projects/README.md) include a multi-file Python invoice report and asynchronous JavaScript account client with success, missing-account, and service-failure cases. Their bugs are intentional; they are learning fixtures, not passing application tests.
+To run from source, open this repository in VS Code and press **F5 → Run Coding Buddy**. The Extension Development Host opens the examples folder. Additional checks:
 
 ```sh
 npm run test:host
 npm run test:trust
-npm run package
 npm run test:package
 ```
 
-`test:host` opens an isolated VS Code profile and verifies actual extension activation, automatic Python/JavaScript/Bash/zsh capture, multi-file invoice runtime/logic/correct results, asynchronous JavaScript and 404/503 cases, cross-language execution routing, quoted paths, helper changes, editor arrows, native diffs, accept/reject, undo, stale-edit protection, and preferences. `test:package` repeats those checks against the installed VSIX. `test:trust` separately starts a truly untrusted window with trust enabled and verifies pre-trust activation/view access and the native trust screen without auto-trusting. Run `node scripts/test-host.cjs --package --restricted` for that check against the installed VSIX. The automated terminal checks use Bash/Python/Node on Linux and also check zsh when installed; the extension itself is intended for desktop VS Code with supported shells. The normal `code` command must be available on PATH.
+The latest verified build passed **107 source tests**, installed VS Code workflow checks, and a separate Restricted Mode check. Coverage includes progressive help, file switching, stale replies, diff review, Project progress, provider contracts, secure key handling, and actual local HTTP transport with fixture responses.
 
-Project tests cover custom/suggested planning, approval, progress restoration, learner-controlled completion, trust and stale/cancelled replies. The native suite also checks the actual Project Mode command and saved-source coaching with HTTP fixture replies; this is not live AI acceptance.
+Live Groq Debug-stage probes are recorded separately. New provider/local-model teaching quality, full live Project-mode acceptance, and Windows runtime behavior remain unverified. See the [verification report](devpost/verification.md) for evidence and limitations, and the [usage guide](docs/usage.md#develop-and-test) for test setup.
 
-Unit tests exercise the activated controller across language switches, workspace boundaries/freshness, fresh playground copies, attempt rules, early-answer guards, and HTTP fixtures for all nine provider choices plus actual loopback HTTP against a test server (not a local model). Live Groq checks now use the key already stored in VS Code without exposing it. They found early-answer leakage, prompting stricter stage schemas and a local hint guard. See the [verification report](devpost/verification.md) for the exact live and automated coverage. New provider/local-model teaching quality and account access remain unverified; HTTP fixtures alone do not establish them.
+## Project status and contributions
 
-Context limits: 12,000 characters in the run’s primary file; up to 500 source paths in its workspace-folder index; up to eight related files, 6,000 characters each and 30,000 combined; the last 8,000 output characters; 2,000 clarification/result-input characters. Omissions and truncated excerpts are labeled for the model; truncated related files cannot be replaced. Related files over 100 KB are omitted. Save related changes before rerunning. New or excluded files may not be read, so the buddy cannot prove the entire project is correct.
+CodeNudge is a **working hackathon prototype**, currently installed through a locally built VSIX. Marketplace publication is planned. An open-source license is still being selected; the manifest currently declares `UNLICENSED`.
 
-Browser inspection, Postman capture, debugger capture, saved Debug chat histories remain outside this version. Long-running servers need a manually shared result. Commands without an identifiable source are skipped without confirmation; compound shell commands and every language/toolchain have not been verified. A local guard catches obvious early edit instructions/code, but subtle answer leakage and diagnosis quality still require real-model review.
-
-The implementation plan and remaining acceptance checks live in [devpost/checklist.md](devpost/checklist.md). [The app map](devpost/app-map.html) is an offline reference to the code.
-
-## Release status
-
-The source is public for development. An open-source license has not yet been selected, so this repository does not currently grant an open-source license. Select a license before publishing the Marketplace release. API keys, learner profiles, and development/course files are excluded from the VSIX.
+Feedback is welcome: try a practice example, describe what you expected and what happened, and share a small reproduction through [GitHub Issues](https://github.com/aatish1321/CodeNudge/issues). Remove keys and personal data from reports and recordings. Development areas include wider live-provider testing, more language/toolchain verification, and public-release preparation.
