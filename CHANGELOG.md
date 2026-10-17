@@ -1,6 +1,11 @@
 # Changelog
 
-Version 0.0.21 is the corrected Marketplace release candidate. Earlier versions were local development builds; publication is pending.
+Version 0.0.21 is available on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge). Earlier versions were local development builds.
+
+## Unreleased
+
+- Refreshed the repository README with a two-mode guide, the learning loop, Marketplace installation and a prominent index of hackathon planning evidence.
+- Added contributor guidance and corrected current documentation to reflect the published extension identity and status. These repository changes have not been uploaded as a new Marketplace package.
 
 ## 0.0.21
 

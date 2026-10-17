@@ -1,21 +1,27 @@
 <h1 align="center">CodeNudge</h1>
 
-<p align="center">
-  <img src="media/buddy.png" alt="CodeNudge’s friendly robot mascot typing at a keyboard" width="480">
-</p>
-
 <p align="center"><strong>A little nudge. A lot of learning.</strong></p>
 
 <p align="center">
-  An AI coding companion inside VS Code that helps beginners think through errors<br>
-  and turn their project ideas into small, achievable steps.
+  <img src="media/buddy.png" alt="CodeNudge’s friendly robot mascot typing at a keyboard" width="380">
 </p>
 
 <p align="center">
-  <a href="#how-it-works">How it works</a> ·
-  <a href="#features">Features</a> ·
-  <a href="#try-it">Try it</a> ·
-  <a href="examples/demo/README.md">Demo walkthrough</a>
+  An AI coding companion inside VS Code.<br>
+  Practise a new concept, work through an error, or build your first idea—one discovery at a time.
+</p>
+
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge"><img src="https://img.shields.io/badge/VS_Code-Install-64d8cb?style=flat-square" alt="Install CodeNudge for VS Code"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-f6c66c?style=flat-square" alt="MIT license"></a>
+  <a href="https://learn-ai-basics.devpost.com/"><img src="https://img.shields.io/badge/Build_With_AI-Basics-b6a0ff?style=flat-square" alt="Built for Build With AI: Basics"></a>
+</p>
+
+<p align="center">
+  <a href="#two-ways-to-learn">Explore the modes</a> ·
+  <a href="#get-started">Get started</a> ·
+  <a href="#hackathon-field-guide">Hackathon files</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a>
 </p>
 
 ## Why CodeNudge?
@@ -26,98 +32,131 @@ CodeNudge is built for that moment. It sits beside your code like a patient seni
 
 It is designed for people starting to code, learners building their first projects, and anyone who wants support while developing the confidence to solve problems independently.
 
-## How it works
+## Two ways to learn
 
-### Debug mode: learn through the error
-
-Run your code, read a clue, try a change, and run again. Help becomes more specific as you work through the same problem.
-
-| Stage | What you see | When it appears |
-| --- | --- | --- |
-| **A clue** | A short, beginner-friendly question or hint about the issue. | The first linked run that needs help. |
-| **A closer look** | An inline arrow and a hint beside the relevant line. | After three unsuccessful changed-code retries for the same issue. |
-| **A little backup** | A colored diff showing a proposed fix, plus an explanation of what changed and why. | After three more unsuccessful changed-code retries. |
-| **Your discovery** | Solved feedback and optional confetti. | When the run’s evidence supports the intended result. |
-
-**You control the fix.** Accept the proposal or keep your code. Accepted edits stay unsaved and support VS Code undo; save and run again to check the result. A successful exit alone does not prove the output is correct.
-
-Rerunning identical code with the same result and context reuses the previous analysis. It does not spend another AI request or advance the help stage. You can explicitly retry from settings.
-
-### Project mode: build an idea one step at a time
-
-1. **Describe your idea.** A rough starting point is enough.
-2. **Choose how to plan.** Share features you already have in mind, or ask CodeNudge to suggest a plan.
-3. **Make it yours.** Review and refine a plan of 3–8 small tasks before starting.
-4. **Try the current task.** Write your own code, ask for a conceptual nudge, or request feedback on your saved attempt and available run output.
-5. **Decide when to move on.** Try the task’s check, then mark it done yourself.
-
-Your plan and progress stay saved with the opened workspace. **Cancel project** lets you change your mind, including while a request is pending; it clears the plan after confirmation and keeps your code files.
-
-While building, use **Check my attempt** when you want a review. Switch to **Debug** for the automatic error-help loop. AI feedback never marks a task complete for you.
-
-## Features
-
-| Feature | What it helps you do |
+| 💡 “I'm learning something new.” | 🌱 “I've got an idea to build.” |
 | --- | --- |
-| **Help inside your editor** | Keep your code, terminal, and learning companion together in a VS Code sidebar. |
-| **Context across files** | Investigate entry files and relevant helpers using bounded workspace context; retain Debug conversations and attempts when switching files within the window. |
-| **Support beyond Python** | Work across source languages and identifiable completed terminal runs. Python and JavaScript are the verified demo paths. |
-| **Run with CodeNudge** | Save and run a Python or plain JavaScript file directly, with its source and output linked automatically. |
-| **Bring your own AI** | Choose a hosted provider, a local Ollama model, or a compatible custom server. |
-| **A companion with character** | Meet an animated robot with a patient teaching voice, optional celebrations, and reduced-motion support. |
-| **Your work stays yours** | Review proposed edits, control task completion, and keep provider keys in VS Code’s secure storage. |
+| **Debug mode** follows your completed runs and offers clues about errors or unexpected output. | **Project mode** helps turn your idea into a reviewable plan of 3–8 small tasks. |
+| Try a change, run again, and receive more specific help when you remain stuck. | Write the implementation yourself, ask for a nudge, and review one task at a time. |
+| Your conversations and attempts stay with each file while you switch tabs in the current window. | Your plan and progress stay saved with the opened workspace. |
+
+### The learning loop
+
+<p align="center">
+  <code>YOUR ATTEMPT</code> → <code>A CLUE</code> → <code>A CLOSER LOOK</code> → <code>YOUR DISCOVERY</code>
+</p>
+
+| Moment | What CodeNudge does | What stays in your hands |
+| --- | --- | --- |
+| **First linked run needs help** | Gives a short clue or asks about your intended result. | Investigating and trying your own fix. |
+| **Three changed, unsuccessful retries on the same issue** | Points toward the relevant line with an inline arrow and hint. | Deciding what to change next. |
+| **Three more unsuccessful retries** | Offers a colored diff and an explanation of the proposed fix. | Accepting or rejecting the reviewed change. |
+| **The run supports the intended result** | Shows solved feedback and optional confetti. | Checking what you learned and trying it again. |
+
+The first failure starts the issue; it is not a retry. Identical source, result and context reuse the previous analysis without another AI request or stage advancement. Clarification messages do not count as attempts. An explicit Retry is available in settings.
+
+Accepted changes remain unsaved and support VS Code undo. Save and rerun to verify the result. A successful exit alone does not establish that a logic problem is solved.
+
+## Get started
+
+**[Install CodeNudge from the Visual Studio Marketplace →](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge)**
+
+Or install from your terminal:
+
+```sh
+code --install-extension aatishdev.codenudge
+```
+
+You need desktop **VS Code 1.93 or newer** and a supported AI connection. Hosted services require your own API key and may charge for use; a chat subscription does not supply an API key. Install Python or Node.js separately to run those practice files.
+
+1. **Open a folder and the robot sidebar.** In Restricted Mode, CodeNudge stays visible; grant folder trust when you are ready to enable code sharing and execution.
+2. **Choose your AI through ⚙.** Select a provider, configure the model/connection, and add a key when required.
+3. **Choose Debug or Project.** For fresh examples, run **CodeNudge: Open Playground** and expand `practice`.
+4. **Write, run, and investigate.** For Python and plain JavaScript, use the editor's **Run with CodeNudge** action. It saves and runs the active file with its output linked automatically.
+
+The playground includes [three beginner exercises and a tiny quiz project](examples/practice/README.md), a [controlled feature walkthrough](examples/demo/README.md), and [harder multi-file Python/JavaScript examples](examples/projects/README.md). Their mistakes are intentional practice material. After an update, reload VS Code and open a new playground; existing copies preserve your edits.
+
+For browser results, Postman responses and long-running servers, use **⚙ → Share a run result**. Automatic browser/API inspection is outside this preview. More setup and troubleshooting details are in the [usage guide](docs/usage.md) and [support guide](SUPPORT.md).
+
+<details>
+<summary>Upgrading from an early local build?</summary>
+
+The published extension ID is `aatishdev.codenudge`. Earlier local builds used `aatish1321.coding-buddy` or `aatishdev.coding-buddy`. Remove the earlier extension to avoid duplicate commands/views. Saved keys and workspace progress do not automatically transfer between these identities; configure the published extension again. The internal `codingBuddy.*` settings prefix remains in use.
+
+</details>
+
+## Try a real learning exercise
+
+Learning JavaScript array methods? Open a fresh folder, choose **Debug**, and start `passing_scores.js` with:
+
+```javascript
+// Keep scores of 50 or higher. Expected result: [76, 50, 91].
+const scores = [42, 76, 50, 91, 33];
+```
+
+Write your own attempt using `filter()`, print the result, and run it. Use CodeNudge when you actually get stuck. Then test `[49, 50, 51]` and an empty array to check your understanding. If you solve it with the first clue, that is a useful outcome too; you do not need to force six failed attempts.
+
+For **Project mode**, describe something small, such as a three-question Python quiz or a shared-expense splitter. Supply your own features or choose **Suggest a plan**, refine it, and start building. Use **Nudge me** for conceptual help and **Check my attempt** for saved-code/run feedback. Try the task's check yourself before **Mark done**. AI reviews are advisory and never advance a task automatically.
+
+**Cancel project** clears the saved plan/progress after confirmation, including while a request is pending, and keeps your source files. Switch between Project and Debug as needed.
 
 ## Choose your AI
 
-The same selected connection works in both Debug and Project mode.
+Both modes use your selected connection. There are **nine connection options**:
 
 | Hosted providers | Local and custom options |
 | --- | --- |
-| Google Gemini · OpenAI · Groq | **Ollama** with a locally installed model |
+| Google Gemini · OpenAI · Groq | **Ollama** with an already-installed model |
 | Anthropic Claude · OpenRouter · DeepSeek · Mistral | **Custom OpenAI-compatible** chat completions, including the documented LM Studio interface |
 
-Use **⚙ → AI provider** to choose a connection, then **Model and connection** to set its model and, where applicable, full endpoint. Named hosted services require your own API key; Ollama/custom can work without a key when the server allows it.
+Choose **⚙ → AI provider**, then **Model and connection**. Hosted providers require keys; local/custom connections allow an optional key when the server supports it. Models must support the configured JSON output format. CodeNudge validates replies and does not automatically retry, switch providers or download models. See [connection defaults and compatibility](docs/usage.md#providers-and-privacy).
 
-Models must support the connection’s JSON output format. CodeNudge validates replies before using them. It does not automatically switch providers, retry failed calls, or download local models. See the [provider setup guide](docs/usage.md#providers-and-privacy) for defaults, endpoint examples, compatibility, and privacy details.
+The character has idle/thinking motion and optional celebrations. Animation and confetti have separate settings, and reduced-motion preferences are respected.
 
-## Try it
+## Hackathon field guide
 
-You need **desktop VS Code 1.93 or newer** and access to your chosen AI provider or local server. The extension is free; hosted AI services may charge for API use. A chat subscription does not include an API key. Install Python or Node.js separately to run the corresponding practice examples.
+Built for **[Build With AI: Basics](https://learn-ai-basics.devpost.com/)** using the [Devpost Learn Skill Pack](https://github.com/challengepost/learn-ai-basics).
 
-1. In VS Code, search Extensions for **CodeNudge** by **aatishdev** and install it once the Marketplace listing is live. Before publication, use **Extensions → … → Install from VSIX** with `codenudge-0.0.21.vsix` (see [building from source](#development-and-verification)).
-2. Run **Developer: Reload Window**, then open a folder and click the robot icon.
-3. Open **⚙** to choose your provider, configure its model/connection, and add a key if needed.
-4. For a fresh practice folder, run **CodeNudge: Open Playground** from the Command Palette. Grant folder trust when you are ready; CodeNudge stays visible in Restricted Mode but code sharing and execution require trust.
-5. Choose **Debug** and open `practice/count_up.py` for a fresh beginner exercise or `demo/expenses.py` for the presentation walkthrough. For a tiny Project-mode task, follow the [quiz practice guide](examples/practice/README.md#tiny-project-mode-project-a-three-question-quiz).
+The planning trail is part of the repository:
 
-The three new exercises are bundled starting with **0.0.17**. After updating, reload VS Code and open a **new** playground to get them; existing playground copies preserve your edits.
+| Document | What it records |
+| --- | --- |
+| [**scope.md**](devpost/scope.md) | The audience, core learning loop and proof-of-concept boundary. |
+| [**prd.md**](devpost/prd.md) | The user journey, progressive-help rules, states and acceptance criteria. |
+| [**spec.md**](devpost/spec.md) | The extension architecture, providers, data boundaries and verification approach. |
+| [Build checklist](devpost/checklist.md) | Ordered implementation, revisions and final-review status. |
+| [App map](devpost/app-map.html) | A source-linked HTML reference to the implemented workflow; download and open locally. |
+| [Verification report](devpost/verification.md) | Checks performed, live-provider probes and their limits. |
 
-For Python and plain JavaScript, the editor’s **Run with CodeNudge** button saves and runs the active file without manually attaching a terminal. For browser results, Postman responses, or long-running servers, use **⚙ → Share a run result**. Automatic browser/API inspection is outside this preview.
+**All three required planning files are committed under `devpost/`.** The [reviewer index](devpost/README.md) connects the requirements to the files without duplicating the plans. They began under the working name *Coding Buddy*; later revisions record CodeNudge and the expanded features.
 
+**Demo video:** a final public video link has not been added to this repository yet. The [recording/readiness guide](docs/hackathon-readiness.md) tracks the required video, submission checks and recording mechanics. A recording should show genuine use and the final result; clearly label cuts between attempts in a controlled feature demonstration.
 
-## Built with
+## Under the hood
 
-- **TypeScript + the VS Code Extension API** for workspace access, commands, terminal observation, and local progress.
-- **HTML, CSS, and JavaScript** for the sidebar and character animation.
-- **Native editor decorations and diff review** for inline hints and proposed changes.
-- **Direct provider HTTP requests** with JSON response contracts, validation, and cancellation; no separate application backend.
-- **Node’s test runner** plus isolated VS Code integration checks.
+| Part | Implementation |
+| --- | --- |
+| Editor integration | TypeScript and the VS Code Extension API. |
+| Sidebar and character | HTML, CSS and JavaScript with bundled artwork. |
+| Teaching behavior | A local controller tracks attempts, duplicate runs and source freshness; the selected model supplies guidance within those limits. |
+| Inline help and fixes | Native editor decorations and diff review; each proposal targets one reviewed file. |
+| AI connection | Direct provider HTTP requests with validated JSON responses and cancellation; no separate CodeNudge backend. |
+| Context | A bounded source index and related-file excerpts, prioritizing imports and error references. |
 
-The local learning controller manages attempts, duplicate runs, source freshness, and help stages. The selected model supplies guidance within those boundaries. Project plans and progress are saved in workspace storage; Debug conversations and attempt counts last for the current window session.
+Python and JavaScript are the verified demo paths. The design supports other source languages and identifiable completed terminal runs; it does not read every workspace file in full or establish tested behavior for every toolchain.
 
 ## Privacy and control
 
-API keys are stored in **VS Code SecretStorage**. Relevant code, bounded related-file excerpts, a source-file index, run output, and your clarification go to the selected provider or configured server when needed. Initial Project planning shares your idea and feature notes without collecting source code.
+- **Your connection, your choice.** Relevant code, bounded related excerpts, a source-file index, output and clarification go to the selected provider/server when needed. Initial Project planning shares your idea and feature notes without collecting source code.
+- **Keys stay in VS Code SecretStorage.** Automatic hints are enabled by default in trusted folders once configured. Use **⚙ → Pause automatic hints** before running code you do not want shared.
+- **Context has boundaries.** Hidden files, known credential filenames, dependencies, generated files, Git-ignored sources and paths escaping the workspace are excluded. These guards are not a universal secret detector; keep credentials out of source and messages.
+- **Edits stay reviewable.** CodeNudge does not execute AI-supplied commands or automatically write project code. There is no CodeNudge analytics/telemetry service; provider/server data handling depends on your connection.
 
-Automatic checking is enabled by default in trusted folders once your connection is configured. Use **⚙ → Pause automatic hints** before running code you do not want shared. CodeNudge has no analytics or telemetry service; your AI provider or configured server has its own data-handling terms.
+See the [full privacy and provider details](docs/usage.md#providers-and-privacy).
 
-Hidden files, known credential filenames, dependencies, generated files, Git-ignored sources, and paths escaping the workspace are excluded from coding context. Known saved keys are checked before sharing. These checks are not a universal secret detector, so keep credentials out of code and messages. A local endpoint receives the context locally; where it processes data depends on how you configure that server.
+## Build and verify
 
-CodeNudge does not execute AI-supplied commands or automatically apply project code. Full context limits and connection safeguards are documented in the [usage guide](docs/usage.md).
-
-## Development and verification
-
-The Devpost Learn Skill Pack planning documents are available in the repository: [scope](devpost/scope.md), [product requirements](devpost/prd.md) and [technical spec](devpost/spec.md). The [build checklist](devpost/checklist.md) records implementation, revisions and remaining final-review work.
+For development or a local VSIX, use Git and Node.js/npm:
 
 ```sh
 git clone https://github.com/aatish1321/CodeNudge.git
@@ -127,7 +166,10 @@ npm test
 npm run package
 ```
 
-To run from source, open this repository in VS Code and press **F5 → Run CodeNudge**. The Extension Development Host opens the examples folder. Additional checks:
+Install the generated `codenudge-0.0.21.vsix` through **Extensions → … → Install from VSIX**, or press **F5 → Run CodeNudge** in the repository to open the Extension Development Host.
+
+<details>
+<summary>Additional VS Code integration checks</summary>
 
 ```sh
 npm run test:host
@@ -135,18 +177,18 @@ npm run test:trust
 npm run test:package
 ```
 
-The latest verified build passed **107 source tests**, installed VS Code workflow checks, and a separate Restricted Mode check. Coverage includes progressive help, file switching, stale replies, diff review, Project progress, provider contracts, secure key handling, and actual local HTTP transport with fixture responses.
+Package before running `test:package`. Native checks require an installed desktop VS Code and a graphical session; shell/runtime checks also require the corresponding tools. Run native suites separately because editor-focus assertions can be sensitive to concurrent windows.
 
-Live Groq Debug-stage probes are recorded separately. New provider/local-model teaching quality, full live Project-mode acceptance, and Windows runtime behavior remain unverified. See the [verification report](devpost/verification.md) for evidence and limitations, and the [usage guide](docs/usage.md#develop-and-test) for test setup.
+</details>
 
-## Project status and contributions
+The recorded verification includes **107 source tests**, installed VS Code workflows and a separate Restricted Mode check. Provider contract tests use fixtures and local HTTP responses; live Groq Debug-stage probes are documented separately. The maintainer reports a manual test pass. Broad live-provider/local-model teaching quality, Windows/macOS behavior and the minimum supported VS Code version still have incomplete coverage. See the [evidence and exact limits](devpost/verification.md) and [release record](docs/marketplace-release.md).
 
-CodeNudge is an **open-source preview**, developed for the Build With AI hackathon. The current release candidate is **0.0.21**; Marketplace publication is pending.
+## Contribute a nudge
 
-The [Marketplace release checklist](docs/marketplace-release.md) tracks testing and publication preparation. See the [changelog](CHANGELOG.md) for local build history and [support guide](SUPPORT.md) for troubleshooting and bug reports.
+CodeNudge is a published **open-source preview**, currently **0.0.21**. Helpful contributions include clearer beginner guidance, reproducible bug reports, provider compatibility checks and verified language/toolchain examples.
 
-Feedback is welcome: try a practice example, describe what you expected and what happened, and share a small reproduction through [GitHub Issues](https://github.com/aatish1321/CodeNudge/issues). Remove keys and personal data from reports and recordings. Development areas include wider live-provider testing, more language/toolchain verification, and public-release preparation.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) to work on the code, [SUPPORT.md](SUPPORT.md) for troubleshooting, or the [changelog](CHANGELOG.md) for the release history. Remove credentials and private code from reports and recordings.
 
 ## License
 
-CodeNudge is licensed under the [MIT License](LICENSE). You may use, modify, and redistribute it, including commercially, while keeping the copyright and license notices. AI providers and third-party components retain their own terms.
+[MIT](LICENSE) · Copyright © 2026 aatish1321. Third-party components and AI services retain their own licenses and terms.

@@ -1,21 +1,23 @@
 # CodeNudge Marketplace release
 
-## Release candidate
+## Published release
 
 | Item | Value |
 | --- | --- |
 | Display name | CodeNudge (preview) |
 | Version | 0.0.21 |
-| Upload artifact | `codenudge-0.0.21.vsix` in the repository root |
-| Publisher | `aatishdev` — confirmed by the Marketplace upload error |
-| Extension ID | `aatishdev.codenudge` — corrected to match the actual publisher |
+| Published artifact | `codenudge-0.0.21.vsix` in the repository root |
+| Publisher | `aatishdev` — verified against the public Marketplace listing |
+| Extension ID | `aatishdev.codenudge` |
 | Repository | [aatish1321/CodeNudge](https://github.com/aatish1321/CodeNudge) |
 | License | [MIT](../LICENSE) |
 | Runtime changes since tested 0.0.17 | Settings link targets the corrected extension ID; teaching behavior unchanged |
 
-The maintainer reports completing manual testing. This candidate remains unpublished until it is uploaded through the publisher account. The previous upload was rejected because the manifest used `aatish1321`. The package name is now `codenudge` after Marketplace rejected `coding-buddy` as already existing. The corrected publisher is `aatishdev`; the GitHub account remains `aatish1321`. This creates a different identity from earlier local builds. Remove the old local extension before using the new one to avoid duplicate commands/views; re-enter your API key and expect workspace progress to start fresh. Automatic migration is not included.
+The maintainer reports completing manual testing and publication. An unauthenticated check on October 17, 2026 confirms the [public listing](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge), and the Marketplace gallery API returns version **0.0.21** for `aatishdev.codenudge`.
 
-## Prepared for upload
+Earlier upload attempts used the wrong publisher or an unavailable package name. The published publisher is `aatishdev`; the GitHub account remains `aatish1321`. This is a different identity from earlier local `coding-buddy` builds. Remove an old local extension to avoid duplicate commands/views, re-enter your key, and expect workspace progress to start fresh. Automatic migration between identities is not included.
+
+## Included in the release
 
 - Marketplace description, compressed square JPEG listing icon (512 × 512 pixels; 69,722 bytes; below both upload limits), dark gallery banner, preview label and repository/support links.
 - README with installation/setup, provider requirements and possible API costs, progressive help and Project mode.
@@ -25,13 +27,13 @@ The maintainer reports completing manual testing. This candidate remains unpubli
 
 The release package uses the original committed `examples/loop_logic.js` and `examples/loop_syntax.py`. Local testing edits to those files are preserved in the working folder and excluded from this candidate. If rebuilding from the working folder, use a clean release checkout so those edits do not change the published exercises.
 
-## What you need to do
+## For the next Marketplace update
 
-1. **Make the release source public.** Commit the release files and push them to the public CodeNudge repository. Keep unrelated agent folders and practice edits out of that commit. Marketplace README images and relative links are rewritten to GitHub URLs, so the release assets must be available there. Check the repository, README image and Issues link while signed out.
-2. **Sign in to your publisher.** Open [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/) with the Microsoft account that owns `aatishdev`.
-3. **Upload the exact candidate.** Choose **New extension → Visual Studio Code**, select `codenudge-0.0.21.vsix`, review the listing and publish. If this extension already exists, use its update/upload action and ensure 0.0.21 is newer than the published version. An already-used version requires a version bump and a fresh package.
-4. **Verify the public release.** Wait for Marketplace validation, open the listing, and install CodeNudge from Extensions in a fresh VS Code profile. Check that the robot opens, setup works and Open Playground includes the practice files.
-5. **Record publication.** The expected listing URL is `https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge`. Confirm it is live, then update the README/changelog publication status for the next release.
+1. **Choose a new version and build from committed release content.** Version 0.0.21 is already published. Keep unrelated agent folders and learner practice edits out of the package; run relevant checks and inspect the exact VSIX contents.
+2. **Make source/assets public.** Push the intended release commit and check the README, images and support links while signed out. Marketplace relative links are rewritten to GitHub URLs.
+3. **Review the exact artifact and upload the update.** Use [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/) for `aatishdev` and the existing CodeNudge extension. Upload the newly versioned VSIX after reviewing it; do not reuse the published 0.0.21 version.
+4. **Verify the updated public install.** Check the listing without authentication and try the exact release in a fresh profile, including provider setup and a real clue. Record the actual coverage.
+5. **Update the release record.** Record the new version, checks and checksum. A GitHub README edit alone does not update the README already bundled in the Marketplace release.
 
 A real screenshot of Debug hints and one of Project mode would improve the listing. They are optional for publishing. Capture the actual extension with a public example and no keys, private code or personal paths; add them to the README and rebuild before uploading if desired.
 

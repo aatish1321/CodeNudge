@@ -2,13 +2,13 @@
 
 [← Back to CodeNudge](../README.md)
 
-CodeNudge retains its original internal extension ID and `codingBuddy.*` settings prefix so existing saved keys, preferences, and project progress continue to work after upgrading.
+The published extension ID is `aatishdev.codenudge`; the internal settings prefix is `codingBuddy.*`. Early local builds used `aatish1321.coding-buddy` or `aatishdev.coding-buddy`. Remove an earlier local extension to avoid duplicate commands/views, then configure the published extension again: saved keys and workspace progress do not automatically transfer between these identities.
 
 A VS Code learning companion that helps you think through a problem before showing an answer. A friendly robot gives a clue, points toward the relevant line when you remain stuck, and eventually offers an explained fix you can accept or reject.
 
 ## Try it
 
-Install `codenudge-0.0.17.vsix` using **Extensions → … → Install from VSIX**. A local build creates this package with `npm run package`. Marketplace publication is planned after live-provider verification.
+Install [CodeNudge from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge), or run `code --install-extension aatishdev.codenudge`. For a local build, `npm run package` creates `codenudge-0.0.21.vsix`; install it using **Extensions → … → Install from VSIX**.
 
 A fresh playground can open in **Restricted Mode**. CodeNudge remains visible with a **Trust this folder…** button that opens VS Code’s trust screen. Choose Trust for the playground, or use the top banner’s **Manage** link. Terminal watching and AI analysis stay disabled until you grant trust. After updating the extension, use **Developer: Reload Window** once.
 
@@ -120,4 +120,4 @@ The implementation plan and remaining acceptance checks live in [devpost/checkli
 
 ## Release status
 
-The source is available under the [MIT License](../LICENSE). Marketplace publication remains planned. API keys, learner profiles, and development/course files are excluded from the VSIX.
+The source is available under the [MIT License](../LICENSE), and the extension is published on the [Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge). API keys, learner profiles, and development/course files are excluded from the VSIX.

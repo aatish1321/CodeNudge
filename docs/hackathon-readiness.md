@@ -19,18 +19,18 @@ The [official rules](https://learn-ai-basics.devpost.com/rules) give equal weigh
 - Approved planning documents are publicly accessible: [scope](../devpost/scope.md), [PRD](../devpost/prd.md), [spec](../devpost/spec.md).
 - Local history starts with planning on October 15, followed by implementation. The public repo was created October 15. This supports the timeline; it is not independent proof of an empty starting folder.
 - All **107 source tests pass** in this review. Earlier installed VS Code, Restricted Mode and live Groq stage evidence is recorded in the [verification report](../devpost/verification.md). Stage probes do not replace a complete live rehearsal.
-- MIT packaging was separately verified. The current local candidate is **0.0.17**, which bundles the new `practice` exercises; the learning-controller runtime is unchanged. Open a new playground after updating to receive the new examples.
-- Final learner review, full live Project-mode acceptance and a public video remain pending. See the [build checklist](../devpost/checklist.md#final-review).
+- MIT packaging was separately verified. Version **0.0.21** is now public on the [Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge); the registry version was checked without authentication. The published identity is `aatishdev.codenudge`.
+- The maintainer reports a manual test pass. The [build checklist](../devpost/checklist.md#final-review) preserves the earlier review record; broad live-provider coverage is not established by that report. A public demo-video link has not been added yet.
 
 ## Finish in this order
 
-1. **Rehearse the main loop with one provider/model.** Follow the [exact demo walkthrough](../examples/demo/README.md). Check first clue, unchanged rerun, retry 3 arrow, retry 6 diff, acceptance, saved rerun and output `18`. Keep any useful error details: version, provider/model, file, expected and actual result. Fix failures before recording.
+1. **Record real learning with one provider/model.** Try the JavaScript `filter()` exercise in the [README](../README.md#try-a-real-learning-exercise), write your own attempt and use CodeNudge when you actually get stuck. Keep useful details: version, provider/model, expected result and actual result. The [controlled walkthrough](../examples/demo/README.md) remains available for a separate escalation check, with deliberate retries disclosed.
 2. **Check the recording view.** Open a fresh playground; trust it deliberately; configure the provider before recording. Close unrelated panels and notifications, hide credentials, enlarge the text, and keep the source, CodeNudge and output visible. Use your actual editor theme. Capture a short sample and check readability and audio before the full take.
 3. **Record the working main journey.** Use the shot list below. Only include Project mode if its complete live rehearsal works. Provider menus and extra examples should not displace the successful Debug result.
 4. **Add real feedback if available.** Let another beginner try the same exercise with minimal prompting. Record what they did, whether the clue helped and where they got confused, with permission. Report observations accurately; do not turn one person's reaction into a claim of proven learning improvement. This is optional, not an eligibility requirement.
 5. **Finish the entry yourself.** Check the current submission form, write the required answers and upload the actual video. Resolve outstanding critical feedback and confirm the candidate is ready before treating final review as complete.
 
-Marketplace publication is a separate release task. The challenge rules require a public repository and working demo; publishing an extension is not a substitute for either.
+Marketplace publication is complete. The challenge still requires the public repository and working demo video; the extension listing does not replace either.
 
 ## Recording shot list: target 2 minutes 30 seconds
 
@@ -38,12 +38,12 @@ These are screen actions and timing targets. Use your own words for the narratio
 
 | Time | Capture | Visible proof |
 | --- | --- | --- |
-| 0:00–0:15 | Show CodeNudge beside the four-line expenses example; point out the intended total. | Audience, problem and working editor context are understandable. |
-| 0:15–0:40 | Run the original example, wait for the clue, then rerun unchanged. | A useful first hint; source stays yours and the stage does not advance on an identical run. Do not infer a measured token count from the UI. |
-| 0:40–1:05 | Show genuine changed-code retries through retry 3 using the walkthrough. | Inline guidance beside the relevant source line. |
-| 1:05–1:35 | Continue genuine retries to 6; open the proposed diff and explanation. | More help follows effort; proposed changes are reviewable. |
-| 1:35–1:55 | Accept the reviewed fix, save/run and show `18` with solved feedback. | The full end-to-end result. Keep this even if other segments need cutting. |
-| 1:55–2:15 | Optional: show a rehearsed Project plan and one conceptual nudge. Otherwise show the JavaScript logic example from the walkthrough. | One supporting capability, with no untested claims. |
+| 0:00–0:15 | Show a fresh JavaScript exercise and its expected passing scores. | A beginner learning a particular concept in their editor. |
+| 0:15–0:40 | Show your own attempt and run it. | Real code and the actual result, rather than a fabricated mistake. |
+| 0:40–1:10 | Show a real difficulty, the clue and your next change. Include inline/diff help if genuinely reached. | Guidance helping you understand and make progress. |
+| 1:10–1:30 | Show the correct result and test scores around the boundary of 50. | The completed learning task and a check beyond one input. |
+| 1:30–2:00 | Optional: show a rehearsed Project idea becoming an approved small task plan. | The distinct idea-to-tasks workflow. |
+| 2:00–2:15 | Show your saved attempt at that task and a nudge or review. | Coaching during real implementation; code stays yours. |
 | 2:15–2:30 | Show the public README and planning links. | Reproducible setup, open source and the planning process. Explain one actual learning experience yourself. |
 
 Trim provider wait time and repetitive edits in the final cut, with visible labels such as “Changed retry 3” and “Changed retry 6.” Preserve the actual stage thresholds and disclose deliberate unsuccessful rehearsal edits. Capture real responses; do not substitute fixtures or animated mockups for a live demonstration. If the model asks a question, include your real reply or choose a clearer rehearsed take.
