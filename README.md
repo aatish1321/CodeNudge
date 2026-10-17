@@ -101,23 +101,6 @@ The three new exercises are bundled starting with **0.0.17**. After updating, re
 
 For Python and plain JavaScript, the editor’s **Run with CodeNudge** button saves and runs the active file without manually attaching a terminal. For browser results, Postman responses, or long-running servers, use **⚙ → Share a run result**. Automatic browser/API inspection is outside this prototype.
 
-## Presenting CodeNudge
-
-**The pitch:** “CodeNudge helps you practise the thinking behind coding. It gives you a clue, guides you closer when you remain stuck, and helps you build your own ideas one small task at a time.”
-
-A short demo can follow this story:
-
-1. **Get unstuck.** Run the four-line Python expenses example and show the first clue.
-2. **Show help growing with effort.** Demonstrate changed-code retries, the inline pointer, and the explained diff. Review the fix, rerun, and show the result.
-3. **Show understanding beyond crashes.** Switch to the JavaScript countdown: it runs, but the output differs from its stated goal.
-4. **Build something of your own.** In Project mode, describe a tiny JavaScript expense tracker, choose features or a suggested plan, and show the first task and a nudge.
-5. **Show the freedom to choose.** Open provider settings and explain the hosted, local, and custom options.
-
-The [complete rehearsal guide](examples/demo/README.md) includes exact commands, retry variants, expected outputs, and what to show at each stage. The [multi-file practice projects](examples/projects/README.md) provide a harder Python invoice report and an asynchronous JavaScript account client. Their bugs are intentional learning material.
-
-For the hackathon recording, prioritize the complete Debug journey and its successful rerun. The [hackathon readiness guide](docs/hackathon-readiness.md) maps the judging criteria to observable behavior, tracks remaining checks and provides a 2½-minute recording shot list.
-
-Use a provider/model you have rehearsed with. Real replies and latency vary; selecting a provider in the menu alone is not a live demonstration of that provider. If you cut between attempts for a short recording, label the cuts.
 
 ## Built with
 
