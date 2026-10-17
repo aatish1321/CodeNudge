@@ -1,5 +1,7 @@
 # Your CodeNudge playground
 
+For fresh beginner testing, use the [three new practice exercises and tiny quiz project](practice/README.md). They cover syntax, runtime and logic mistakes without providing the fixes.
+
 Open the robot icon, use its gear to choose an AI provider and add its key, then open a project file and use **Run with CodeNudge** in the editor for Python/plain JavaScript. The same action is in the command palette. Identifiable manual terminal commands also work. CodeNudge follows runs across this folder. Save edits before rerunning. If the window says **Restricted Mode**, use CodeNudge’s **Trust this folder…** button or the top banner’s **Manage** link, then grant trust for this playground to enable hints.
 
 For a simple presentation, open [demo/README.md](demo/README.md). Start with four-line `demo/expenses.py` (`python3 demo/expenses.py`), then four-line `demo/countdown.js` (`node demo/countdown.js`). The walkthrough lists exactly how to show clues, retry 3’s arrow, retry 6’s reviewed fix, rejection/acceptance, success, and file switching.
