@@ -2,7 +2,7 @@
   "name": "coding-buddy",
   "displayName": "CodeNudge",
   "description": "A patient coding companion: clues first, answers when you need them.",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "publisher": "aatish1321",
   "license": "MIT",
   "repository": { "type": "git", "url": "https://github.com/aatish1321/CodeNudge.git" },
@@ -64,7 +64,7 @@
     "test:trust": "npm run compile && node scripts/test-host.cjs --restricted",
     "test:package": "node scripts/test-host.cjs --package",
     "vscode:prepublish": "npm run compile",
-    "package": "vsce package --no-dependencies --out codenudge-0.0.16.vsix"
+    "package": "vsce package --no-dependencies --out codenudge-0.0.17.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

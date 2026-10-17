@@ -91,11 +91,13 @@ npm ci
 npm run package
 ```
 
-1. In VS Code, open **Extensions → … → Install from VSIX** and select the generated `codenudge-0.0.16.vsix`.
+1. In VS Code, open **Extensions → … → Install from VSIX** and select the generated `codenudge-0.0.17.vsix`.
 2. Run **Developer: Reload Window**, then open a folder and click the robot icon.
 3. Open **⚙** to choose your provider, configure its model/connection, and add a key if needed.
 4. For a fresh practice folder, run **CodeNudge: Open Playground** from the Command Palette. Grant folder trust when you are ready; CodeNudge stays visible in Restricted Mode but code sharing and execution require trust.
-5. Choose **Debug** and open `demo/expenses.py`, or choose **Project** and describe an idea.
+5. Choose **Debug** and open `practice/count_up.py` for a fresh beginner exercise or `demo/expenses.py` for the presentation walkthrough. For a tiny Project-mode task, follow the [quiz practice guide](examples/practice/README.md#tiny-project-mode-project-a-three-question-quiz).
+
+The three new exercises are bundled starting with **0.0.17**. After updating, reload VS Code and open a **new** playground to get them; existing playground copies preserve your edits.
 
 For Python and plain JavaScript, the editor’s **Run with CodeNudge** button saves and runs the active file without manually attaching a terminal. For browser results, Postman responses, or long-running servers, use **⚙ → Share a run result**. Automatic browser/API inspection is outside this prototype.
 

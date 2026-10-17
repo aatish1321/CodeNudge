@@ -7,8 +7,8 @@ Status: **preparation only**. The learner is testing the installed extension. No
 | Item | Current value |
 | --- | --- |
 | Display name | CodeNudge |
-| Local test version | 0.0.16 |
-| Tested package | `codenudge-0.0.16.vsix` |
+| Local test version | 0.0.17 |
+| Tested package | `codenudge-0.0.17.vsix` |
 | Configured publisher ID | `aatish1321` — Marketplace ownership/access not verified |
 | Extension identity | `aatish1321.coding-buddy`, retained to preserve installed-user data |
 | Repository | [aatish1321/CodeNudge](https://github.com/aatish1321/CodeNudge) |

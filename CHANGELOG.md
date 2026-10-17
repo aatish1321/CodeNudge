@@ -2,6 +2,12 @@
 
 Versions listed below are local development builds. No Marketplace release is recorded yet.
 
+## 0.0.17
+
+- Bundled the three fresh beginner exercises and tiny quiz project guide in new playgrounds under `practice`.
+- Included the MIT license, hackathon readiness guide and direct planning-document links in the updated local package.
+- Existing playground copies keep their edits; reload after updating and open a new playground for the new files.
+
 ## 0.0.16
 
 - Added the MIT license and aligned package metadata and release documentation.

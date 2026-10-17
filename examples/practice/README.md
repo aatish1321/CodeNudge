@@ -4,9 +4,11 @@ These three exercises deliberately contain mistakes. Try them in order, without 
 
 ## Open and run
 
-Open this `practice` folder in ordinary desktop VS Code with CodeNudge installed. Trust the folder when you are ready, open the robot sidebar, choose Debug and configure your provider. Open an exercise and use **CodeNudge: Run with CodeNudge** from the Command Palette. It saves the active file before running. Python 3 and Node.js are needed for their respective examples.
+With **CodeNudge 0.0.17 or later**, run **CodeNudge: Open Playground** and expand `practice`. After updating the extension, run **Developer: Reload Window** first and open a new playground; existing copies retain your edits and do not gain new files automatically. You can also open this `practice` folder directly from the repository.
 
-This folder can be opened directly from the repository; you do not need to rebuild or reinstall the extension. Existing playground copies do not automatically gain these files.
+Trust the folder when you are ready, open the robot sidebar, choose Debug and configure your provider. Open an exercise and use **CodeNudge: Run with CodeNudge** from the Command Palette. It saves the active file before running. Python 3 and Node.js are needed for their respective examples.
+
+Opening the repository's practice folder directly also works with an existing installed extension; it does not require a rebuild.
 
 ## Three exercises
 

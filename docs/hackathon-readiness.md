@@ -19,7 +19,7 @@ The [official rules](https://learn-ai-basics.devpost.com/rules) give equal weigh
 - Approved planning documents are publicly accessible: [scope](../devpost/scope.md), [PRD](../devpost/prd.md), [spec](../devpost/spec.md).
 - Local history starts with planning on October 15, followed by implementation. The public repo was created October 15. This supports the timeline; it is not independent proof of an empty starting folder.
 - All **107 source tests pass** in this review. Earlier installed VS Code, Restricted Mode and live Groq stage evidence is recorded in the [verification report](../devpost/verification.md). Stage probes do not replace a complete live rehearsal.
-- MIT packaging was separately verified. The installed local candidate remains **0.0.16**; this preparation does not change its runtime or replace it.
+- MIT packaging was separately verified. The current local candidate is **0.0.17**, which bundles the new `practice` exercises; the learning-controller runtime is unchanged. Open a new playground after updating to receive the new examples.
 - Final learner review, full live Project-mode acceptance and a public video remain pending. See the [build checklist](../devpost/checklist.md#final-review).
 
 ## Finish in this order

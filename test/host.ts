@@ -25,6 +25,9 @@ export async function run(): Promise<void> {
   assert.equal(extension.packageJSON.displayName, 'CodeNudge');
   assert.ok(extension.packageJSON.contributes.commands.every((item: { title: string }) => item.title.startsWith('CodeNudge: ')));
   assert.equal(extension.packageJSON.contributes.configuration.title, 'CodeNudge');
+  for (const name of ['count_up.py', 'last_fruit.py', 'delivery.js', 'README.md']) {
+    assert.ok(existsSync(join(extension.extensionPath, 'examples/practice', name)), `Bundled practice file missing: ${name}`);
+  }
   const { TerminalCapture } = require(join(extension.extensionPath, 'out/src/terminal.js')) as typeof import('../src/terminal');
   const { EditorGuidance } = require(join(extension.extensionPath, 'out/src/editor.js')) as typeof import('../src/editor');
   const { configuration, keyName } = require(join(extension.extensionPath, 'out/src/settings.js')) as typeof import('../src/settings');
