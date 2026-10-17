@@ -13,7 +13,7 @@
 
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge"><img src="https://img.shields.io/badge/VS_Code-Install-64d8cb?style=flat-square" alt="Install CodeNudge for VS Code"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-f6c66c?style=flat-square" alt="MIT license"></a>
+  <a href="https://github.com/aatish1321/CodeNudge/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-f6c66c?style=flat-square" alt="MIT license"></a>
   <a href="https://learn-ai-basics.devpost.com/"><img src="https://img.shields.io/badge/Build_With_AI-Basics-b6a0ff?style=flat-square" alt="Built for Build With AI: Basics"></a>
 </p>
 
@@ -21,7 +21,7 @@
   <a href="#two-ways-to-learn">Explore the modes</a> ·
   <a href="#get-started">Get started</a> ·
   <a href="#hackathon-field-guide">Hackathon files</a> ·
-  <a href="CONTRIBUTING.md">Contribute</a>
+  <a href="https://github.com/aatish1321/CodeNudge/blob/main/CONTRIBUTING.md">Contribute</a>
 </p>
 
 ## Why CodeNudge?
