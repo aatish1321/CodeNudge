@@ -243,7 +243,7 @@ export function activate(context: vscode.ExtensionContext): void {
         if (choice) await action(choice.action);
       }
       else if (name === 'playground') await openPlayground(context.extensionUri);
-      else if (name === 'openSettings') await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:aatish1321.coding-buddy');
+      else if (name === 'openSettings') await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:aatishdev.coding-buddy');
       else if (name === 'removeKey') await vscode.commands.executeCommand('codingBuddy.removeKey');
       else if (name === 'toggleWatching') {
         const config = vscode.workspace.getConfiguration('codingBuddy');

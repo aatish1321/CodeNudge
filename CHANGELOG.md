@@ -6,8 +6,8 @@ Version 0.0.18 is the first Marketplace release candidate. Earlier versions were
 
 - Prepared the Marketplace preview listing with the robot icon, gallery styling, and source/support links.
 - Added installation guidance, provider cost information, and a clearer explanation of automatic code sharing and privacy.
-- Retained existing extension identity, settings, stored keys, and workspace progress.
-- Kept runtime behavior unchanged from the tested 0.0.17 build.
+- Corrected the Marketplace publisher to `aatishdev` (`aatishdev.coding-buddy`). Local builds under `aatish1321.coding-buddy` have a different identity; saved keys and workspace progress do not automatically transfer.
+- Updated the extension settings link for the corrected identity; teaching behavior is unchanged.
 
 ## 0.0.17
 
