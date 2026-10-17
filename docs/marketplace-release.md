@@ -4,7 +4,22 @@
 
 The maintainer explicitly authorized removing the Preview label and publishing an update on October 18, 2026. Version **0.0.22** removes the `preview` manifest property and includes the refreshed README. The extension identity, runtime code, settings, saved keys and Project storage are unchanged.
 
-Publication is **pending**. The public gallery currently reports **0.0.21** with the Preview flag. No VSCE publisher login, Azure publishing credentials or connected browser is available to this agent. Prepare and verify the exact `codenudge-0.0.22.vsix`, then upload it through the existing publisher account; do not paste publishing credentials into chat. Checks and the final artifact checksum are recorded below when complete.
+Publication is **pending**. The public gallery currently reports **0.0.21** with the Preview flag. No saved VSCE publisher login or Azure publishing credentials are available, and opening the publisher dashboard through the browser tool reports that no browser is available. Upload the checked `codenudge-0.0.22.vsix` through the existing publisher account; do not paste publishing credentials into chat.
+
+The release artifact was built from committed source **c9db9f0**, with learner edits excluded:
+
+- **107/107 source tests pass**; compilation and packaging pass.
+- The **45-entry VSIX** has version 0.0.22, identity `aatishdev.codenudge`, no manifest `preview` property, and `GalleryFlags` equal to `Public`.
+- All 13 compiled runtime files are unchanged. Exercises match committed source, the refreshed README is included, the MIT text matches, and private/development/credential-file exclusions pass.
+- The exact package installs as `aatishdev.codenudge@0.0.22` in an isolated VS Code profile, and installed entries match the artifact. The normal profile was not changed.
+
+Artifact SHA-256:
+
+```text
+f8103b2350a8ef12c48a1c689f0a0db56b961a6e3492ab6d9bb6bdcadc9ff16b
+```
+
+Existing native workflow coverage is recorded below; the full GUI workflow and fresh live-model guidance were not rerun for this metadata/documentation update.
 
 After upload, verify that the public gallery reports version 0.0.22 without `preview` in its flags. Record publication only after that succeeds. Removing the label does not expand the operating-system/provider coverage described in the verification limits.
 
