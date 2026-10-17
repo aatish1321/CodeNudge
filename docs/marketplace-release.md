@@ -1,61 +1,60 @@
-# CodeNudge Marketplace preparation
+# CodeNudge Marketplace release
 
-Status: **preparation only**. The learner is testing the installed extension. No Marketplace upload or publication is authorized by this checklist.
+## Release candidate
 
-## Current candidate
-
-| Item | Current value |
+| Item | Value |
 | --- | --- |
-| Display name | CodeNudge |
-| Local test version | 0.0.17 |
-| Tested package | `codenudge-0.0.17.vsix` |
-| Configured publisher ID | `aatish1321` — Marketplace ownership/access not verified |
-| Extension identity | `aatish1321.coding-buddy`, retained to preserve installed-user data |
+| Display name | CodeNudge (preview) |
+| Version | 0.0.18 |
+| Upload artifact | `codenudge-0.0.18.vsix` in the repository root |
+| Publisher | `aatish1321` — ownership confirmed by the maintainer |
+| Extension ID | `aatish1321.coding-buddy` — retained for settings, keys and progress compatibility |
 | Repository | [aatish1321/CodeNudge](https://github.com/aatish1321/CodeNudge) |
-| License | [MIT](../LICENSE); manifest and root lockfile metadata match |
-| Automated evidence | 107 source tests and installed VS Code/Restricted Mode checks passed for the branding build |
+| License | [MIT](../LICENSE) |
+| Runtime changes since tested 0.0.17 | None; listing, metadata and documentation polish only |
 
-Any code fixes found during testing need a fresh version/package and relevant checks. Keep the eventual published artifact identical to the final artifact tested.
+The maintainer reports completing manual testing. This candidate remains unpublished until it is uploaded through the publisher account. Do not change the publisher or package name to match the display name: that creates a different extension identity.
 
-## Learner test pass
+## Prepared for upload
 
-Record problems with the version, file/example, provider/model, expected result and actual result. The [demo walkthrough](../examples/demo/README.md) supplies small examples.
+- Marketplace description, existing PNG mascot icon, dark gallery banner, preview label and repository/support links.
+- README with installation/setup, provider requirements and possible API costs, progressive help and Project mode.
+- Privacy disclosure covering default automatic hints, shared context, secret storage and provider data handling.
+- Changelog, MIT license and troubleshooting guide.
+- Package exclusions for source tests, development scripts, local agent/skill folders, learner documents and credential filenames.
 
-- [ ] Install/reload, open the robot, configure a provider and run a saved file.
-- [ ] Debug: first clue → changed attempts → inline pointer → explained diff.
-- [ ] Reject a fix; accept a reviewed fix; check undo; save/rerun and verify the intended result.
-- [ ] Confirm unchanged reruns do not request fresh analysis and successful output clears stale error advice.
-- [ ] Switch Python/JavaScript and helper files without losing per-file Debug progress.
-- [ ] Project: try both feature choices, refine/approve a plan, request nudges/reviews and mark tasks done.
-- [ ] Reload the same folder and resume Project progress; cancel a project, including while a request is pending.
-- [ ] Check readable UI, keyboard actions, celebrations and animation settings in the theme/window size used for the demo.
-- [ ] Record which providers/local models were actually tested; keep untested combinations clearly identified.
-- [ ] Confirm the final candidate is ready for public use after any fixes.
+The release package uses the original committed `examples/loop_logic.js` and `examples/loop_syntax.py`. Local testing edits to those files are preserved in the working folder and excluded from this candidate. If rebuilding from the working folder, use a clean release checkout so those edits do not change the published exercises.
 
-## Release preparation
+## What you need to do
 
-- [x] CodeNudge public branding and setup README are in place.
-- [x] Changelog and support instructions are drafted.
-- [x] Provider/privacy/context limitations are documented.
-- [ ] Complete the learner test pass and resolve release-blocking bugs.
-- [x] Add the MIT license and update manifest/root lockfile metadata. Packaging now checks for the license without bypassing it.
-- [ ] Confirm control of the configured Marketplace publisher. Do not change the publisher/extension identity casually; existing installations use it.
-- [ ] Add a listing icon and screenshots from the final tested UI. Screenshots must not expose keys or private code.
-- [ ] Rebuild the final version from committed release content; inspect VSIX contents and repeat relevant source/installed checks.
-- [ ] Recheck final tracked files/history and package exclusions for credentials, learner-profile data and unrelated files.
-- [ ] Review the exact listing, version, artifact and support links, then explicitly approve publication.
+1. **Make the release source public.** Commit the release files and push them to the public CodeNudge repository. Keep unrelated agent folders and practice edits out of that commit. Marketplace README images and relative links are rewritten to GitHub URLs, so the release assets must be available there. Check the repository, README image and Issues link while signed out.
+2. **Sign in to your publisher.** Open [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/) with the Microsoft account that owns `aatish1321`.
+3. **Upload the exact candidate.** Choose **New extension → Visual Studio Code**, select `codenudge-0.0.18.vsix`, review the listing and publish. If this extension already exists, use its update/upload action and ensure 0.0.18 is newer than the published version. An already-used version requires a version bump and a fresh package.
+4. **Verify the public release.** Wait for Marketplace validation, open the listing, and install CodeNudge from Extensions in a fresh VS Code profile. Check that the robot opens, setup works and Open Playground includes the practice files.
+5. **Record publication.** The expected listing URL is `https://marketplace.visualstudio.com/items?itemName=aatish1321.coding-buddy`. Confirm it is live, then update the README/changelog publication status for the next release.
 
-The Marketplace README comes from the repository README. Microsoft’s [presentation guidance](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#marketplace-integration) recommends a changelog/support file and a PNG listing icon of at least 128 × 128 pixels. The existing activity-bar SVG is separate from the manifest’s listing `icon` field, which is currently absent. A square mascot icon is planned presentation work; it is not yet implemented.
+A real screenshot of Debug hints and one of Project mode would improve the listing. They are optional for publishing. Capture the actual extension with a public example and no keys, private code or personal paths; add them to the README and rebuild before uploading if desired.
 
-## First publication: manual upload
+Manual VSIX upload is an [officially supported publishing method](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#publish-an-extension) and avoids setting up CLI publishing credentials. No PAT or Azure pipeline is needed for this route. Keep account credentials and publishing tokens out of chat and the repository.
 
-Use the official [publishing guide](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#create-a-publisher) and [publisher management website](https://marketplace.visualstudio.com/manage/publishers/).
+## Verification and limits
 
-After the final tested candidate and publication are approved:
+Release checks on 2026-10-17:
 
-1. Sign in to the Marketplace with your Microsoft account and create or confirm the intended publisher.
-2. Use the website’s VS Code extension upload flow with the exact reviewed VSIX.
-3. Check the display name, README/images, version, provider requirements and support information before publishing.
-4. After publication, verify the public listing and install it from Marketplace in a fresh profile. Record the real listing URL and replace the README’s local-install-only status.
+- `npm test`: **107/107 passed**. Local HTTP and spawned runtime checks required execution outside the restricted sandbox.
+- `npm run package`: **passed**, 44 archive entries, approximately 1.88 MB. The packaging tool noted the existing 1.85 MB mascot image; no packaging errors.
+- Archive assertions: **passed** for manifest/version identity, icon dimensions and runtime assets, compiled runtime equality, canonical practice exercises, rewritten README image URL and development/credential-file exclusions.
+- `npm run test:package`: **passed** against the final VSIX in an isolated profile, including Debug, Project workflows, terminal capture, direct runs, reviewed edits and settings.
+- `node scripts/test-host.cjs --package --restricted`: **passed** against the final VSIX, including activation and view access before trust.
+- Public repository: **HTTP 200** without authentication.
+- `git diff --check`: **passed**.
 
-Manual VSIX upload is an officially supported publication method. CLI automation is optional; if added later, configure its publishing credentials locally or through an appropriate secret store. Never paste a publishing token into chat, source files or the repository. No automation credentials are needed for this preparation work.
+Upload artifact SHA-256:
+
+```text
+fe8f849941258f2715c3ce599dc8ce4f37efb50d8e79d64402194af8cd4b98cc
+```
+
+The release checklist itself is excluded from the VSIX, so recording the final checksum does not alter the tested artifact. The earlier [verification report](https://github.com/aatish1321/CodeNudge/blob/main/devpost/verification.md) describes development coverage.
+
+Automated provider checks use fixture responses and local HTTP transport. They do not establish current account/model availability or teaching quality for every provider. Windows/macOS runtime coverage and a run on the minimum supported VS Code version remain incomplete. The maintainer’s manual pass is reported separately from automated evidence.

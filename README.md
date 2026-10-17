@@ -82,16 +82,9 @@ Models must support the connection’s JSON output format. CodeNudge validates r
 
 ## Try it
 
-You need desktop VS Code, Node.js/npm to build the extension, and access to your chosen AI provider or local server. The manifest’s VS Code minimum is 1.93. Install Python or Node.js separately to run the corresponding practice examples.
+You need **desktop VS Code 1.93 or newer** and access to your chosen AI provider or local server. The extension is free; hosted AI services may charge for API use. A chat subscription does not include an API key. Install Python or Node.js separately to run the corresponding practice examples.
 
-```sh
-git clone https://github.com/aatish1321/CodeNudge.git
-cd CodeNudge
-npm ci
-npm run package
-```
-
-1. In VS Code, open **Extensions → … → Install from VSIX** and select the generated `codenudge-0.0.17.vsix`.
+1. In VS Code, search Extensions for **CodeNudge** by **aatish1321** and install it once the Marketplace listing is live. Before publication, use **Extensions → … → Install from VSIX** with `codenudge-0.0.18.vsix` (see [building from source](#development-and-verification)).
 2. Run **Developer: Reload Window**, then open a folder and click the robot icon.
 3. Open **⚙** to choose your provider, configure its model/connection, and add a key if needed.
 4. For a fresh practice folder, run **CodeNudge: Open Playground** from the Command Palette. Grant folder trust when you are ready; CodeNudge stays visible in Restricted Mode but code sharing and execution require trust.
@@ -99,7 +92,7 @@ npm run package
 
 The three new exercises are bundled starting with **0.0.17**. After updating, reload VS Code and open a **new** playground to get them; existing playground copies preserve your edits.
 
-For Python and plain JavaScript, the editor’s **Run with CodeNudge** button saves and runs the active file without manually attaching a terminal. For browser results, Postman responses, or long-running servers, use **⚙ → Share a run result**. Automatic browser/API inspection is outside this prototype.
+For Python and plain JavaScript, the editor’s **Run with CodeNudge** button saves and runs the active file without manually attaching a terminal. For browser results, Postman responses, or long-running servers, use **⚙ → Share a run result**. Automatic browser/API inspection is outside this preview.
 
 
 ## Built with
@@ -116,6 +109,8 @@ The local learning controller manages attempts, duplicate runs, source freshness
 
 API keys are stored in **VS Code SecretStorage**. Relevant code, bounded related-file excerpts, a source-file index, run output, and your clarification go to the selected provider or configured server when needed. Initial Project planning shares your idea and feature notes without collecting source code.
 
+Automatic checking is enabled by default in trusted folders once your connection is configured. Use **⚙ → Pause automatic hints** before running code you do not want shared. CodeNudge has no analytics or telemetry service; your AI provider or configured server has its own data-handling terms.
+
 Hidden files, known credential filenames, dependencies, generated files, Git-ignored sources, and paths escaping the workspace are excluded from coding context. Known saved keys are checked before sharing. These checks are not a universal secret detector, so keep credentials out of code and messages. A local endpoint receives the context locally; where it processes data depends on how you configure that server.
 
 CodeNudge does not execute AI-supplied commands or automatically apply project code. Full context limits and connection safeguards are documented in the [usage guide](docs/usage.md).
@@ -125,7 +120,11 @@ CodeNudge does not execute AI-supplied commands or automatically apply project c
 The Devpost Learn Skill Pack planning documents are available in the repository: [scope](devpost/scope.md), [product requirements](devpost/prd.md) and [technical spec](devpost/spec.md). The [build checklist](devpost/checklist.md) records implementation, revisions and remaining final-review work.
 
 ```sh
+git clone https://github.com/aatish1321/CodeNudge.git
+cd CodeNudge
+npm ci
 npm test
+npm run package
 ```
 
 To run from source, open this repository in VS Code and press **F5 → Run CodeNudge**. The Extension Development Host opens the examples folder. Additional checks:
@@ -142,7 +141,7 @@ Live Groq Debug-stage probes are recorded separately. New provider/local-model t
 
 ## Project status and contributions
 
-CodeNudge is a **working open-source hackathon prototype**, currently installed through a locally built VSIX. Marketplace publication is planned.
+CodeNudge is an **open-source preview**, developed for the Build With AI hackathon. The current release candidate is **0.0.18**; Marketplace publication is pending.
 
 The [Marketplace release checklist](docs/marketplace-release.md) tracks testing and publication preparation. See the [changelog](CHANGELOG.md) for local build history and [support guide](SUPPORT.md) for troubleshooting and bug reports.
 

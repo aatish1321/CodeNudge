@@ -1,6 +1,13 @@
 # Changelog
 
-Versions listed below are local development builds. No Marketplace release is recorded yet.
+Version 0.0.18 is the first Marketplace release candidate. Earlier versions were local development builds; publication is pending.
+
+## 0.0.18
+
+- Prepared the Marketplace preview listing with the robot icon, gallery styling, and source/support links.
+- Added installation guidance, provider cost information, and a clearer explanation of automatic code sharing and privacy.
+- Retained existing extension identity, settings, stored keys, and workspace progress.
+- Kept runtime behavior unchanged from the tested 0.0.17 build.
 
 ## 0.0.17
 

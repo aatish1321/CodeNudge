@@ -8,6 +8,7 @@ agent/**
 skills/**
 skills-lock.json
 devpost/**
+docs/marketplace-release.md
 test/**
 scripts/**
 src/**
