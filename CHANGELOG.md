@@ -1,6 +1,11 @@
 # Changelog
 
-Version 0.0.20 is the corrected Marketplace release candidate. Earlier versions were local development builds; publication is pending.
+Version 0.0.21 is the corrected Marketplace release candidate. Earlier versions were local development builds; publication is pending.
+
+## 0.0.21
+
+- Resized the Marketplace icon to 512 × 512 pixels (69,722 bytes), within both upload limits: 1024 × 1024 pixels and 1024 KB.
+- Runtime behavior is unchanged.
 
 ## 0.0.20
 

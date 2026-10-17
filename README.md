@@ -84,7 +84,7 @@ Models must support the connection’s JSON output format. CodeNudge validates r
 
 You need **desktop VS Code 1.93 or newer** and access to your chosen AI provider or local server. The extension is free; hosted AI services may charge for API use. A chat subscription does not include an API key. Install Python or Node.js separately to run the corresponding practice examples.
 
-1. In VS Code, search Extensions for **CodeNudge** by **aatishdev** and install it once the Marketplace listing is live. Before publication, use **Extensions → … → Install from VSIX** with `codenudge-0.0.20.vsix` (see [building from source](#development-and-verification)).
+1. In VS Code, search Extensions for **CodeNudge** by **aatishdev** and install it once the Marketplace listing is live. Before publication, use **Extensions → … → Install from VSIX** with `codenudge-0.0.21.vsix` (see [building from source](#development-and-verification)).
 2. Run **Developer: Reload Window**, then open a folder and click the robot icon.
 3. Open **⚙** to choose your provider, configure its model/connection, and add a key if needed.
 4. For a fresh practice folder, run **CodeNudge: Open Playground** from the Command Palette. Grant folder trust when you are ready; CodeNudge stays visible in Restricted Mode but code sharing and execution require trust.
@@ -141,7 +141,7 @@ Live Groq Debug-stage probes are recorded separately. New provider/local-model t
 
 ## Project status and contributions
 
-CodeNudge is an **open-source preview**, developed for the Build With AI hackathon. The current release candidate is **0.0.20**; Marketplace publication is pending.
+CodeNudge is an **open-source preview**, developed for the Build With AI hackathon. The current release candidate is **0.0.21**; Marketplace publication is pending.
 
 The [Marketplace release checklist](docs/marketplace-release.md) tracks testing and publication preparation. See the [changelog](CHANGELOG.md) for local build history and [support guide](SUPPORT.md) for troubleshooting and bug reports.
 
