@@ -1,5 +1,13 @@
 # CodeNudge Marketplace release
 
+## 0.0.22 update
+
+The maintainer explicitly authorized removing the Preview label and publishing an update on October 18, 2026. Version **0.0.22** removes the `preview` manifest property and includes the refreshed README. The extension identity, runtime code, settings, saved keys and Project storage are unchanged.
+
+Publication is **pending**. The public gallery currently reports **0.0.21** with the Preview flag. No VSCE publisher login, Azure publishing credentials or connected browser is available to this agent. Prepare and verify the exact `codenudge-0.0.22.vsix`, then upload it through the existing publisher account; do not paste publishing credentials into chat. Checks and the final artifact checksum are recorded below when complete.
+
+After upload, verify that the public gallery reports version 0.0.22 without `preview` in its flags. Record publication only after that succeeds. Removing the label does not expand the operating-system/provider coverage described in the verification limits.
+
 ## Published release
 
 | Item | Value |

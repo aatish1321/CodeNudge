@@ -2,11 +2,10 @@
   "name": "codenudge",
   "displayName": "CodeNudge",
   "description": "Learn to debug with progressive AI hints, reviewed fixes, and step-by-step project guidance.",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "publisher": "aatishdev",
   "license": "MIT",
   "icon": "media/marketplace-icon.jpg",
-  "preview": true,
   "homepage": "https://github.com/aatish1321/CodeNudge#readme",
   "bugs": { "url": "https://github.com/aatish1321/CodeNudge/issues" },
   "qna": "https://github.com/aatish1321/CodeNudge/issues",
@@ -70,7 +69,7 @@
     "test:trust": "npm run compile && node scripts/test-host.cjs --restricted",
     "test:package": "node scripts/test-host.cjs --package",
     "vscode:prepublish": "npm run compile",
-    "package": "vsce package --no-dependencies --out codenudge-0.0.21.vsix"
+    "package": "vsce package --no-dependencies --out codenudge-0.0.22.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

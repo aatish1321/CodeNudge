@@ -76,7 +76,7 @@ You need desktop **VS Code 1.93 or newer** and a supported AI connection. Hosted
 
 The playground includes [three beginner exercises and a tiny quiz project](examples/practice/README.md), a [controlled feature walkthrough](examples/demo/README.md), and [harder multi-file Python/JavaScript examples](examples/projects/README.md). Their mistakes are intentional practice material. After an update, reload VS Code and open a new playground; existing copies preserve your edits.
 
-For browser results, Postman responses and long-running servers, use **⚙ → Share a run result**. Automatic browser/API inspection is outside this preview. More setup and troubleshooting details are in the [usage guide](docs/usage.md) and [support guide](SUPPORT.md).
+For browser results, Postman responses and long-running servers, use **⚙ → Share a run result**. Automatic browser/API inspection is outside this release. More setup and troubleshooting details are in the [usage guide](docs/usage.md) and [support guide](SUPPORT.md).
 
 <details>
 <summary>Upgrading from an early local build?</summary>
@@ -166,7 +166,7 @@ npm test
 npm run package
 ```
 
-Install the generated `codenudge-0.0.21.vsix` through **Extensions → … → Install from VSIX**, or press **F5 → Run CodeNudge** in the repository to open the Extension Development Host.
+Install the generated `codenudge-0.0.22.vsix` through **Extensions → … → Install from VSIX**, or press **F5 → Run CodeNudge** in the repository to open the Extension Development Host.
 
 <details>
 <summary>Additional VS Code integration checks</summary>
@@ -185,7 +185,7 @@ The recorded verification includes **107 source tests**, installed VS Code workf
 
 ## Contribute a nudge
 
-CodeNudge is a published **open-source preview**, currently **0.0.21**. Helpful contributions include clearer beginner guidance, reproducible bug reports, provider compatibility checks and verified language/toolchain examples.
+CodeNudge is an **open-source learning companion**, available on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge). Helpful contributions include clearer beginner guidance, reproducible bug reports, provider compatibility checks and verified language/toolchain examples.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) to work on the code, [SUPPORT.md](SUPPORT.md) for troubleshooting, or the [changelog](CHANGELOG.md) for the release history. Remove credentials and private code from reports and recordings.
 
