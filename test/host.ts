@@ -20,7 +20,7 @@ async function disableTestHistory(terminal: vscode.Terminal): Promise<void> {
 }
 
 export async function run(): Promise<void> {
-  const extension = vscode.extensions.getExtension('aatishdev.coding-buddy');
+  const extension = vscode.extensions.getExtension('aatishdev.codenudge');
   assert.ok(extension, 'Development extension must be discovered');
   assert.equal(extension.packageJSON.displayName, 'CodeNudge');
   assert.ok(extension.packageJSON.contributes.commands.every((item: { title: string }) => item.title.startsWith('CodeNudge: ')));

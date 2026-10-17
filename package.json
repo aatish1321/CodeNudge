@@ -1,8 +1,8 @@
 {
-  "name": "coding-buddy",
+  "name": "codenudge",
   "displayName": "CodeNudge",
   "description": "Learn to debug with progressive AI hints, reviewed fixes, and step-by-step project guidance.",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "publisher": "aatishdev",
   "license": "MIT",
   "icon": "media/buddy.png",
@@ -70,7 +70,7 @@
     "test:trust": "npm run compile && node scripts/test-host.cjs --restricted",
     "test:package": "node scripts/test-host.cjs --package",
     "vscode:prepublish": "npm run compile",
-    "package": "vsce package --no-dependencies --out codenudge-0.0.18.vsix"
+    "package": "vsce package --no-dependencies --out codenudge-0.0.19.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

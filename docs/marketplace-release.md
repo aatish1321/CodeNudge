@@ -5,15 +5,15 @@
 | Item | Value |
 | --- | --- |
 | Display name | CodeNudge (preview) |
-| Version | 0.0.18 |
-| Upload artifact | `codenudge-0.0.18.vsix` in the repository root |
+| Version | 0.0.19 |
+| Upload artifact | `codenudge-0.0.19.vsix` in the repository root |
 | Publisher | `aatishdev` — confirmed by the Marketplace upload error |
-| Extension ID | `aatishdev.coding-buddy` — corrected to match the actual publisher |
+| Extension ID | `aatishdev.codenudge` — corrected to match the actual publisher |
 | Repository | [aatish1321/CodeNudge](https://github.com/aatish1321/CodeNudge) |
 | License | [MIT](../LICENSE) |
 | Runtime changes since tested 0.0.17 | Settings link targets the corrected extension ID; teaching behavior unchanged |
 
-The maintainer reports completing manual testing. This candidate remains unpublished until it is uploaded through the publisher account. The previous upload was rejected because the manifest used `aatish1321`. The corrected publisher is `aatishdev`; the GitHub account remains `aatish1321`. This creates a different identity from earlier local builds. Remove the old local extension before using the new one to avoid duplicate commands/views; re-enter your API key and expect workspace progress to start fresh. Automatic migration is not included.
+The maintainer reports completing manual testing. This candidate remains unpublished until it is uploaded through the publisher account. The previous upload was rejected because the manifest used `aatish1321`. The package name is now `codenudge` after Marketplace rejected `coding-buddy` as already existing. The corrected publisher is `aatishdev`; the GitHub account remains `aatish1321`. This creates a different identity from earlier local builds. Remove the old local extension before using the new one to avoid duplicate commands/views; re-enter your API key and expect workspace progress to start fresh. Automatic migration is not included.
 
 ## Prepared for upload
 
@@ -29,9 +29,9 @@ The release package uses the original committed `examples/loop_logic.js` and `ex
 
 1. **Make the release source public.** Commit the release files and push them to the public CodeNudge repository. Keep unrelated agent folders and practice edits out of that commit. Marketplace README images and relative links are rewritten to GitHub URLs, so the release assets must be available there. Check the repository, README image and Issues link while signed out.
 2. **Sign in to your publisher.** Open [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/) with the Microsoft account that owns `aatishdev`.
-3. **Upload the exact candidate.** Choose **New extension → Visual Studio Code**, select `codenudge-0.0.18.vsix`, review the listing and publish. If this extension already exists, use its update/upload action and ensure 0.0.18 is newer than the published version. An already-used version requires a version bump and a fresh package.
+3. **Upload the exact candidate.** Choose **New extension → Visual Studio Code**, select `codenudge-0.0.19.vsix`, review the listing and publish. If this extension already exists, use its update/upload action and ensure 0.0.19 is newer than the published version. An already-used version requires a version bump and a fresh package.
 4. **Verify the public release.** Wait for Marketplace validation, open the listing, and install CodeNudge from Extensions in a fresh VS Code profile. Check that the robot opens, setup works and Open Playground includes the practice files.
-5. **Record publication.** The expected listing URL is `https://marketplace.visualstudio.com/items?itemName=aatishdev.coding-buddy`. Confirm it is live, then update the README/changelog publication status for the next release.
+5. **Record publication.** The expected listing URL is `https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge`. Confirm it is live, then update the README/changelog publication status for the next release.
 
 A real screenshot of Debug hints and one of Project mode would improve the listing. They are optional for publishing. Capture the actual extension with a public example and no keys, private code or personal paths; add them to the README and rebuild before uploading if desired.
 
@@ -52,7 +52,7 @@ Release checks on 2026-10-17:
 Upload artifact SHA-256:
 
 ```text
-020f565b202e34cfd53b856e03235810841a852b5bd1cd2e057e401606e42ff7
+c188fecb0bc21924d76954f7839c7dd5f6cc3230ed8aa8abb389a3dbc04f78c7
 ```
 
 The release checklist itself is excluded from the VSIX, so recording the final checksum does not alter the tested artifact. The earlier [verification report](https://github.com/aatish1321/CodeNudge/blob/main/devpost/verification.md) describes development coverage.

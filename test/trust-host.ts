@@ -4,7 +4,7 @@ import { writeFile } from 'node:fs/promises';
 
 export async function run(): Promise<void> {
   assert.equal(vscode.workspace.isTrusted, false, 'This check must actually run in Restricted Mode');
-  const extension = vscode.extensions.getExtension('aatishdev.coding-buddy');
+  const extension = vscode.extensions.getExtension('aatishdev.codenudge');
   assert.ok(extension);
   assert.equal(extension.packageJSON.capabilities.untrustedWorkspaces.supported, 'limited');
   await extension.activate();

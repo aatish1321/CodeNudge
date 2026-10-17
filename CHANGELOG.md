@@ -1,6 +1,11 @@
 # Changelog
 
-Version 0.0.18 is the first Marketplace release candidate. Earlier versions were local development builds; publication is pending.
+Version 0.0.19 is the corrected Marketplace release candidate. Earlier versions were local development builds; publication is pending.
+
+## 0.0.19
+
+- Changed the package name to `codenudge`, matching the CodeNudge product name. The Marketplace extension ID is `aatishdev.codenudge`.
+- Updated settings links and installed-extension checks for that ID. Earlier local identities do not automatically transfer saved keys or workspace progress.
 
 ## 0.0.18
 
