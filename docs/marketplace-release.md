@@ -5,8 +5,8 @@
 | Item | Value |
 | --- | --- |
 | Display name | CodeNudge (preview) |
-| Version | 0.0.19 |
-| Upload artifact | `codenudge-0.0.19.vsix` in the repository root |
+| Version | 0.0.20 |
+| Upload artifact | `codenudge-0.0.20.vsix` in the repository root |
 | Publisher | `aatishdev` — confirmed by the Marketplace upload error |
 | Extension ID | `aatishdev.codenudge` — corrected to match the actual publisher |
 | Repository | [aatish1321/CodeNudge](https://github.com/aatish1321/CodeNudge) |
@@ -17,7 +17,7 @@ The maintainer reports completing manual testing. This candidate remains unpubli
 
 ## Prepared for upload
 
-- Marketplace description, existing PNG mascot icon, dark gallery banner, preview label and repository/support links.
+- Marketplace description, compressed square JPEG listing icon (276,157 bytes; below the 1024 KB limit), dark gallery banner, preview label and repository/support links.
 - README with installation/setup, provider requirements and possible API costs, progressive help and Project mode.
 - Privacy disclosure covering default automatic hints, shared context, secret storage and provider data handling.
 - Changelog, MIT license and troubleshooting guide.
@@ -29,7 +29,7 @@ The release package uses the original committed `examples/loop_logic.js` and `ex
 
 1. **Make the release source public.** Commit the release files and push them to the public CodeNudge repository. Keep unrelated agent folders and practice edits out of that commit. Marketplace README images and relative links are rewritten to GitHub URLs, so the release assets must be available there. Check the repository, README image and Issues link while signed out.
 2. **Sign in to your publisher.** Open [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/) with the Microsoft account that owns `aatishdev`.
-3. **Upload the exact candidate.** Choose **New extension → Visual Studio Code**, select `codenudge-0.0.19.vsix`, review the listing and publish. If this extension already exists, use its update/upload action and ensure 0.0.19 is newer than the published version. An already-used version requires a version bump and a fresh package.
+3. **Upload the exact candidate.** Choose **New extension → Visual Studio Code**, select `codenudge-0.0.20.vsix`, review the listing and publish. If this extension already exists, use its update/upload action and ensure 0.0.20 is newer than the published version. An already-used version requires a version bump and a fresh package.
 4. **Verify the public release.** Wait for Marketplace validation, open the listing, and install CodeNudge from Extensions in a fresh VS Code profile. Check that the robot opens, setup works and Open Playground includes the practice files.
 5. **Record publication.** The expected listing URL is `https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge`. Confirm it is live, then update the README/changelog publication status for the next release.
 
@@ -41,18 +41,18 @@ Manual VSIX upload is an [officially supported publishing method](https://code.v
 
 Release checks on 2026-10-17:
 
-- `npm test`: **107/107 passed**. Local HTTP and spawned runtime checks required execution outside the restricted sandbox.
-- `npm run package`: **passed**, 44 archive entries, approximately 1.88 MB. The packaging tool noted the existing 1.85 MB mascot image; no packaging errors.
+- `npm test`: **107/107 passed** for 0.0.19; 0.0.20 changes only listing assets, version metadata and documentation. Local HTTP and spawned runtime checks required execution outside the restricted sandbox.
+- `npm run package`: **passed**, 45 archive entries. The listing icon is a separate 276,157-byte JPEG. The existing 1.85 MB in-editor mascot remains bundled and is not the listing icon.
 - Archive assertions: **passed** for manifest/version identity, icon dimensions and runtime assets, compiled runtime equality, canonical practice exercises, rewritten README image URL and development/credential-file exclusions.
 - `npm run test:package`: **passed** against the final VSIX in an isolated profile, including Debug, Project workflows, terminal capture, direct runs, reviewed edits and settings.
-- `node scripts/test-host.cjs --package --restricted`: **passed** against the final VSIX, including activation and view access before trust.
+- `node scripts/test-host.cjs --package --restricted`: **passed** for 0.0.19, including activation and view access before trust; runtime is unchanged in 0.0.20.
 - Public repository: **HTTP 200** without authentication.
 - `git diff --check`: **passed**.
 
 Upload artifact SHA-256:
 
 ```text
-c188fecb0bc21924d76954f7839c7dd5f6cc3230ed8aa8abb389a3dbc04f78c7
+d9ae0e10e5fec9bf5d50286f98a1965ed7b3bb59108ae5b471ef2d4ab7f287e7
 ```
 
 The release checklist itself is excluded from the VSIX, so recording the final checksum does not alter the tested artifact. The earlier [verification report](https://github.com/aatish1321/CodeNudge/blob/main/devpost/verification.md) describes development coverage.

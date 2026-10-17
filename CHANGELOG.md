@@ -1,6 +1,11 @@
 # Changelog
 
-Version 0.0.19 is the corrected Marketplace release candidate. Earlier versions were local development builds; publication is pending.
+Version 0.0.20 is the corrected Marketplace release candidate. Earlier versions were local development builds; publication is pending.
+
+## 0.0.20
+
+- Used the supplied compressed square JPEG for the Marketplace icon (276,157 bytes), below the 1024 KB upload limit.
+- Kept the in-editor mascot and runtime behavior unchanged.
 
 ## 0.0.19
 
