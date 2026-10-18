@@ -4,7 +4,7 @@
 
 The maintainer explicitly authorized removing the Preview label and publishing an update on October 18, 2026. Version **0.0.22** removes the `preview` manifest property and includes the refreshed README. The extension identity, runtime code, settings, saved keys and Project storage are unchanged.
 
-Publication is **pending**. The public gallery currently reports **0.0.21** with the Preview flag. No saved VSCE publisher login or Azure publishing credentials are available, and opening the publisher dashboard through the browser tool reports that no browser is available. Upload the checked `codenudge-0.0.22.vsix` through the existing publisher account; do not paste publishing credentials into chat.
+Publication is **confirmed**. A subsequent unauthenticated gallery check on October 18, 2026 reports **0.0.22** with flags `validated, public` and no `preview`. The agent prepared the checked package but could not perform the authenticated upload because no publisher login or connected browser was available. The public registry now confirms the requested release state.
 
 The release artifact was built from committed source **c9db9f0**, with learner edits excluded:
 
@@ -21,28 +21,28 @@ f8103b2350a8ef12c48a1c689f0a0db56b961a6e3492ab6d9bb6bdcadc9ff16b
 
 Existing native workflow coverage is recorded below; the full GUI workflow and fresh live-model guidance were not rerun for this metadata/documentation update.
 
-After upload, verify that the public gallery reports version 0.0.22 without `preview` in its flags. Record publication only after that succeeds. Removing the label does not expand the operating-system/provider coverage described in the verification limits.
+The version and absence of `preview` are verified against the public gallery. This registry check does not establish unique/active users or fresh post-publication runtime/model behavior. Removing the label does not expand the operating-system/provider coverage described in the verification limits.
 
 ## Published release
 
 | Item | Value |
 | --- | --- |
-| Display name | CodeNudge (preview) |
-| Version | 0.0.21 |
-| Published artifact | `codenudge-0.0.21.vsix` in the repository root |
+| Display name | CodeNudge |
+| Version | 0.0.22 |
+| Prepared upload artifact | `codenudge-0.0.22.vsix` in the repository root |
 | Publisher | `aatishdev` — verified against the public Marketplace listing |
 | Extension ID | `aatishdev.codenudge` |
 | Repository | [aatish1321/CodeNudge](https://github.com/aatish1321/CodeNudge) |
 | License | [MIT](../LICENSE) |
 | Runtime changes since tested 0.0.17 | Settings link targets the corrected extension ID; teaching behavior unchanged |
 
-The maintainer reports completing manual testing and publication. An unauthenticated check on October 17, 2026 confirms the [public listing](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge), and the Marketplace gallery API returns version **0.0.21** for `aatishdev.codenudge`.
+The maintainer reports completing manual testing and publication. The [public listing](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) and gallery API now report version **0.0.22** without Preview, checked October 18, 2026. Version 0.0.21 was the previously verified public release.
 
 Earlier upload attempts used the wrong publisher or an unavailable package name. The published publisher is `aatishdev`; the GitHub account remains `aatish1321`. This is a different identity from earlier local `coding-buddy` builds. Remove an old local extension to avoid duplicate commands/views, re-enter your key, and expect workspace progress to start fresh. Automatic migration between identities is not included.
 
 ## Included in the release
 
-- Marketplace description, compressed square JPEG listing icon (512 × 512 pixels; 69,722 bytes; below both upload limits), dark gallery banner, preview label and repository/support links.
+- Marketplace description, compressed square JPEG listing icon (512 × 512 pixels; 69,722 bytes; below both upload limits), dark gallery banner and repository/support links. The Preview label is removed in 0.0.22.
 - README with installation/setup, provider requirements and possible API costs, progressive help and Project mode.
 - Privacy disclosure covering default automatic hints, shared context, secret storage and provider data handling.
 - Changelog, MIT license and troubleshooting guide.
@@ -52,9 +52,9 @@ The release package uses the original committed `examples/loop_logic.js` and `ex
 
 ## For the next Marketplace update
 
-1. **Choose a new version and build from committed release content.** Version 0.0.21 is already published. Keep unrelated agent folders and learner practice edits out of the package; run relevant checks and inspect the exact VSIX contents.
+1. **Choose a new version and build from committed release content.** Version 0.0.22 is already published. Keep unrelated agent folders and learner practice edits out of the package; run relevant checks and inspect the exact VSIX contents.
 2. **Make source/assets public.** Push the intended release commit and check the README, images and support links while signed out. Marketplace relative links are rewritten to GitHub URLs.
-3. **Review the exact artifact and upload the update.** Use [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/) for `aatishdev` and the existing CodeNudge extension. Upload the newly versioned VSIX after reviewing it; do not reuse the published 0.0.21 version.
+3. **Review the exact artifact and upload the update.** Use [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/) for `aatishdev` and the existing CodeNudge extension. Upload the newly versioned VSIX after reviewing it; do not reuse the published 0.0.22 version.
 4. **Verify the updated public install.** Check the listing without authentication and try the exact release in a fresh profile, including provider setup and a real clue. Record the actual coverage.
 5. **Update the release record.** Record the new version, checks and checksum. A GitHub README edit alone does not update the README already bundled in the Marketplace release.
 
