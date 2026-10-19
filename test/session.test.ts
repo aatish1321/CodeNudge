@@ -22,20 +22,19 @@ test('rejected guidance supplies a safe diagnostic code without echoing model te
   });
 });
 
-test('contradictory issue stages recover as clues without unlocking edits or exposing a new-issue fix', () => {
+test('missing stages recover as clues and new diagnoses use only the host-unlocked stage', () => {
   const none = validateReply({ ...clue, level: 'none', line: 2 }, run, 'clue');
   assert.equal(none.level, 'clue');
   assert.equal(none.message, clue.message);
   const inline = validateReply({ ...clue, level: 'inline', line: 2, inlineHint: 'Look here.' }, run, 'inline');
-  assert.equal(inline.level, 'clue');
-  assert.equal(inline.inlineHint, null);
+  assert.equal(inline.level, 'inline');
+  assert.equal(inline.inlineHint, 'Look here.');
   const fixed = { ...clue, level: 'fix', message: 'SECRET CORRECTED CODE', replacement: 'print(1)', explanation: 'SECRET FIX' };
   const recovered = validateReply(fixed, run, 'fix');
-  assert.equal(recovered.level, 'clue');
+  assert.equal(recovered.level, 'fix');
   assert.equal(recovered.relationship, 'new');
-  assert.equal(recovered.replacement, null);
-  assert.equal(recovered.explanation, null);
-  assert.doesNotMatch(recovered.message, /SECRET/);
+  assert.equal(recovered.replacement, 'print(1)');
+  assert.equal(recovered.explanation, 'SECRET FIX');
   assert.doesNotMatch(validateReply({ ...fixed, level: 'none' }, run, 'clue').message, /SECRET/);
   assert.throws(() => validateReply(fixed, run, 'clue'), (error: unknown) => error instanceof GuidanceValidationError && error.reason === 'stage_exceeded');
   assert.throws(() => validateReply({ ...clue, level: 'none', line: 999 }, run, 'clue'), /couldn’t read/);
@@ -86,21 +85,21 @@ test('three changed-code retries unlock inline guidance, then three more unlock 
   }
 });
 
-test('a new issue resets progression without causing an unchanged rerun request', () => {
+test('a changed diagnosis preserves effort without causing an unchanged rerun request', () => {
   const session = new LearningSession();
   session.apply(run, clue, 'initial', true); session.retries = 2;
   const changed = { ...run, version: 2, source: `${run.source}\n# different issue` };
   assert.equal(session.allowedLevel(changed, true), 'inline');
   session.apply(changed, clue, session.fingerprint(changed, 'gemini', 'fixture', true), true);
-  assert.equal(session.retries, 0);
+  assert.equal(session.retries, 3);
   assert.equal(session.isDuplicate(session.fingerprint(changed, 'gemini', 'fixture', true)), true);
 });
 
-test('an unknown relationship cannot unlock the next help stage', () => {
+test('model uncertainty about the relationship cannot erase a changed attempt', () => {
   const session = new LearningSession(); session.apply(run, clue, 'initial', true); session.retries = 2;
   const changed = { ...run, source: `${run.source}\n# try` };
-  assert.throws(() => session.apply(changed, { ...clue, relationship: 'unknown', level: 'inline', line: 2, inlineHint: 'Look here' }, 'next', true));
-  assert.equal(session.retries, 2);
+  session.apply(changed, { ...clue, relationship: 'unknown', level: 'inline', line: 2, inlineHint: 'Look here' }, 'next', true);
+  assert.equal(session.retries, 3);
 });
 
 test('success requires clear intended behavior and sufficient observed evidence', () => {

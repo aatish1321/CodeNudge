@@ -15,7 +15,7 @@ Source: `scope.md > The Unique Kernel`, `Who It's For`, and `The POC Boundary`.
 2. Clicking the icon opens a quiet side panel: no prefilled conversation, with a text area for clarification. The character is part of the buddy's identity.
 3. The learner configures a supported AI provider using their own API key.
 4. With code open, the learner runs it. An error or unexpected outcome prompts the buddy to offer a likely problem category and a clue in the panel, without requiring a “what is wrong?” message.
-5. The learner changes the code and runs it again. Three unsuccessful attempts on the same issue lead to an inline hint pointing at the relevant code.
+5. The learner changes the code and runs it again. Three unsuccessful changed-code retries during the unresolved task lead to an inline hint pointing at the relevant code.
 6. Three further unsuccessful attempts lead to a proposed fix displayed as a colored diff, with an explanation of what would change and why in the panel.
 7. The learner accepts or rejects the proposal. The buddy does not apply it without acceptance.
 8. When the run result matches the expected behavior described in the top-of-file comment or the learner's clarification, the attempt count resets and confetti celebrates if enabled. If intended behavior is unclear, the buddy asks in the text area before claiming success.
@@ -58,7 +58,7 @@ Source: `scope.md > The Core Loop`.
 ### Attempts and Escalation
 
 - The initial error produces the first clue and starts the issue at zero retry attempts.
-- An attempt means changed code is run and the same issue remains.
+- An attempt means changed code is run while the task in this file is unresolved. A different error type does not reset the count; verified success or Start a new issue does. This rule was revised after learner testing on October 19 showed genuine effort being erased.
 - Three unsuccessful attempts after the initial clue trigger line-specific inline guidance.
 - Three more unsuccessful attempts after the inline hint trigger a proposed fix and explanation.
 - Typing alone, time passing, and clarification replies do not count as unsuccessful code attempts.
@@ -110,7 +110,7 @@ The no-code, waiting, connection-failure, and outdated-result handling above are
 
 - Opening the sidebar icon reveals the character element, quiet conversation area, and clarification text area without an unsolicited conversation.
 - A Python syntax-error demo produces a problem-category clue without a typed “what is wrong?” request or an immediate complete fix.
-- Three changed-code attempts that leave the same issue unresolved produce an arrow-style inline hint. Three further unsuccessful attempts produce a diff and explanation.
+- Three changed-code retries during an unresolved task produce an arrow-style inline hint. Three further unsuccessful attempts produce a diff and explanation.
 - Rerunning unchanged code with the same context leaves both the attempt count and number of AI requests unchanged.
 - Typing a clarification can receive a response without requiring a code change.
 - Accepting a current proposal applies the displayed change. Rejecting it preserves the file. An outdated proposal cannot overwrite newer work.

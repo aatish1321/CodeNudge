@@ -2,6 +2,13 @@
 
 Release changes are listed below. The [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) shows the currently published version; preparing a package does not publish it.
 
+## 0.0.26
+
+- Preserved changed-code retry effort across different errors in an unresolved task. Moving from a name error to a type error or output issue no longer restarts the clue stage.
+- Made the host’s count control the provider help stage even for a new diagnosis, and refreshed the current issue summary and inline location.
+- Kept the initial clue/three retries/three more rhythm, unchanged-run caching, separate file sessions, reviewed edits and verified-success/manual reset boundaries.
+- Added a real Python greeting regression covering changing errors and a reviewed fix, with model replies supplied as fixtures.
+
 ## 0.0.25
 
 - Recovered contradictory AI issue/stage labels as safe clues instead of repeatedly showing “couldn’t read that AI reply.”

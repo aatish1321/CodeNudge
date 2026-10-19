@@ -11,7 +11,7 @@ Coding Buddy is one extension running inside desktop VS Code. Its robot panel sh
 
 The AI identifies the likely issue and writes teaching guidance. Ordinary extension code counts attempts and controls which level of help is allowed, so switching providers does not bypass the three-plus-three rule. Editor arrows are visual annotations, not extra text inserted into the learner's file. Proposed fixes open in VS Code's change-review view and apply only after acceptance.
 
-For diagnostics exposing an exception type and valid source line, retain that identity across changed-code retries even if the model calls a rephrased error new. Count such retries before the provider request so a malformed response does not erase genuine effort. At three retries, render a local pointer to the known line even if the model omits its own inline hint. Other diagnostic formats still depend on model classification/line evidence. Keep the first issue description stable and send the latest hint separately. For confirmed continuing diagnostics, constrain the provider schema to the unlocked inline/fix stage or none.
+Post-test revision, October 19: count changed-code retries locally across the unresolved task in each file, including transitions between exception types and logic issues. Once an initial issue exists, count retries before the provider request so malformed replies cannot erase effort. At three retries, point to the current known diagnostic or validated model location, never a stale line from a different error. Logic locations still depend on model evidence. Refresh the issue summary after each valid diagnosis. Every provider schema uses the host-unlocked stage or none; a model new/unknown relationship cannot reset or gate effort. Verified success or an explicit Start a new issue resets the count.
 
 A fresh source/result clears obsolete cards and editor guidance before analysis. A successful exit with no error in current output cannot display a historical syntax/runtime diagnosis: ask about expected output instead, without claiming logic correctness. Discard irrelevant edit fields on success/clarification responses. Cache attempted requests, including failures; only the explicit Retry action clears that cache for an unchanged result. The settings header and composer stay fixed while the conversation scrolls.
 
@@ -128,21 +128,21 @@ Implements `prd.md > Context and First Clue` and the learner-agreed completed-co
 | Event | Local behavior |
 | --- | --- |
 | First confirmed issue | Save issue summary; zero retry attempts; general clue |
-| Changed-code retry, same unresolved issue | Increment only after a valid, current analysis; retries 1–2 stay at clues |
+| Changed-code retry during the unresolved task | Count locally before analysis; retries 1–2 stay at clues |
 | Third unsuccessful retry | Inline hint becomes allowed |
 | Fourth/fifth unsuccessful retry | Continue inline guidance |
 | Sixth unsuccessful retry | A fix proposal and explanation become allowed |
 | Same code and unchanged relevant context rerun | Keep existing guidance; no extra request or count |
 | Clarification | May request analysis; never counts as a code-run attempt |
-| Explicitly shared external run result | Label as learner-reported; count only if code changed and analysis confirms the same unresolved issue |
-| Missing intent, unknown issue relationship, failed/invalid response, stale run | Do not advance count or claim success |
-| Genuinely new issue | Reset to zero and start with a clue; show that the issue changed |
+| Explicitly shared external run result | Label as learner-reported; count only if code changed while a task is unresolved |
+| Missing intent, unknown relationship or failed/invalid reply | Do not claim success; retain locally counted attempts without automatically retrying |
+| Changed diagnostic in the unresolved task | Preserve effort; refresh diagnosis and target location |
 | Provider switch | Cancel stale work and invalidate provider-specific cache/proposals; preserve current issue count |
 | Solved tracked issue | Reset count; show success and optional confetti once |
 
-For a retry, compute the maximum level that would be allowed if the issue is the same, then make one analysis request. The response must provide only a general clue if it identifies a new issue. Validate that relationship and the returned help level before committing the transition; do not make an extra AI call solely to advance a stage. A clarification can explain the existing hint but cannot bypass the allowed help level.
+For a retry, compute the host-unlocked level from changed attempts, then make one analysis request. Diagnose the current problem at that level even when its cause differs from the previous error. Validate the returned level and target before displaying it; do not make an extra AI call solely to advance a stage. A clarification can explain the existing hint but cannot bypass the allowed help level.
 
-Fingerprint requests using source, expected-outcome clarification, watched command, meaningful run result, and provider/model. Ignore transport metadata such as execution IDs and the locally computed level when comparing duplicates; a new-issue reset must not generate a second request for unchanged input. Source-identical reruns never advance attempts. A materially changed input/result is new context, not proof of a code-edit attempt. Coalesce pending identical requests and retain the latest successful response for duplicate suppression.
+Fingerprint requests using source, expected-outcome clarification, watched command, meaningful run result, and provider/model. Ignore transport metadata such as execution IDs and the locally computed level when comparing duplicates; diagnostic labels must not generate a second request for unchanged input. Source-identical reruns never advance attempts. A materially changed input/result is new context, not proof of a code-edit attempt. Coalesce pending identical requests and retain the latest successful response for duplicate suppression.
 
 Keep one active learning session and an in-memory map keyed by source URI. Switching source tabs restores that file’s session, clarification, latest run, and messages; cancel pending work and clear decorations/proposals. Markdown, virtual/diff, and untitled tabs do not erase progress. Reset Issue resets only the current session; restarting the extension clears all sessions. Include related-content revision in fingerprints and changed-source identity, so helper-only edits count without counting same-content saves.
 

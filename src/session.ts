@@ -42,8 +42,7 @@ export class LearningSession {
 
   begin(run: RunSnapshot, fingerprint: string, attempt: boolean): void {
     this.lastRequest = fingerprint;
-    if (this.issue && attempt && run.sourceConfirmed !== false && this.sourceIdentity(run) !== this.lastSource &&
-      this.sameDiagnostic(run)) {
+    if (this.issue && attempt && run.sourceConfirmed !== false && this.sourceIdentity(run) !== this.lastSource) {
       this.retries = Math.min(6, this.retries + 1);
       this.lastSource = this.sourceIdentity(run);
     }
@@ -63,14 +62,9 @@ export class LearningSession {
     }
     if (reply.status === 'issue') {
       const key = diagnostic(run).key;
-      const sameDiagnostic = !!this.issue && !!key && key === this.lastDiagnostic;
-      if (!sameDiagnostic && reply.relationship === 'unknown' && reply.level !== this.level(this.retries)) {
-        throw new Error('I need to understand whether this is the same issue before giving more specific help. Clarify what happened.');
-      }
-      const newIssue = !this.issue || (reply.relationship === 'new' && !sameDiagnostic);
-      if (newIssue) this.retries = 0;
-      else if ((reply.relationship === 'same' || sameDiagnostic) && attempt && run.sourceConfirmed !== false && this.sourceIdentity(run) !== this.lastSource) this.retries = Math.min(6, this.retries + 1);
-      if (newIssue) this.issue = `${reply.category}: ${reply.message}`;
+      if (!this.issue) this.retries = 0;
+      else if (attempt && run.sourceConfirmed !== false && this.sourceIdentity(run) !== this.lastSource) this.retries = Math.min(6, this.retries + 1);
+      this.issue = `${reply.category}: ${reply.message}`;
       this.lastSource = this.sourceIdentity(run);
       this.lastDiagnostic = key;
     }

@@ -135,16 +135,16 @@ test('oversized and interrupted responses do not become usable guidance', async 
   finally { fetchMock.mock.restore(); }
 });
 
-test('a locally confirmed continuing error requires the unlocked stage in every provider schema', async () => {
+test('every provider requires the host-unlocked stage even when a diagnostic changes', async () => {
   for (const provider of providers) {
-    for (const level of ['inline', 'fix']) {
+    for (const level of ['inline', 'fix']) for (const sameDiagnostic of [true, false]) {
       const fetchMock = mock.method(globalThis, 'fetch', async (_url: string, options: RequestInit) => {
         const body = JSON.parse(options.body as string);
         const schema = schemaFor(provider, body);
         assert.deepEqual(schema.properties.level.enum, [level, 'none']);
         return Response.json(responseFor(provider, clue));
       });
-      try { await analyze(provider, 'fixture-model', key, { allowedLevel: level, sameDiagnostic: true }, signal()); }
+      try { await analyze(provider, 'fixture-model', key, { allowedLevel: level, sameDiagnostic }, signal()); }
       finally { fetchMock.mock.restore(); }
     }
   }

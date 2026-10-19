@@ -86,13 +86,13 @@ When sourceConfirmed is false, the source is only the file focused when a termin
 Direct the learner to Run with CodeNudge or explicit result sharing, without asking for a yes/no confirmation. Never mark an unlinked result solved or offer code changes.
 Compare the issue with previousIssue. relationship is same only when it is actually the same problem.
 An unsuccessful edit is not by itself a new problem. Compare the underlying cause, not the wording.
-For status issue, level must be clue, inline, or fix; never none. For relationship new, use clue.
+For status issue, use exactly allowedLevel, never none, even when the current issue is new.
+The host tracks effort across the unresolved task. A changed error does not reset that effort.
 previousIssue is history, not a current diagnosis. Always inspect the CURRENT source and CURRENT output.
 If exitCode is 0 and the output contains no error, the earlier syntax/runtime error is gone.
 Check the intended output for logic issues; never repeat an earlier syntax/runtime clue from history.
-When the same issue persists, use exactly allowedLevel, not a lower level. A different phrasing
-of the same error is not a new issue. Always include the suspected 1-based line for an issue.
-For a new issue, return a general clue, regardless of the maximum allowed level.
+Always diagnose the current problem at allowedLevel; do not give an outdated hint to preserve history.
+Always include the suspected 1-based line for an issue, pointing to the current cause.
 At clue level: name a likely category and give one useful thinking prompt, not a full fix or code.
 At inline level: add a concise arrow hint and its 1-based line number; do not provide corrected code.
 Before fix level, do not name the exact replacement token, spell out a one-character fix,
@@ -177,9 +177,9 @@ export function validateReply(value: unknown, run: RunSnapshot, allowed: Level, 
   const reply = item as unknown as TeachingReply;
   const ranks = { none: -1, clue: 0, inline: 1, fix: 2 };
   if (ranks[reply.level] > ranks[allowed]) throw invalid('stage_exceeded');
-  // Contradictory stage labels can still supply a safe clue without rejecting the whole reply.
-  if (reply.status === 'issue' && (reply.level === 'none' || (reply.relationship === 'new' && reply.level !== 'clue'))) {
-    if (reply.level === 'fix' || reply.replacement !== null || reply.explanation !== null) reply.message = 'Trace one small input through the suspected operation. What differs from your goal?';
+  // Recover a missing stage as a clue; the host owns effort independently of issue labels.
+  if (reply.status === 'issue' && reply.level === 'none') {
+    if (reply.replacement !== null || reply.explanation !== null) reply.message = 'Trace one small input through the suspected operation. What differs from your goal?';
     Object.assign(reply, { level: 'clue', inlineHint: null, replacement: null, explanation: null });
   }
   if (reply.status !== 'issue' && (reply.level !== 'none' || reply.replacement !== null || reply.inlineHint !== null)) throw invalid();
@@ -188,7 +188,6 @@ export function validateReply(value: unknown, run: RunSnapshot, allowed: Level, 
   if (reply.level === 'clue' && reply.inlineHint !== null) throw invalid('locked_inline_hint');
   if (reply.level === 'inline' && (!reply.inlineHint?.trim() || reply.line === null)) throw invalid('missing_inline_hint');
   if (reply.level === 'fix' && (!reply.replacement?.trim() || !reply.explanation?.trim())) throw invalid('missing_fix');
-  if (reply.level === 'fix' && reply.relationship !== 'same') throw invalid('fix_without_same_issue');
   // shortcut: catch obvious edits/code in early hints; subtle answer leakage still needs live teaching review.
   if (reply.status === 'issue' && reply.level !== 'fix' &&
     /```|\b\w+\s*\[\s*["'][^"']+["']\s*\]|\bawait\s+\w|\breplace\b|\b(?:use[sd]?|change|add)\b[^\n?.]{0,120}(["'`])[^"'`\n]{1,80}\1|\b(?:colon|semicolon)\b|\binstead\s+of\b/i.test(`${reply.message}\n${reply.inlineHint ?? ''}`)) {

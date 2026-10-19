@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
+import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -194,6 +195,53 @@ function reply(input: Input, changes: Partial<TeachingReply> = {}): TeachingRepl
     explanation: input.allowedLevel === 'fix' ? 'Keep the input and calculation consistent.' : null,
     ...changes };
 }
+
+test('real greeting edits preserve effort across NameError, TypeError and logic issues, pointing at the current line', async t => {
+  const fixture = await controllerFixture(t);
+  const expressions = [
+    '"Hello " + user_name + ", you are " + age + " years old."',
+    '"Hello " + user_name + ", you are " + age + " years old."',
+    'f"Hello " + user_name + ", you are " + age + " years old."',
+    'f"Hello + user_name + , you are + {age} + years old."',
+    'f"Hello {user_name}, you are + {age} years old."',
+    'f"Hello {user_name}, you are {{age}} years old."',
+    'f"Hello {user_name}, you are {age + 1} years old."'
+  ];
+  const source = (index: number) => `user_name = ${index === 0 ? 'Alex' : '"Alex"'}\nage = 22\n\ngreeting = ${expressions[index]}\n\nprint(greeting)\n`;
+  const document = await fixture.add('greeting.py', source(0));
+  fixture.respond(input => reply(input, { relationship: 'new', category: input.output.includes('Error:') ? 'runtime' : 'logic',
+    intentSource: 'inferred', expectedOutcome: 'Greet the user by name and age.',
+    message: input.output.includes('NameError:') ? 'What does this name refer to?' : 'Which values become part of the greeting?',
+    line: input.output.includes('NameError:') ? 1 : 4,
+    inlineHint: input.allowedLevel === 'inline' ? 'Trace the values used to build this greeting.' : null,
+    replacement: input.allowedLevel === 'fix' ? source(6).replace('{age + 1}', '{age}') : null }));
+  await fixture.select(document);
+  for (let index = 0; index < expressions.length; index++) {
+    if (index) await fixture.change(document, source(index));
+    const result = spawnSync('python3', [document.fileName], { encoding: 'utf8' });
+    assert.ifError(result.error); assert.notEqual(result.status, null);
+    const output = result.stdout + result.stderr;
+    await fixture.run(document, false, true, output, result.status!);
+    assert.equal(fixture.state().retries, index, 'a new diagnostic must not reset effort');
+    assert.doesNotMatch(fixture.state().status, /couldn.t read|same issue/);
+    if (index < 3) assert.equal(fixture.hints.length, 0);
+    if (index === 3) {
+      assert.equal(fixture.requests.at(-1)!.input.allowedLevel, 'inline');
+      const hint = fixture.hints.at(-1)!;
+      assert.equal(hint.run.source, document.source);
+      assert.equal((hint.reply as TeachingReply).line, 4, 'use the current expression, not the old name error');
+    }
+    const requests = fixture.requests.length;
+    await fixture.run(document, false, true, output, result.status!);
+    assert.equal(fixture.requests.length, requests, 'unchanged reruns remain cached');
+  }
+  assert.equal(fixture.proposals.length, 1);
+  assert.equal(fixture.state().celebration, 0);
+  assert.equal(document.source, source(6), 'the learner still reviews the fix before source changes');
+  await fixture.action('reset');
+  assert.equal(fixture.state().retries, 0);
+  assert.equal(fixture.state().hasIssue, false);
+});
 
 test('inconsistent no-stage logic replies still establish an issue and reach inline and reviewed-fix stages', async t => {
   const fixture = await controllerFixture(t);

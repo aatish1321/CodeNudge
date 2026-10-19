@@ -81,7 +81,7 @@ Do not promise an inline arrow on the very first run: arrows follow the attempt 
 - **“I couldn’t identify that run”** is a quiet status for an ambiguous manual command. Use **Run with CodeNudge** for these examples; there is no yes/no confirmation. If you still see the old question, update to 0.0.9 and reload the window.
 - **No new hint after an unchanged run:** expected. Make a real edit or use **gear → Retry last result** intentionally.
 - **Quota/connection failure:** wait for quota recovery or fix the provider settings, then use Retry. Do not keep rerunning unchanged code hoping it will bypass caching.
-- **Arrow/fix does not appear:** check that all edits were saved and actually run, the same issue remains, and the count reached 3/6. Reset/New Issue clears that count. Provider responses still need to validate.
+- **Arrow/fix does not appear:** check that all edits were saved and actually run, the task is still unresolved, and the count reached 3/6. Reset/New Issue clears that count. Provider responses still need to validate.
 - **Fresh demo files missing:** open a new playground after installing the newer package. Existing copies keep your edits.
 
 Real model wording and quota behavior can vary. Rehearse with the same provider/model you will record. This guide's program outputs and six unsuccessful variants are checked mechanically; the exact new examples are not a guarantee of every live model reply.

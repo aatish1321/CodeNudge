@@ -26,7 +26,7 @@ For each exercise:
 4. Check that the old error advice is replaced with solved feedback when the intended result is established. Celebration is optional in settings.
 5. Before solving the next exercise, switch to another file and back. Your current window should retain each file's Debug conversation and progress.
 
-Inline hints require three changed unsuccessful retries on the same issue; a reviewed fix requires three more. Unchanged reruns and clarification replies do not advance the count. For a separate controlled escalation check, use the [existing rehearsal sequence](../demo/README.md#1-clue--inline-pointer--reviewed-fix).
+Inline hints require three changed unsuccessful retries during the unresolved task; a reviewed fix requires three more. Unchanged reruns and clarification replies do not advance the count. For a separate controlled escalation check, use the [existing rehearsal sequence](../demo/README.md#1-clue--inline-pointer--reviewed-fix).
 
 When you repair the delivery example, also try order totals **29**, **30** and **31**. Expected delivery fees are **5**, **0** and **0**. This checks the rule beyond a single input. Save before every run. Restore the intended order total or update the top comment when changing the test case so the stated goal matches it.
 

@@ -49,7 +49,7 @@ It is designed for people starting to code, learners building their first projec
 | Moment | What CodeNudge does | What stays in your hands |
 | --- | --- | --- |
 | **First linked run needs help** | Gives a short clue, or asks about the task when its goal is unclear. | Investigating and trying your own fix. |
-| **Three changed, unsuccessful retries on the same issue** | Points toward the relevant line with an inline arrow and hint. | Deciding what to change next. |
+| **Three changed, unsuccessful retries during the task** | Points toward the relevant line with an inline arrow and hint. | Deciding what to change next. |
 | **Three more unsuccessful retries** | Offers a colored diff and an explanation of the proposed fix. | Accepting or rejecting the reviewed change. |
 | **The run supports the intended result** | Shows solved feedback and optional confetti. | Checking what you learned and trying it again. |
 
@@ -168,7 +168,7 @@ npm test
 npm run package
 ```
 
-Install the generated `codenudge-0.0.25.vsix` through **Extensions → … → Install from VSIX**, or press **F5 → Run CodeNudge** in the repository to open the Extension Development Host.
+Install the generated `codenudge-0.0.26.vsix` through **Extensions → … → Install from VSIX**, or press **F5 → Run CodeNudge** in the repository to open the Extension Development Host.
 
 <details>
 <summary>Additional VS Code integration checks</summary>
@@ -183,7 +183,7 @@ Package before running `test:package`. Native checks require an installed deskto
 
 </details>
 
-The recorded verification includes **111 source tests**, installed VS Code workflows and a separate Restricted Mode check. Provider contract tests use fixtures and local HTTP responses; live Groq Debug-stage probes are documented separately. The maintainer reports a manual test pass. Broad live-provider/local-model teaching quality, Windows/macOS behavior and the minimum supported VS Code version still have incomplete coverage. See the [evidence and exact limits](devpost/verification.md) and [release record](docs/marketplace-release.md).
+The recorded verification includes **112 source tests**, installed VS Code workflows and a separate Restricted Mode check. Provider contract tests use fixtures and local HTTP responses; live Groq Debug-stage probes are documented separately. The maintainer reports a manual test pass. Broad live-provider/local-model teaching quality, Windows/macOS behavior and the minimum supported VS Code version still have incomplete coverage. See the [evidence and exact limits](devpost/verification.md) and [release record](docs/marketplace-release.md).
 
 ## Contribute a nudge
 

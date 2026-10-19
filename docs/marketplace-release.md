@@ -1,45 +1,41 @@
 # CodeNudge Marketplace release
 
-## Upload candidate: 0.0.25
+## Upload candidate: 0.0.26
 
-Prepared October 19, 2026 to fix repeated rejected guidance reported after the 0.0.24 package. This candidate has not been uploaded by the agent. It supersedes the earlier local upload file; use **codenudge-0.0.25.vsix** for this fix.
+Prepared October 19, 2026 after testing exposed effort being reset by changing errors. Use **codenudge-0.0.26.vsix** instead of the earlier local packages. This candidate has not been uploaded by the agent.
 
 | Item | Value |
 | --- | --- |
 | Display name | CodeNudge |
-| Upload version | **0.0.25** |
-| Artifact | `codenudge-0.0.25.vsix` in the repository root |
-| Publisher | `aatishdev` |
-| Extension ID | `aatishdev.codenudge` |
+| Version | **0.0.26** |
+| Artifact | `codenudge-0.0.26.vsix` in the repository root |
+| Publisher / ID | `aatishdev` / `aatishdev.codenudge` |
 | Gallery flags | Public; Preview remains off |
 | Repository | [aatish1321/CodeNudge](https://github.com/aatish1321/CodeNudge) |
 | License | [MIT](../LICENSE) |
 
-## Fix
+## Corrected learning loop
 
-The local CodeNudge output log repeatedly reported `new_issue_stage`. This means a response claimed a new issue but used an incompatible stage; the log records a safe reason code, not the response itself. Both no-hint and later-stage contradictions are now handled: valid issue text can become a clue, with inline/edit fields discarded. A new-issue fix message is replaced with a thinking prompt to avoid revealing the fix prematurely. Locked stages, malformed fields/locations, source freshness and evidence guards remain enforced. Provider instructions explicitly rule out `none` for an issue and distinguish unsuccessful edits from genuinely new problems.
+The screenshot showed a name error, then type errors, then a greeting with the wrong output. Previously each new diagnosis could reset effort to zero. CodeNudge now counts changed runs across the unresolved task in that file, independently of the model’s relationship labels. It starts with a clue, unlocks inline guidance after three changed retries and a reviewed fix after three more. New diagnoses update the summary and use the current target line; they do not reuse the previous error’s location. A missing AI stage can still recover as a safe clue.
 
-A controller regression uses a valid-running Python greeting with extra literal plus signs, fixture logic replies carrying `level: none`, six changed attempts, inline guidance after three retries and a reviewed fix after six. Unchanged reruns make no new request, inferred intent does not celebrate, and proposals do not silently edit the learner’s file. This is fixture evidence, not a new live-model quality claim. Existing identity, keys, settings, Project progress and the goal-based teaching fix remain intact. No automatic provider retry was added.
+Identical reruns, same-content saves, unrelated-file edits and clarification messages do not increase effort. Source changes count before a request so a provider failure does not erase the attempt; there is no automatic network retry. Verified success or **Start a new issue** clears the count. Use that reset action for a new exercise in the same file. Counts remain separate between files and remain in memory for the window session.
 
-## Upload and test
+The provider schema and policy now follow the host-unlocked stage even for a new diagnosis. Malformed/out-of-range targets, locked stages, stale edits and missing success evidence remain rejected. Fixes still require review and acceptance. Identity, saved-key slots, settings and Project storage are unchanged. The output channel now records safe status/stage/count metadata to help diagnose future progression problems; it does not log source, output or raw model messages.
 
-1. Open [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/), choose the existing CodeNudge extension under **aatishdev**, and upload **codenudge-0.0.25.vsix** as an update.
-2. Confirm the [public listing](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) shows 0.0.25 after processing. Preview should remain absent.
-3. Update CodeNudge, run **Developer: Reload Window**, then try a saved changed run. Earlier rejected replies could not establish issue progress, so rejected attempts cannot be reconstructed after reload. Normal hints should now establish progress rather than require repeated manual retries.
+## Install or upload
 
-For a local install, use **Extensions → … → Install from VSIX** with this file and reload. For the same continuing issue, three changed unsuccessful retries after the initial clue unlock inline guidance, then three further retries unlock a proposed fix. Identical reruns and clarification messages do not advance that count; a genuinely new issue starts with a clue.
+For local testing, install this VSIX through **Extensions → … → Install from VSIX**, then run **Developer: Reload Window**. If already installed by the agent, only reload. In-memory progress cannot be reconstructed from the previous window after reload.
 
-Earlier local `aatish1321.coding-buddy` or `aatishdev.coding-buddy` installations have a different identity. Remove them to avoid duplicate commands/views; keys/progress do not migrate automatically. Existing `aatishdev.codenudge` identity is preserved.
+For publishing, open [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/), choose the existing CodeNudge extension under **aatishdev**, and upload **codenudge-0.0.26.vsix** as an update. Confirm the [public listing](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) shows 0.0.26 after processing. Later uploads need a higher version.
+
+Older local `coding-buddy` identities do not migrate keys or progress. The existing `aatishdev.codenudge` identity is preserved.
 
 ## Verification
 
-- **111/111 source tests pass**, including contradictory-stage recovery, inferred-goal progression, unchanged-run caching and existing provider/trust/edit guards.
-- Clean committed source **fa8270c** produces a **45-entry VSIX**. Identity/Public metadata, committed assets/exercises, MIT text and private/development-file exclusions pass inspection. Only `providers.js` and `teaching.js` differ among compiled runtime modules versus 0.0.24. No recognizable credential pattern was found in packaged text; this is not a universal secret detector.
-- `npm run test:package`: **passed** in an isolated native VS Code profile, including real terminal/direct runs, multiple files/languages, inline arrows, native diff accept/reject/undo, stale-edit checks, settings and Project coordination with fixture replies.
-- `node scripts/test-host.cjs --package --restricted`: **passed**, including actual activation/view access before trust and trust management without auto-trusting.
-- All **43 installed extension entries** match the artifact in both native test profiles and the normal user profile, ignoring installer-added package metadata. Reload the normal window to use the installed 0.0.25 fix.
-- Artifact SHA-256: `c0602561975a874f989042de6585b547ee682d1b6eea50f5605bcbb461b6bf5a`.
+- **112/112 source tests pass**. A new controller regression executes seven greeting variants with Python, captures real NameError/TypeError/plain output, supplies fixture diagnoses labeled new, and verifies progression through current-line inline guidance and a reviewed fix. It also checks unchanged-run caching, no inferred-goal celebration, no silent edits and manual reset. Existing success, per-file, trust, freshness and provider boundaries remain covered.
+- All nine provider schemas constrain issue help to the host-unlocked level even without a matching diagnostic.
+- Exact-package inspection and installed VS Code checks will be recorded here when complete.
 
-This record and [the historical verification report](../devpost/verification.md) are excluded from the VSIX, so recording a final checksum does not change the artifact. User practice edits and private/local setup folders are excluded through a clean committed-source build. Approved planning documents remain public in the repository.
+The package is built from clean committed source, preserving user practice edits and excluding local/private/setup files. The required approved planning files remain in the public repository. This record and the [historical verification report](../devpost/verification.md) are excluded from the VSIX, so recording the checksum does not alter it.
 
-Fresh live-provider responses, Windows/macOS, the minimum supported VS Code version and pixel-level visual QA have not been newly verified. AI classification of a genuinely new versus continuing logic problem remains a model judgment when there is no matching terminal diagnostic. Publication is separate from package preparation.
+Fresh live Groq teaching responses, Windows/macOS, minimum-supported-VS-Code execution and pixel-level visual QA have not been newly checked. Logic-error locations and diagnosis still depend on the selected model; effort counting no longer does. Publication is separate from preparing the package.
