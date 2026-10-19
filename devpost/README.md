@@ -29,7 +29,7 @@ For the current extension, start with the [repository README](../README.md), [us
 | --- | --- |
 | Public source | [aatish1321/CodeNudge](https://github.com/aatish1321/CodeNudge) |
 | Open-source license | [MIT](../LICENSE) |
-| Working extension | [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge), verified public as version 0.0.21. |
+| Working extension | [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge), public as version 0.0.22 when checked October 19, 2026. The next upload candidate is described in the [release record](../docs/marketplace-release.md). |
 | Demo video | Final public recording link has not been added yet. |
 | Recording and form checks | [Hackathon readiness guide](../docs/hackathon-readiness.md) |
 

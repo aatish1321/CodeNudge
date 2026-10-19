@@ -2,6 +2,12 @@
 
 Release changes are listed below. The [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) shows the currently published version; preparing a package does not publish it.
 
+## 0.0.24
+
+- Prepared the goal-based teaching changes and polished README together as a Marketplace update.
+- Updated setup, support, hackathon and contributor-facing release information; clarified that pausing automatic hints does not disable explicit analysis actions.
+- Kept the existing extension identity, settings, saved-key slots, Project storage and non-Preview status. Runtime behavior is unchanged from the tested 0.0.23 build.
+
 ## 0.0.23
 
 - Made Debug guidance goal-based: a comment describing the task can establish intent without the learner knowing the exact answer.

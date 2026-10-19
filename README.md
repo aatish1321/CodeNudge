@@ -150,7 +150,7 @@ Python and JavaScript are the verified demo paths. The design supports other sou
 ## Privacy and control
 
 - **Your connection, your choice.** Relevant code, bounded related excerpts, a source-file index, output and clarification go to the selected provider/server when needed. Initial Project planning shares your idea and feature notes without collecting source code.
-- **Keys stay in VS Code SecretStorage.** Automatic hints are enabled by default in trusted folders once configured. Use **⚙ → Pause automatic hints** before running code you do not want shared.
+- **Keys stay in VS Code SecretStorage.** Automatic hints are enabled by default in trusted folders once configured. Use **⚙ → Pause automatic hints** to stop automatic analysis. **Run with CodeNudge** and **Share a run result** remain explicit analysis actions.
 - **Context has boundaries.** Hidden files, known credential filenames, dependencies, generated files, Git-ignored sources and paths escaping the workspace are excluded. These guards are not a universal secret detector; keep credentials out of source and messages.
 - **Edits stay reviewable.** CodeNudge does not execute AI-supplied commands or automatically write project code. There is no CodeNudge analytics/telemetry service; provider/server data handling depends on your connection.
 
@@ -168,7 +168,7 @@ npm test
 npm run package
 ```
 
-Install the generated `codenudge-0.0.23.vsix` through **Extensions → … → Install from VSIX**, or press **F5 → Run CodeNudge** in the repository to open the Extension Development Host.
+Install the generated `codenudge-0.0.24.vsix` through **Extensions → … → Install from VSIX**, or press **F5 → Run CodeNudge** in the repository to open the Extension Development Host.
 
 <details>
 <summary>Additional VS Code integration checks</summary>

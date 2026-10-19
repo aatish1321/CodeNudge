@@ -8,7 +8,7 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install [CodeNudge from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge), or run `code --install-extension aatishdev.codenudge`. For a local build, `npm run package` creates `codenudge-0.0.23.vsix`; install it using **Extensions → … → Install from VSIX**.
+Install [CodeNudge from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge), or run `code --install-extension aatishdev.codenudge`. For a local build, `npm run package` creates `codenudge-0.0.24.vsix`; install it using **Extensions → … → Install from VSIX**.
 
 A fresh playground can open in **Restricted Mode**. CodeNudge remains visible with a **Trust this folder…** button that opens VS Code’s trust screen. Choose Trust for the playground, or use the top banner’s **Manage** link. Terminal watching and AI analysis stay disabled until you grant trust. After updating the extension, use **Developer: Reload Window** once.
 
@@ -110,7 +110,7 @@ npm run test:package
 
 Project tests cover custom/suggested planning, approval, progress restoration, learner-controlled completion, trust and stale/cancelled replies. The native suite also checks the actual Project Mode command and saved-source coaching with HTTP fixture replies; this is not live AI acceptance.
 
-Unit tests exercise the activated controller across language switches, workspace boundaries/freshness, fresh playground copies, attempt rules, early-answer guards, and HTTP fixtures for all nine provider choices plus actual loopback HTTP against a test server (not a local model). Live Groq checks now use the key already stored in VS Code without exposing it. They found early-answer leakage, prompting stricter stage schemas and a local hint guard. See the [verification report](../devpost/verification.md) for the exact live and automated coverage. New provider/local-model teaching quality and account access remain unverified; HTTP fixtures alone do not establish them.
+Unit tests exercise the activated controller across language switches, workspace boundaries/freshness, fresh playground copies, attempt rules, early-answer guards, and HTTP fixtures for all nine provider choices plus actual loopback HTTP against a test server (not a local model). Historical live Groq probes are recorded separately. They found early-answer leakage, prompting stricter stage schemas and a local hint guard. Those earlier probes do not establish live-model quality for the latest goal-based teaching instructions. See the [verification report](../devpost/verification.md) for the exact live and automated coverage. New provider/local-model teaching quality and account access remain unverified; HTTP fixtures alone do not establish them.
 
 Context limits: 12,000 characters in the run’s primary file; up to 500 source paths in its workspace-folder index; up to eight related files, 6,000 characters each and 30,000 combined; the last 8,000 output characters; 2,000 clarification/result-input characters. Omissions and truncated excerpts are labeled for the model; truncated related files cannot be replaced. Related files over 100 KB are omitted. Save related changes before rerunning. New or excluded files may not be read, so the buddy cannot prove the entire project is correct.
 

@@ -1,98 +1,48 @@
 # CodeNudge Marketplace release
 
-## Local test build 0.0.23
+## Upload candidate: 0.0.24
 
-Prepared and installed locally on October 19, 2026 after learner feedback about having to supply the correct answer. The shared teaching policy now treats a behavioral task comment as sufficient intent, directs independent comparison of supplied input/output against that goal, and asks task/concept questions only when requirements are ambiguous. Clarification and invalid-success messages no longer require the exact answer. Existing evidence, inferred-intent and help-stage safeguards remain.
-
-- **109 source tests pass**, including computed-goal and unknown-answer clarification regressions with fixture responses.
-- Clean source **5a12490** builds a **45-entry VSIX**; only the intended teaching, session and controller runtime modules differ from 0.0.22. Current identity/configuration, Public flag, committed exercises and private-file exclusions pass checks.
-- The installed-package native workflow suite passes, including terminal capture, Python/JavaScript, reviewed edits/undo, settings and Project coordination with fixtures.
-- The normal-profile installation matches all 43 packaged extension files. Reload VS Code before retrying the same example.
-
-Artifact: `codenudge-0.0.23.vsix`, SHA-256 `22b888cf15e77e86286672186292629fab121818cff5c0a7f836ab7e8934bc2b`.
-
-This build was **not published to Marketplace by the agent**. The latest public release verified in this record is 0.0.22. Fresh live-model wording for the new policy remains a learner rehearsal check; controller/provider fixtures do not establish teaching quality.
-
-## 0.0.22 update
-
-The maintainer explicitly authorized removing the Preview label and publishing an update on October 18, 2026. Version **0.0.22** removes the `preview` manifest property and includes the refreshed README. The extension identity, runtime code, settings, saved keys and Project storage are unchanged.
-
-Publication is **confirmed**. A subsequent unauthenticated gallery check on October 18, 2026 reports **0.0.22** with flags `validated, public` and no `preview`. The agent prepared the checked package but could not perform the authenticated upload because no publisher login or connected browser was available. The public registry now confirms the requested release state.
-
-The release artifact was built from committed source **c9db9f0**, with learner edits excluded:
-
-- **107/107 source tests pass**; compilation and packaging pass.
-- The **45-entry VSIX** has version 0.0.22, identity `aatishdev.codenudge`, no manifest `preview` property, and `GalleryFlags` equal to `Public`.
-- All 13 compiled runtime files are unchanged. Exercises match committed source, the refreshed README is included, the MIT text matches, and private/development/credential-file exclusions pass.
-- The exact package installs as `aatishdev.codenudge@0.0.22` in an isolated VS Code profile, and installed entries match the artifact. The normal profile was not changed.
-
-Artifact SHA-256:
-
-```text
-f8103b2350a8ef12c48a1c689f0a0db56b961a6e3492ab6d9bb6bdcadc9ff16b
-```
-
-Existing native workflow coverage is recorded below; the full GUI workflow and fresh live-model guidance were not rerun for this metadata/documentation update.
-
-The version and absence of `preview` are verified against the public gallery. This registry check does not establish unique/active users or fresh post-publication runtime/model behavior. Removing the label does not expand the operating-system/provider coverage described in the verification limits.
-
-## Published release
+Prepared October 19, 2026. This candidate includes the goal-based teaching fix from 0.0.23 and polished documentation. It has not been uploaded by the agent. The latest public version verified through the unauthenticated gallery on October 19 is **0.0.22**, with flags `validated, public` and no Preview label.
 
 | Item | Value |
 | --- | --- |
 | Display name | CodeNudge |
-| Version | 0.0.22 |
-| Prepared upload artifact | `codenudge-0.0.22.vsix` in the repository root |
-| Publisher | `aatishdev` — verified against the public Marketplace listing |
+| Upload version | **0.0.24** |
+| Artifact | `codenudge-0.0.24.vsix` in the repository root |
+| Publisher | `aatishdev` |
 | Extension ID | `aatishdev.codenudge` |
+| Gallery flags | Public; Preview remains off |
 | Repository | [aatish1321/CodeNudge](https://github.com/aatish1321/CodeNudge) |
 | License | [MIT](../LICENSE) |
-| Runtime changes since tested 0.0.17 | Settings link targets the corrected extension ID; teaching behavior unchanged |
 
-The maintainer reports completing manual testing and publication. The [public listing](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) and gallery API now report version **0.0.22** without Preview, checked October 18, 2026. Version 0.0.21 was the previously verified public release.
+## What users receive
 
-Earlier upload attempts used the wrong publisher or an unavailable package name. The published publisher is `aatishdev`; the GitHub account remains `aatish1321`. This is a different identity from earlier local `coding-buddy` builds. Remove an old local extension to avoid duplicate commands/views, re-enter your key, and expect workspace progress to start fresh. Automatic migration between identities is not included.
+- Goal-based teaching: a comment such as “find the largest number” supplies intent; learners do not need to supply the correct answer. CodeNudge asks about the task or concept when intent is ambiguous, and keeps evidence checks before marking a tracked issue solved.
+- Progressive clues, inline arrows, reviewed fixes, separate Project mode and nine provider connections remain available.
+- Refreshed README, beginner troubleshooting, current build instructions and consistent hackathon documentation. Pausing automatic analysis is now clearly distinguished from explicitly requesting analysis.
+- The same extension identity, commands, settings, key slots and Project storage. Runtime code is unchanged from the checked 0.0.23 build.
 
-## Included in the release
+The package is built from committed source in a clean temporary folder. Uncommitted practice edits and local agent/course files are excluded. Approved planning files remain in the public repository; they are not included in the extension download.
 
-- Marketplace description, compressed square JPEG listing icon (512 × 512 pixels; 69,722 bytes; below both upload limits), dark gallery banner and repository/support links. The Preview label is removed in 0.0.22.
-- README with installation/setup, provider requirements and possible API costs, progressive help and Project mode.
-- Privacy disclosure covering default automatic hints, shared context, secret storage and provider data handling.
-- Changelog, MIT license and troubleshooting guide.
-- Package exclusions for source tests, development scripts, local agent/skill folders, learner documents and credential filenames.
+## Upload this update
 
-The release package uses the original committed `examples/loop_logic.js` and `examples/loop_syntax.py`. Local testing edits to those files are preserved in the working folder and excluded from this candidate. If rebuilding from the working folder, use a clean release checkout so those edits do not change the published exercises.
+1. Open [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/) and sign in to the account managing **aatishdev**.
+2. Find the existing **CodeNudge** extension, choose its update/upload action, and upload **codenudge-0.0.24.vsix**. Keep the existing publisher and extension identity.
+3. Check the [public listing](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) after processing. Confirm version **0.0.24** and that Preview is absent.
+4. Update CodeNudge in VS Code, reload the window, and rehearse a real example using your selected provider. If already on an unpublished local build, confirm the installed version in Extensions.
 
-## For the next Marketplace update
+A README edit on GitHub does not replace the README bundled in Marketplace; this VSIX includes the revised copy. Later uploads require a version greater than the latest published version. Manual upload is supported by the [official publishing guide](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#publish-an-extension).
 
-1. **Choose a new version and build from committed release content.** Version 0.0.22 is already published. Keep unrelated agent folders and learner practice edits out of the package; run relevant checks and inspect the exact VSIX contents.
-2. **Make source/assets public.** Push the intended release commit and check the README, images and support links while signed out. Marketplace relative links are rewritten to GitHub URLs.
-3. **Review the exact artifact and upload the update.** Use [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/) for `aatishdev` and the existing CodeNudge extension. Upload the newly versioned VSIX after reviewing it; do not reuse the published 0.0.22 version.
-4. **Verify the updated public install.** Check the listing without authentication and try the exact release in a fresh profile, including provider setup and a real clue. Record the actual coverage.
-5. **Update the release record.** Record the new version, checks and checksum. A GitHub README edit alone does not update the README already bundled in the Marketplace release.
+Earlier local `aatish1321.coding-buddy` or `aatishdev.coding-buddy` installations have a different identity. Remove them to avoid duplicate commands/views, re-enter the provider key and expect fresh workspace progress. There is no automatic migration from those old identities. Existing `aatishdev.codenudge` installations retain their identity.
 
-A real screenshot of Debug hints and one of Project mode would improve the listing. They are optional for publishing. Capture the actual extension with a public example and no keys, private code or personal paths; add them to the README and rebuild before uploading if desired.
+## Verification
 
-Manual VSIX upload is an [officially supported publishing method](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#publish-an-extension) and avoids setting up CLI publishing credentials. No PAT or Azure pipeline is needed for this route. Keep account credentials and publishing tokens out of chat and the repository.
+- **109/109 source tests pass**, including clear-goal assessment without a learner-supplied answer, ambiguous-task clarification, unchanged-run caching, per-file progress, provider boundaries and Project coordination.
+- Local documentation links, required tracked planning files, manifest/lock consistency and whitespace checks pass.
+- Exact-package inspection and installed VS Code workflow checks are recorded below when complete.
 
-## Verification and limits
+This record is excluded from the VSIX so recording its checksum does not change the tested artifact. Detailed historical evidence remains in [the verification report](../devpost/verification.md) and [changelog](../CHANGELOG.md).
 
-Release checks on 2026-10-17:
+## Limits
 
-- `npm test`: **107/107 passed** for 0.0.19; 0.0.21 changes only listing assets, version metadata and documentation. Local HTTP and spawned runtime checks required execution outside the restricted sandbox.
-- `npm run package`: **passed**, 45 archive entries. The listing icon is a separate 512 × 512 JPEG (69,722 bytes). The existing 1.85 MB in-editor mascot remains bundled and is not the listing icon.
-- Archive assertions: **passed** for manifest/version identity, icon file size ≤ 1024 KB, dimensions ≤ 1024 × 1024 pixels, and runtime assets, compiled runtime equality, canonical practice exercises, rewritten README image URL and development/credential-file exclusions.
-- `npm run test:package`: **passed** for 0.0.20 in an isolated profile, including Debug, Project workflows, terminal capture, direct runs, reviewed edits and settings; runtime is unchanged in 0.0.21.
-- `node scripts/test-host.cjs --package --restricted`: **passed** for 0.0.19, including activation and view access before trust; runtime is unchanged in 0.0.21.
-- Public repository: **HTTP 200** without authentication.
-- `git diff --check`: **passed**.
-
-Upload artifact SHA-256:
-
-```text
-77169b0360205d6b981722fbb429ab263042be13598bbb7749f7d5e1ad0230e2
-```
-
-The release checklist itself is excluded from the VSIX, so recording the final checksum does not alter the tested artifact. The earlier [verification report](https://github.com/aatish1321/CodeNudge/blob/main/devpost/verification.md) describes development coverage.
-
-Automated provider checks use fixture responses and local HTTP transport. They do not establish current account/model availability or teaching quality for every provider. Windows/macOS runtime coverage and a run on the minimum supported VS Code version remain incomplete. The maintainer’s manual pass is reported separately from automated evidence.
+Provider transport/controller tests use fixtures and local HTTP; they do not establish current account/model availability or the teaching quality of every provider. Fresh live-model wording for the goal-based policy still needs a learner rehearsal. Windows/macOS, the minimum supported VS Code version, and pixel-level visual review have not been newly verified. Publication is separate from preparing and testing this file.
