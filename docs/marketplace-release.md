@@ -34,7 +34,12 @@ Older local `coding-buddy` identities do not migrate keys or progress. The exist
 
 - **112/112 source tests pass**. A new controller regression executes seven greeting variants with Python, captures real NameError/TypeError/plain output, supplies fixture diagnoses labeled new, and verifies progression through current-line inline guidance and a reviewed fix. It also checks unchanged-run caching, no inferred-goal celebration, no silent edits and manual reset. Existing success, per-file, trust, freshness and provider boundaries remain covered.
 - All nine provider schemas constrain issue help to the host-unlocked level even without a matching diagnostic.
-- Exact-package inspection and installed VS Code checks will be recorded here when complete.
+- Clean committed source **f407a25** produces a **45-entry VSIX**. Only the four intended compiled modules (`extension`, `session`, `teaching`, `providers`) differ from 0.0.25. Identity/settings/Public metadata, committed assets/exercises, exact MIT text and private/development-file exclusions pass inspection. A scoped packaged-text credential-pattern scan found no matches; this is not a universal secret detector.
+- **67 local documentation links/anchors** pass; linked images have alt text.
+- `npm run test:package`: **passed** in an isolated native VS Code profile, including terminal/direct runs, Python/JavaScript, multi-file routing, inline guidance, native diff accept/reject/undo, stale-edit checks, settings and Project coordination with fixtures.
+- `node scripts/test-host.cjs --package --restricted`: **passed**, including real activation/view access before trust and trust management without auto-trusting.
+- Both passing test installations and the normal user installation match all **43 extension entries**, ignoring installer-added package metadata. Reload the normal window to activate the installed 0.0.26 build.
+- Artifact SHA-256: `c33a237ead16395a19c7c30ec055505c042c1a122aa77ed3f00495296a6b3cbe`.
 
 The package is built from clean committed source, preserving user practice edits and excluding local/private/setup files. The required approved planning files remain in the public repository. This record and the [historical verification report](../devpost/verification.md) are excluded from the VSIX, so recording the checksum does not alter it.
 
