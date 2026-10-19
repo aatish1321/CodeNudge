@@ -11,6 +11,10 @@ export const defaultEndpoints = { ollama: 'http://localhost:11434/api/chat', cus
 export const modelPattern = /^[a-zA-Z0-9._/:@+-]{1,200}$/;
 export const requiresKey = (provider: Provider): boolean => provider !== 'ollama' && provider !== 'custom';
 
+export class ProviderRequestError extends Error {
+  constructor(readonly status: number, readonly code: string, message: string) { super(message); }
+}
+
 export function validateEndpoint(value: unknown): string {
   try {
     if (typeof value !== 'string' || value.length > 2_000 || /\s/.test(value.trim())) throw new Error();
@@ -98,26 +102,29 @@ async function request(provider: Provider, model: string, key: string, context: 
     body: JSON.stringify(payload)
   });
   if (!response.ok) {
-    await response.body?.cancel().catch(() => {});
+    let error: { code?: unknown; failed_generation?: unknown } | undefined;
+    try { error = JSON.parse(await responseText(response, 64_000)).error; } catch { /* Never display raw provider errors: they may contain code or credentials. */ }
+    const codes = ['json_validate_failed', 'model_not_found', 'model_decommissioned', 'rate_limit_exceeded', 'invalid_api_key', 'invalid_json_schema', 'context_length_exceeded'];
+    const code = typeof error?.code === 'string' && codes.includes(error.code) ? error.code : 'unknown';
+    // Complete generations still pass the caller's key, stage, target and edit validation.
+    if (provider === 'groq' && response.status === 400 && code === 'json_validate_failed' && typeof error?.failed_generation === 'string') {
+      try {
+        const generated = JSON.parse(error.failed_generation);
+        if (generated && typeof generated === 'object' && !Array.isArray(generated)) return generated;
+      } catch { /* Incomplete JSON stays a failure; do not spend tokens retrying automatically. */ }
+    }
+    const label = providerLabels[provider];
     const reason = response.status === 401 || response.status === 403 ? 'Check your API key and model access.'
       : response.status === 429 ? 'Your provider limit has been reached. Check your quota, then retry.'
-      : response.status === 400 || response.status === 404 ? 'Check that this model is available and supports structured output.'
+      : response.status === 404 || ['model_not_found', 'model_decommissioned'].includes(code) ? 'Check that your selected model is available to your account.'
+      : code === 'json_validate_failed' ? `${label} couldn’t format this hint. Use settings → Retry last result. Your code has not been assessed yet.`
+      : code === 'invalid_json_schema' ? `${label} rejected CodeNudge’s response format. Update CodeNudge or report this connection error.`
+      : code === 'context_length_exceeded' ? 'This model cannot fit the current context. Try a smaller example or a model with a larger context limit.'
+      : response.status === 400 ? `${label} rejected this analysis request. Use settings → Retry last result. Your code has not been assessed yet.`
       : 'The provider is unavailable. Try again shortly.';
-    throw new Error(reason);
+    throw new ProviderRequestError(response.status, code, reason);
   }
-  const reader = response.body?.getReader();
-  if (!reader) throw new Error('The provider returned an empty response. Try again.');
-  const decoder = new TextDecoder();
-  let text = '';
-  try {
-    for (;;) {
-      const part = await reader.read();
-      if (part.done) break;
-      text += decoder.decode(part.value, { stream: true });
-      if (text.length > 500_000) throw new Error('The provider response was too large. Try a smaller example.');
-    }
-    text += decoder.decode();
-  } finally { await reader.cancel().catch(() => {}); }
+  const text = await responseText(response, 500_000);
   try {
     const body = JSON.parse(text);
     let output: string | undefined;
@@ -144,4 +151,21 @@ async function request(provider: Provider, model: string, key: string, context: 
     if (!output) throw new Error();
     return JSON.parse(output);
   } catch { throw new Error('The AI response was incomplete or blocked. Try again or choose another model.'); }
+}
+
+async function responseText(response: Response, limit: number): Promise<string> {
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('The provider returned an empty response. Try again.');
+  const decoder = new TextDecoder();
+  let text = '';
+  try {
+    for (;;) {
+      const part = await reader.read();
+      if (part.done) break;
+      text += decoder.decode(part.value, { stream: true });
+      if (text.length > limit) throw new Error('The provider response was too large. Try a smaller example.');
+    }
+    text += decoder.decode();
+  } finally { await reader.cancel().catch(() => {}); }
+  return text;
 }

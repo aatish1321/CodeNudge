@@ -11,6 +11,7 @@ import { runInNewContext } from 'node:vm';
 import type { PanelState } from '../src/panel';
 import type { RunSnapshot, TeachingReply } from '../src/teaching';
 import type { ProjectSnapshot, WorkspaceContext } from '../src/workspace';
+import { ProviderRequestError } from '../src/providers';
 
 type Document = { uri: ReturnType<typeof uri>; fileName: string; languageId: string; version: number; isDirty: boolean; isClosed: boolean; source: string; getText(): string };
 type Input = { output: string; source: string; allowedLevel: 'clue' | 'inline' | 'fix'; previousIssue: string; clarification: string; workspace: ProjectSnapshot['data'] & { currentFile: string } };
@@ -130,7 +131,7 @@ async function controllerFixture(t: TestContext, trusted = true, storage = new M
       }
       dispose() {}
     } },
-    './providers': { projectReply: async (_provider: string, _model: string, key: string, input: Record<string, unknown>, signal: AbortSignal, connection?: unknown) => { projectRequests.push({ input: JSON.parse(JSON.stringify(input)), signal, connection, key }); return respondProject(input); }, analyze: async (_provider: string, _model: string, key: string, input: Input, signal: AbortSignal, connection?: unknown) => {
+    './providers': { ProviderRequestError: localRequire('./providers').ProviderRequestError, projectReply: async (_provider: string, _model: string, key: string, input: Record<string, unknown>, signal: AbortSignal, connection?: unknown) => { projectRequests.push({ input: JSON.parse(JSON.stringify(input)), signal, connection, key }); return respondProject(input); }, analyze: async (_provider: string, _model: string, key: string, input: Input, signal: AbortSignal, connection?: unknown) => {
       requests.push({ input: JSON.parse(JSON.stringify(input)), signal, connection, key });
       return respond(input);
     } },
@@ -195,6 +196,24 @@ function reply(input: Input, changes: Partial<TeachingReply> = {}): TeachingRepl
     explanation: input.allowedLevel === 'fix' ? 'Keep the input and calculation consistent.' : null,
     ...changes };
 }
+
+test('a rejected provider request cannot assess the code and an explicit retry can publish a logic clue', async t => {
+  const fixture = await controllerFixture(t);
+  const document = await fixture.add('maximum.py', '# Find the largest number.\ndef maximum(values):\n    candidate = 0\n    for value in values:\n        if value > candidate:\n            candidate = value\n    return candidate\nprint(maximum([-10, -5, -3]))\n');
+  fixture.respond(() => { throw new ProviderRequestError(400, 'json_validate_failed', 'Groq couldn’t format this hint. Your code has not been assessed yet.'); });
+  await fixture.select(document); await fixture.run(document, false, true, '0\n', 0);
+  assert.equal(fixture.state().messages.length, 0);
+  assert.equal(fixture.state().celebration, 0);
+  assert.match(fixture.state().status, /not been assessed/);
+  await fixture.run(document, false, true, '0\n', 0);
+  assert.equal(fixture.requests.length, 1, 'a failure does not create an automatic retry loop');
+  fixture.respond(input => reply(input, { category: 'logic', line: 3, message: 'Is the starting candidate part of the original list?' }));
+  await fixture.action('retry');
+  assert.equal(fixture.requests.length, 2);
+  assert.equal(fixture.state().hasIssue, true);
+  assert.match(fixture.state().messages.at(-1)!.text, /starting candidate/);
+  assert.equal(fixture.state().celebration, 0);
+});
 
 test('real greeting edits preserve effort across NameError, TypeError and logic issues, pointing at the current line', async t => {
   const fixture = await controllerFixture(t);

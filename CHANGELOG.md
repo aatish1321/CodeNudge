@@ -2,6 +2,13 @@
 
 Release changes are listed below. The [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) shows the currently published version; preparing a package does not publish it.
 
+## 0.0.27
+
+- Distinguished rejected analysis requests, malformed model generations, unavailable models and rate limits instead of blaming model support for every HTTP 400.
+- Recovered complete JSON from Groq’s `json_validate_failed` response without a second request; the same local key/stage/target/edit validation still applies.
+- Bounded error-body reads and logged only HTTP status plus an allowlisted error code, keeping raw provider messages and generations out of logs.
+- Verified live Groq clues, inline targeting, a reviewed-fix response and corrected-output success for the negative-number maximum exercise; fixture tests cover the error-recovery path.
+
 ## 0.0.26
 
 - Preserved changed-code retry effort across different errors in an unresolved task. Moving from a name error to a type error or output issue no longer restarts the clue stage.

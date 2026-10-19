@@ -18,7 +18,7 @@ The [official rules](https://learn-ai-basics.devpost.com/rules) give equal weigh
 - Public repository: [aatish1321/CodeNudge](https://github.com/aatish1321/CodeNudge). An unauthenticated GitHub API check confirms public access and MIT recognition.
 - Approved planning documents are publicly accessible: [scope](../devpost/scope.md), [PRD](../devpost/prd.md), [spec](../devpost/spec.md).
 - Local history starts with planning on October 15, followed by implementation. The public repo was created October 15. This supports the timeline; it is not independent proof of an empty starting folder.
-- The source suite contains **112 tests**, including the goal-based teaching regressions. Earlier installed VS Code, Restricted Mode and live Groq stage evidence is recorded in the [verification report](../devpost/verification.md). Stage probes do not replace a complete live rehearsal.
+- The source suite contains **115 tests**, including the goal-based teaching regressions. Earlier installed VS Code, Restricted Mode and live Groq stage evidence is recorded in the [verification report](../devpost/verification.md). Stage probes do not replace a complete live rehearsal.
 - MIT packaging was separately verified. Version **0.0.22** is public on the [Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge); the registry version was checked without authentication. The published identity is `aatishdev.codenudge`.
 - The maintainer reports a manual test pass. The [build checklist](../devpost/checklist.md#final-review) preserves the earlier review record; broad live-provider coverage is not established by that report. A public demo-video link has not been added yet.
 

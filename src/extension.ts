@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { extname, resolve } from 'node:path';
 import { WorkspaceContext, ProjectSnapshot, sourcePath } from './workspace';
-import { analyze } from './providers';
+import { analyze, ProviderRequestError } from './providers';
 import { BuddyPanel, PanelState } from './panel';
 import { LearningSession } from './session';
 import { checkKnownKeys, chooseProvider, configuration, configureProvider, keyName, setKey } from './settings';
@@ -156,6 +156,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (mine === requestGeneration) {
         const cause = error as Error;
         if (cause instanceof GuidanceValidationError) log.appendLine(`Rejected guidance: ${cause.reason}; provider=${configuration().provider}`);
+        if (cause instanceof ProviderRequestError) log.appendLine(`Provider request failed: status=${cause.status}; code=${cause.code}; provider=${configuration().provider}`);
         state.status = cause.name === 'AbortError' || cause.name === 'TimeoutError' ? 'The request took too long. Try again when you are ready.'
           : cause instanceof TypeError ? 'Could not reach the provider. Check your connection and retry.' : cause.message;
       }

@@ -1,7 +1,8 @@
 import { test, mock } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyze, defaults, projectReply, Provider, validateEndpoint } from '../src/providers';
-import { clue } from './fixtures';
+import { analyze, defaults, projectReply, Provider, ProviderRequestError, validateEndpoint } from '../src/providers';
+import { validateReply } from '../src/teaching';
+import { clue, run } from './fixtures';
 import { createServer } from 'node:http';
 
 const key = 'fixture-provider-key-123456789';
@@ -44,6 +45,40 @@ test('provider failures do not expose raw response bodies or credentials', async
       await assert.rejects(analyze('gemini', 'fixture-model', key, {}, signal()), error => {
         assert.ok(error instanceof Error); assert.ok(!error.message.includes(key)); return true;
       });
+    } finally { fetchMock.mock.restore(); }
+  }
+});
+
+test('Groq format errors can recover complete JSON without another request or bypassing local validation', async () => {
+  for (const generated of [clue, { ...clue, level: 'fix', replacement: 'unsolicited code', explanation: 'early answer' }, { ...clue, line: 999 }]) {
+    const fetchMock = mock.method(globalThis, 'fetch', async () => Response.json({ error: {
+      code: 'json_validate_failed', message: key, failed_generation: JSON.stringify(generated)
+    } }, { status: 400 }));
+    try {
+      const result = await analyze('groq', 'fixture-model', key, { allowedLevel: 'clue' }, signal());
+      if (generated === clue) assert.deepEqual(validateReply(result, run, 'clue'), clue);
+      else assert.throws(() => validateReply(result, run, 'clue'));
+      assert.equal(fetchMock.mock.callCount(), 1);
+    } finally { fetchMock.mock.restore(); }
+  }
+});
+
+test('incomplete or unrelated provider errors stay failures with bounded safe diagnostics', async () => {
+  for (const [provider, status, code, generated] of [
+    ['groq', 400, 'json_validate_failed', '{"message":'], ['groq', 400, 'json_validate_failed', '[]'],
+    ['groq', 400, 'invalid_json_schema', JSON.stringify(clue)], ['groq', 400, key, JSON.stringify(clue)],
+    ['groq', 429, 'rate_limit_exceeded', JSON.stringify(clue)], ['openai', 400, 'json_validate_failed', JSON.stringify(clue)],
+    ['groq', 400, 'json_validate_failed', 'x'.repeat(65_000)]
+  ] as const) {
+    const fetchMock = mock.method(globalThis, 'fetch', async () => Response.json({ error: { code, message: key, failed_generation: generated } }, { status }));
+    try {
+      await assert.rejects(analyze(provider, 'fixture-model', key, {}, signal()), error => {
+        assert.ok(error instanceof ProviderRequestError); assert.equal(error.status, status);
+        assert.ok(!JSON.stringify(error).includes(key)); assert.ok(!error.message.includes(key));
+        assert.doesNotMatch(error.message, /supports structured output/);
+        return true;
+      });
+      assert.equal(fetchMock.mock.callCount(), 1);
     } finally { fetchMock.mock.restore(); }
   }
 });

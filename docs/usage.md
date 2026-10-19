@@ -8,7 +8,7 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install [CodeNudge from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge), or run `code --install-extension aatishdev.codenudge`. For a local build, `npm run package` creates `codenudge-0.0.26.vsix`; install it using **Extensions → … → Install from VSIX**.
+Install [CodeNudge from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge), or run `code --install-extension aatishdev.codenudge`. For a local build, `npm run package` creates `codenudge-0.0.27.vsix`; install it using **Extensions → … → Install from VSIX**.
 
 A fresh playground can open in **Restricted Mode**. CodeNudge remains visible with a **Trust this folder…** button that opens VS Code’s trust screen. Choose Trust for the playground, or use the top banner’s **Manage** link. Terminal watching and AI analysis stay disabled until you grant trust. After updating the extension, use **Developer: Reload Window** once.
 
@@ -110,7 +110,7 @@ npm run test:package
 
 Project tests cover custom/suggested planning, approval, progress restoration, learner-controlled completion, trust and stale/cancelled replies. The native suite also checks the actual Project Mode command and saved-source coaching with HTTP fixture replies; this is not live AI acceptance.
 
-Unit tests exercise the activated controller across language switches, workspace boundaries/freshness, fresh playground copies, attempt rules, early-answer guards, and HTTP fixtures for all nine provider choices plus actual loopback HTTP against a test server (not a local model). Historical live Groq probes are recorded separately. They found early-answer leakage, prompting stricter stage schemas and a local hint guard. Those earlier probes do not establish live-model quality for the latest goal-based teaching instructions. See the [verification report](../devpost/verification.md) for the exact live and automated coverage. New provider/local-model teaching quality and account access remain unverified; HTTP fixtures alone do not establish them.
+Unit tests exercise the activated controller across language switches, workspace boundaries/freshness, fresh playground copies, attempt rules, early-answer guards, and HTTP fixtures for all nine provider choices plus actual loopback HTTP against a test server (not a local model). Historical live Groq probes are recorded separately. They found early-answer leakage, prompting stricter stage schemas and a local hint guard. Fresh October 19 maximum-number checks also cover goal-based clues, inline/fix replies and corrected-output success on Groq; they do not establish broad model quality or availability. See the [verification report](../devpost/verification.md) for the exact live and automated coverage. New provider/local-model teaching quality and account access remain unverified; HTTP fixtures alone do not establish them.
 
 Context limits: 12,000 characters in the run’s primary file; up to 500 source paths in its workspace-folder index; up to eight related files, 6,000 characters each and 30,000 combined; the last 8,000 output characters; 2,000 clarification/result-input characters. Omissions and truncated excerpts are labeled for the model; truncated related files cannot be replaced. Related files over 100 KB are omitted. Save related changes before rerunning. New or excluded files may not be read, so the buddy cannot prove the entire project is correct.
 
@@ -121,3 +121,9 @@ The implementation plan and remaining acceptance checks live in [devpost/checkli
 ## Release status
 
 The source is available under the [MIT License](../LICENSE), and the extension is published on the [Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge). API keys, learner profiles, and development/course files are excluded from the VSIX.
+
+### Provider request failures
+
+A failed API request cannot assess the program. CodeNudge distinguishes format failures, unavailable models, quota limits and other rejected requests. **Output → CodeNudge** records the HTTP status and an allowlisted error code, without raw response bodies. Explicitly use **⚙ → Retry last result** when ready; an unchanged failed request is cached and does not run an automatic retry loop.
+
+For Groq HTTP 400 `json_validate_failed`, a complete JSON object in `failed_generation` can be processed without another request. It still goes through the same local key, schema, stage, target and stale-edit checks; incomplete or unusable content stays a failure. This is distinct from changing provider or silently loosening output validation. Groq’s [structured-output documentation](https://console.groq.com/docs/structured-outputs) describes format validation failures and supported modes/models. Provider rate limits still apply.
