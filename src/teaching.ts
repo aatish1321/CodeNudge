@@ -85,6 +85,8 @@ ambiguous requirements need a task-level question. Neither requires the learner 
 When sourceConfirmed is false, the source is only the file focused when a terminal command started.
 Direct the learner to Run with CodeNudge or explicit result sharing, without asking for a yes/no confirmation. Never mark an unlinked result solved or offer code changes.
 Compare the issue with previousIssue. relationship is same only when it is actually the same problem.
+An unsuccessful edit is not by itself a new problem. Compare the underlying cause, not the wording.
+For status issue, level must be clue, inline, or fix; never none. For relationship new, use clue.
 previousIssue is history, not a current diagnosis. Always inspect the CURRENT source and CURRENT output.
 If exitCode is 0 and the output contains no error, the earlier syntax/runtime error is gone.
 Check the intended output for logic issues; never repeat an earlier syntax/runtime clue from history.
@@ -175,9 +177,12 @@ export function validateReply(value: unknown, run: RunSnapshot, allowed: Level, 
   const reply = item as unknown as TeachingReply;
   const ranks = { none: -1, clue: 0, inline: 1, fix: 2 };
   if (ranks[reply.level] > ranks[allowed]) throw invalid('stage_exceeded');
-  if (reply.relationship === 'new' && reply.level !== 'clue' && reply.status === 'issue') throw invalid('new_issue_stage');
+  // Contradictory stage labels can still supply a safe clue without rejecting the whole reply.
+  if (reply.status === 'issue' && (reply.level === 'none' || (reply.relationship === 'new' && reply.level !== 'clue'))) {
+    if (reply.level === 'fix' || reply.replacement !== null || reply.explanation !== null) reply.message = 'Trace one small input through the suspected operation. What differs from your goal?';
+    Object.assign(reply, { level: 'clue', inlineHint: null, replacement: null, explanation: null });
+  }
   if (reply.status !== 'issue' && (reply.level !== 'none' || reply.replacement !== null || reply.inlineHint !== null)) throw invalid();
-  if (reply.status === 'issue' && reply.level === 'none') throw invalid('issue_without_stage');
   if (reply.status === 'issue' && reply.relationship === 'none') throw invalid('issue_without_relationship');
   if (reply.level !== 'fix' && (reply.replacement !== null || reply.explanation !== null)) throw invalid('locked_edit_fields');
   if (reply.level === 'clue' && reply.inlineHint !== null) throw invalid('locked_inline_hint');

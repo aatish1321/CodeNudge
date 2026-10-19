@@ -195,6 +195,32 @@ function reply(input: Input, changes: Partial<TeachingReply> = {}): TeachingRepl
     ...changes };
 }
 
+test('inconsistent no-stage logic replies still establish an issue and reach inline and reviewed-fix stages', async t => {
+  const fixture = await controllerFixture(t);
+  const source = 'user_name = "Alex"\nage = 22\ngreeting = f"hello + {user_name} + you are + {age} + years old."\nprint(greeting)\n';
+  const document = await fixture.add('greeting.py', source);
+  fixture.respond(input => reply(input, { category: 'logic', intentSource: 'inferred', expectedOutcome: 'Format a greeting.',
+    level: input.allowedLevel === 'fix' ? 'fix' : 'none', line: 3,
+    message: 'Which parts of this formatted string are literal text, and which parts are expressions?',
+    replacement: input.allowedLevel === 'fix' ? source.replace('hello + {user_name} + you are + {age} +', 'hello {user_name}, you are {age}') : null }));
+  await fixture.select(document); await fixture.run(document, false, true, 'hello + Alex + you are + 22 + years old.\n', 0);
+  assert.equal(fixture.state().hasIssue, true);
+  assert.doesNotMatch(fixture.state().status, /couldn.t read/);
+  for (let attempt = 1; attempt <= 6; attempt++) {
+    await fixture.change(document, source.replace('hello +', `hello${'!'.repeat(attempt)} +`));
+    await fixture.run(document, false, true, `hello${'!'.repeat(attempt)} + Alex + you are + 22 + years old.\n`, 0);
+    assert.equal(fixture.state().retries, attempt);
+    assert.doesNotMatch(fixture.state().status, /couldn.t read/);
+    const count = fixture.requests.length;
+    await fixture.run(document, false, true, `hello${'!'.repeat(attempt)} + Alex + you are + 22 + years old.\n`, 0);
+    assert.equal(fixture.requests.length, count, 'an unchanged rerun remains cached');
+    if (attempt === 3) assert.equal(fixture.hints.at(-1)?.run.uri, document.uri.toString());
+  }
+  assert.equal(fixture.proposals.length, 1);
+  assert.equal(fixture.state().celebration, 0, 'an inferred goal does not establish success');
+  assert.equal(document.source.includes('hello!!!!!! +'), true, 'a proposed fix does not silently edit source');
+});
+
 test('one activated controller preserves Python and JavaScript progress and clarification, dedupes reruns, and counts helper-only changes', async t => {
   const fixture = await controllerFixture(t);
   const python = await fixture.add('main.py', '# Print the report.\nfrom invoice import total\nprint(total())\n');

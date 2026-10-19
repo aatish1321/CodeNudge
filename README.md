@@ -168,7 +168,7 @@ npm test
 npm run package
 ```
 
-Install the generated `codenudge-0.0.24.vsix` through **Extensions → … → Install from VSIX**, or press **F5 → Run CodeNudge** in the repository to open the Extension Development Host.
+Install the generated `codenudge-0.0.25.vsix` through **Extensions → … → Install from VSIX**, or press **F5 → Run CodeNudge** in the repository to open the Extension Development Host.
 
 <details>
 <summary>Additional VS Code integration checks</summary>
@@ -183,7 +183,7 @@ Package before running `test:package`. Native checks require an installed deskto
 
 </details>
 
-The recorded verification includes **109 source tests**, installed VS Code workflows and a separate Restricted Mode check. Provider contract tests use fixtures and local HTTP responses; live Groq Debug-stage probes are documented separately. The maintainer reports a manual test pass. Broad live-provider/local-model teaching quality, Windows/macOS behavior and the minimum supported VS Code version still have incomplete coverage. See the [evidence and exact limits](devpost/verification.md) and [release record](docs/marketplace-release.md).
+The recorded verification includes **111 source tests**, installed VS Code workflows and a separate Restricted Mode check. Provider contract tests use fixtures and local HTTP responses; live Groq Debug-stage probes are documented separately. The maintainer reports a manual test pass. Broad live-provider/local-model teaching quality, Windows/macOS behavior and the minimum supported VS Code version still have incomplete coverage. See the [evidence and exact limits](devpost/verification.md) and [release record](docs/marketplace-release.md).
 
 ## Contribute a nudge
 

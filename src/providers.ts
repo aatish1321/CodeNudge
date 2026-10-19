@@ -25,7 +25,8 @@ export async function analyze(provider: Provider, model: string, key: string, co
   const { allowedLevel, sameDiagnostic } = context as { allowedLevel?: unknown; sameDiagnostic?: unknown };
   const level = allowedLevel === 'inline' || allowedLevel === 'fix' ? allowedLevel : 'clue';
   const schema = { ...replySchema, properties: { ...replySchema.properties,
-    level: { type: 'string', enum: sameDiagnostic === true ? [level, 'none'] : level === 'fix' ? ['clue', 'inline', 'fix', 'none'] : level === 'inline' ? ['clue', 'inline', 'none'] : ['clue', 'none'] },
+    level: { type: 'string', enum: sameDiagnostic === true ? [level, 'none'] : level === 'fix' ? ['clue', 'inline', 'fix', 'none'] : level === 'inline' ? ['clue', 'inline', 'none'] : ['clue', 'none'],
+      description: 'For status issue, never use none. A new issue uses clue; a continuing issue uses allowedLevel. Use none only for solved or needs_clarification.' },
     ...(level !== 'fix' ? { replacement: { type: 'null' }, explanation: { type: 'null' } } : {}),
     ...(level === 'clue' ? { inlineHint: { type: 'null' } } : {})
   } };

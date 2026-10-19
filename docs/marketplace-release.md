@@ -1,53 +1,41 @@
 # CodeNudge Marketplace release
 
-## Upload candidate: 0.0.24
+## Upload candidate: 0.0.25
 
-Prepared October 19, 2026. This candidate includes the goal-based teaching fix from 0.0.23 and polished documentation. It has not been uploaded by the agent. The latest public version verified through the unauthenticated gallery on October 19 is **0.0.22**, with flags `validated, public` and no Preview label.
+Prepared October 19, 2026 to fix repeated rejected guidance reported after the 0.0.24 package. This candidate has not been uploaded by the agent. It supersedes the earlier local upload file; use **codenudge-0.0.25.vsix** for this fix.
 
 | Item | Value |
 | --- | --- |
 | Display name | CodeNudge |
-| Upload version | **0.0.24** |
-| Artifact | `codenudge-0.0.24.vsix` in the repository root |
+| Upload version | **0.0.25** |
+| Artifact | `codenudge-0.0.25.vsix` in the repository root |
 | Publisher | `aatishdev` |
 | Extension ID | `aatishdev.codenudge` |
 | Gallery flags | Public; Preview remains off |
 | Repository | [aatish1321/CodeNudge](https://github.com/aatish1321/CodeNudge) |
 | License | [MIT](../LICENSE) |
 
-## What users receive
+## Fix
 
-- Goal-based teaching: a comment such as “find the largest number” supplies intent; learners do not need to supply the correct answer. CodeNudge asks about the task or concept when intent is ambiguous, and keeps evidence checks before marking a tracked issue solved.
-- Progressive clues, inline arrows, reviewed fixes, separate Project mode and nine provider connections remain available.
-- Refreshed README, beginner troubleshooting, current build instructions and consistent hackathon documentation. Pausing automatic analysis is now clearly distinguished from explicitly requesting analysis.
-- The same extension identity, commands, settings, key slots and Project storage. Runtime code is unchanged from the checked 0.0.23 build.
+The local CodeNudge output log repeatedly reported `new_issue_stage`. This means a response claimed a new issue but used an incompatible stage; the log records a safe reason code, not the response itself. Both no-hint and later-stage contradictions are now handled: valid issue text can become a clue, with inline/edit fields discarded. A new-issue fix message is replaced with a thinking prompt to avoid revealing the fix prematurely. Locked stages, malformed fields/locations, source freshness and evidence guards remain enforced. Provider instructions explicitly rule out `none` for an issue and distinguish unsuccessful edits from genuinely new problems.
 
-The package is built from committed source in a clean temporary folder. Uncommitted practice edits and local agent/course files are excluded. Approved planning files remain in the public repository; they are not included in the extension download.
+A controller regression uses a valid-running Python greeting with extra literal plus signs, fixture logic replies carrying `level: none`, six changed attempts, inline guidance after three retries and a reviewed fix after six. Unchanged reruns make no new request, inferred intent does not celebrate, and proposals do not silently edit the learner’s file. This is fixture evidence, not a new live-model quality claim. Existing identity, keys, settings, Project progress and the goal-based teaching fix remain intact. No automatic provider retry was added.
 
-## Upload this update
+## Upload and test
 
-1. Open [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/) and sign in to the account managing **aatishdev**.
-2. Find the existing **CodeNudge** extension, choose its update/upload action, and upload **codenudge-0.0.24.vsix**. Keep the existing publisher and extension identity.
-3. Check the [public listing](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) after processing. Confirm version **0.0.24** and that Preview is absent.
-4. Update CodeNudge in VS Code, reload the window, and rehearse a real example using your selected provider. If already on an unpublished local build, confirm the installed version in Extensions.
+1. Open [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/), choose the existing CodeNudge extension under **aatishdev**, and upload **codenudge-0.0.25.vsix** as an update.
+2. Confirm the [public listing](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) shows 0.0.25 after processing. Preview should remain absent.
+3. Update CodeNudge, run **Developer: Reload Window**, then try a saved changed run. Earlier rejected replies could not establish issue progress, so rejected attempts cannot be reconstructed after reload. Normal hints should now establish progress rather than require repeated manual retries.
 
-A README edit on GitHub does not replace the README bundled in Marketplace; this VSIX includes the revised copy. Later uploads require a version greater than the latest published version. Manual upload is supported by the [official publishing guide](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#publish-an-extension).
+For a local install, use **Extensions → … → Install from VSIX** with this file and reload. For the same continuing issue, three changed unsuccessful retries after the initial clue unlock inline guidance, then three further retries unlock a proposed fix. Identical reruns and clarification messages do not advance that count; a genuinely new issue starts with a clue.
 
-Earlier local `aatish1321.coding-buddy` or `aatishdev.coding-buddy` installations have a different identity. Remove them to avoid duplicate commands/views, re-enter the provider key and expect fresh workspace progress. There is no automatic migration from those old identities. Existing `aatishdev.codenudge` installations retain their identity.
+Earlier local `aatish1321.coding-buddy` or `aatishdev.coding-buddy` installations have a different identity. Remove them to avoid duplicate commands/views; keys/progress do not migrate automatically. Existing `aatishdev.codenudge` identity is preserved.
 
 ## Verification
 
-- **109/109 source tests pass**, including clear-goal assessment without a learner-supplied answer, ambiguous-task clarification, unchanged-run caching, per-file progress, provider boundaries and Project coordination.
-- Local documentation links, required tracked planning files, manifest/lock consistency and whitespace checks pass.
-- Clean committed source **2a7c7f8** builds a **45-entry VSIX**. Manifest/version/Public flags, all 13 compiled runtime modules (identical to 0.0.23), committed exercises/assets, MIT text, rewritten README links and private-file exclusions pass inspection. No recognizable credential pattern was found in the packaged text files; this is not a universal secret detector.
-- **64 local documentation links/anchors pass**; linked images have alt text.
-- `npm run test:package`: **passed** against this exact artifact in an isolated VS Code profile, covering Project coordination with fixtures, real Python/JavaScript runs, automatic Bash/zsh capture, multiple files, inline guidance, native diff accept/reject/undo, stale edits and settings.
-- `node scripts/test-host.cjs --package --restricted`: **passed**, including actual activation/view access before trust and trust management without auto-trusting.
-- Both isolated installations match all **43 extension entries** in the artifact, ignoring only installer metadata in `package.json`. The normal user profile was not changed.
-- Artifact SHA-256: `1cf47986caefedccc1242a00ceb75a6094bc5fbe9e3b3cf22b9f6ba5a62865ec`.
+- **111/111 source tests pass**, including contradictory-stage recovery, inferred-goal progression, unchanged-run caching and existing provider/trust/edit guards.
+- Exact-package inspection and installed VS Code workflow results will be recorded here after packaging.
 
-This record is excluded from the VSIX so recording its checksum does not change the tested artifact. Detailed historical evidence remains in [the verification report](../devpost/verification.md) and [changelog](../CHANGELOG.md).
+This record and [the historical verification report](../devpost/verification.md) are excluded from the VSIX, so recording a final checksum does not change the artifact. User practice edits and private/local setup folders are excluded through a clean committed-source build. Approved planning documents remain public in the repository.
 
-## Limits
-
-Provider transport/controller tests use fixtures and local HTTP; they do not establish current account/model availability or the teaching quality of every provider. Fresh live-model wording for the goal-based policy still needs a learner rehearsal. Windows/macOS, the minimum supported VS Code version, and pixel-level visual review have not been newly verified. Publication is separate from preparing and testing this file.
+Fresh live-provider responses, Windows/macOS, the minimum supported VS Code version and pixel-level visual QA have not been newly verified. AI classification of a genuinely new versus continuing logic problem remains a model judgment when there is no matching terminal diagnostic. Publication is separate from package preparation.

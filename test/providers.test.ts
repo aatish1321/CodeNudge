@@ -158,6 +158,7 @@ test('each provider schema prevents locked edit fields before the fix stage', as
         const schema = schemaFor(provider, body);
         assert.equal(schema.properties.replacement.type, 'null');
         assert.equal(schema.properties.explanation.type, 'null');
+        assert.match(schema.properties.level.description, /For status issue, never use none/);
         assert.ok(!schema.properties.level.enum.includes('fix'));
         if (level === 'clue') {
           assert.equal(schema.properties.inlineHint.type, 'null');

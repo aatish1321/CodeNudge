@@ -22,6 +22,25 @@ test('rejected guidance supplies a safe diagnostic code without echoing model te
   });
 });
 
+test('contradictory issue stages recover as clues without unlocking edits or exposing a new-issue fix', () => {
+  const none = validateReply({ ...clue, level: 'none', line: 2 }, run, 'clue');
+  assert.equal(none.level, 'clue');
+  assert.equal(none.message, clue.message);
+  const inline = validateReply({ ...clue, level: 'inline', line: 2, inlineHint: 'Look here.' }, run, 'inline');
+  assert.equal(inline.level, 'clue');
+  assert.equal(inline.inlineHint, null);
+  const fixed = { ...clue, level: 'fix', message: 'SECRET CORRECTED CODE', replacement: 'print(1)', explanation: 'SECRET FIX' };
+  const recovered = validateReply(fixed, run, 'fix');
+  assert.equal(recovered.level, 'clue');
+  assert.equal(recovered.relationship, 'new');
+  assert.equal(recovered.replacement, null);
+  assert.equal(recovered.explanation, null);
+  assert.doesNotMatch(recovered.message, /SECRET/);
+  assert.doesNotMatch(validateReply({ ...fixed, level: 'none' }, run, 'clue').message, /SECRET/);
+  assert.throws(() => validateReply(fixed, run, 'clue'), (error: unknown) => error instanceof GuidanceValidationError && error.reason === 'stage_exceeded');
+  assert.throws(() => validateReply({ ...clue, level: 'none', line: 999 }, run, 'clue'), /couldn’t read/);
+});
+
 test('source checks stop credential files, blank and oversized context', () => {
   assert.doesNotThrow(() => checkSource(run.source, 'example.py'));
   assert.throws(() => checkSource(' ', 'example.py'));

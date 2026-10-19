@@ -2,6 +2,12 @@
 
 Release changes are listed below. The [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) shows the currently published version; preparing a package does not publish it.
 
+## 0.0.25
+
+- Recovered contradictory AI issue/stage labels as safe clues instead of repeatedly showing “couldn’t read that AI reply.”
+- Clarified the shared provider instructions: a continuing problem keeps its stage, and an issue cannot use the no-hint stage.
+- Added regressions for a valid-running greeting exercise progressing through clues, inline guidance and a reviewed fix. Unchanged reruns stay cached; premature fixes and invalid targets remain blocked.
+
 ## 0.0.24
 
 - Prepared the goal-based teaching changes and polished README together as a Marketplace update.
