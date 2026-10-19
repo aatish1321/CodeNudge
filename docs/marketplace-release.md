@@ -31,6 +31,10 @@ For publishing, open [Marketplace publisher management](https://marketplace.visu
 
 - **115/115 source tests pass**, including complete-error-generation recovery, no added request, unchanged failure caching, explicit retry, locked-stage/target rejection and bounded/redacted error diagnostics.
 - Fresh live Groq clue/inline/fix/solved checks pass on the synthetic negative-number exercise. Other provider/model teaching quality is not established by these checks.
-- Exact artifact and installed VS Code evidence will be recorded here after packaging.
+- Clean committed source **7b83e1d** builds a **45-entry VSIX**. Only compiled `providers.js` and `extension.js` differ from 0.0.26. Identity/settings/Public metadata, committed exercises/assets, MIT and private/development-file exclusions pass assertions. The scoped packaged-text credential-pattern scan found no matches; it is not a universal secret detector.
+- `npm run test:package`: **passed**, covering native terminal/direct Python/JavaScript runs, multiple files, inline guidance, diff accept/reject/undo, freshness, settings and Project coordination with fixtures.
+- `node scripts/test-host.cjs --package --restricted`: **passed**, including actual pre-trust activation/view access and trust management without auto-trusting.
+- Both test installations and the normal user installation match all **43 extension entries**, ignoring installer-added package metadata. Reload the normal window to activate 0.0.27.
+- Artifact SHA-256: `231117456f4eb6e06a624d6c006d799b47f4fa9f171f976ef935090f77abc624`.
 
 Clean committed-source packaging excludes user practice edits and local/private setup files. Required planning files remain public in the repository. This record and [the historical verification report](../devpost/verification.md) are excluded from the artifact, so checksum/evidence updates do not change it. Windows/macOS, minimum-version VS Code and pixel-level visual QA have not been newly verified. Provider rate limits and intermittent failures can still interrupt a demo.
