@@ -34,7 +34,11 @@ Earlier local `aatish1321.coding-buddy` or `aatishdev.coding-buddy` installation
 ## Verification
 
 - **111/111 source tests pass**, including contradictory-stage recovery, inferred-goal progression, unchanged-run caching and existing provider/trust/edit guards.
-- Exact-package inspection and installed VS Code workflow results will be recorded here after packaging.
+- Clean committed source **fa8270c** produces a **45-entry VSIX**. Identity/Public metadata, committed assets/exercises, MIT text and private/development-file exclusions pass inspection. Only `providers.js` and `teaching.js` differ among compiled runtime modules versus 0.0.24. No recognizable credential pattern was found in packaged text; this is not a universal secret detector.
+- `npm run test:package`: **passed** in an isolated native VS Code profile, including real terminal/direct runs, multiple files/languages, inline arrows, native diff accept/reject/undo, stale-edit checks, settings and Project coordination with fixture replies.
+- `node scripts/test-host.cjs --package --restricted`: **passed**, including actual activation/view access before trust and trust management without auto-trusting.
+- All **43 installed extension entries** match the artifact in both native test profiles and the normal user profile, ignoring installer-added package metadata. Reload the normal window to use the installed 0.0.25 fix.
+- Artifact SHA-256: `c0602561975a874f989042de6585b547ee682d1b6eea50f5605bcbb461b6bf5a`.
 
 This record and [the historical verification report](../devpost/verification.md) are excluded from the VSIX, so recording a final checksum does not change the artifact. User practice edits and private/local setup folders are excluded through a clean committed-source build. Approved planning documents remain public in the repository.
 
