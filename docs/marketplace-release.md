@@ -1,5 +1,18 @@
 # CodeNudge Marketplace release
 
+## Local test build 0.0.23
+
+Prepared and installed locally on October 19, 2026 after learner feedback about having to supply the correct answer. The shared teaching policy now treats a behavioral task comment as sufficient intent, directs independent comparison of supplied input/output against that goal, and asks task/concept questions only when requirements are ambiguous. Clarification and invalid-success messages no longer require the exact answer. Existing evidence, inferred-intent and help-stage safeguards remain.
+
+- **109 source tests pass**, including computed-goal and unknown-answer clarification regressions with fixture responses.
+- Clean source **5a12490** builds a **45-entry VSIX**; only the intended teaching, session and controller runtime modules differ from 0.0.22. Current identity/configuration, Public flag, committed exercises and private-file exclusions pass checks.
+- The installed-package native workflow suite passes, including terminal capture, Python/JavaScript, reviewed edits/undo, settings and Project coordination with fixtures.
+- The normal-profile installation matches all 43 packaged extension files. Reload VS Code before retrying the same example.
+
+Artifact: `codenudge-0.0.23.vsix`, SHA-256 `22b888cf15e77e86286672186292629fab121818cff5c0a7f836ab7e8934bc2b`.
+
+This build was **not published to Marketplace by the agent**. The latest public release verified in this record is 0.0.22. Fresh live-model wording for the new policy remains a learner rehearsal check; controller/provider fixtures do not establish teaching quality.
+
 ## 0.0.22 update
 
 The maintainer explicitly authorized removing the Preview label and publishing an update on October 18, 2026. Version **0.0.22** removes the `preview` manifest property and includes the refreshed README. The extension identity, runtime code, settings, saved keys and Project storage are unchanged.
