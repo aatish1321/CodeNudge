@@ -39,7 +39,12 @@ Earlier local `aatish1321.coding-buddy` or `aatishdev.coding-buddy` installation
 
 - **109/109 source tests pass**, including clear-goal assessment without a learner-supplied answer, ambiguous-task clarification, unchanged-run caching, per-file progress, provider boundaries and Project coordination.
 - Local documentation links, required tracked planning files, manifest/lock consistency and whitespace checks pass.
-- Exact-package inspection and installed VS Code workflow checks are recorded below when complete.
+- Clean committed source **2a7c7f8** builds a **45-entry VSIX**. Manifest/version/Public flags, all 13 compiled runtime modules (identical to 0.0.23), committed exercises/assets, MIT text, rewritten README links and private-file exclusions pass inspection. No recognizable credential pattern was found in the packaged text files; this is not a universal secret detector.
+- **64 local documentation links/anchors pass**; linked images have alt text.
+- `npm run test:package`: **passed** against this exact artifact in an isolated VS Code profile, covering Project coordination with fixtures, real Python/JavaScript runs, automatic Bash/zsh capture, multiple files, inline guidance, native diff accept/reject/undo, stale edits and settings.
+- `node scripts/test-host.cjs --package --restricted`: **passed**, including actual activation/view access before trust and trust management without auto-trusting.
+- Both isolated installations match all **43 extension entries** in the artifact, ignoring only installer metadata in `package.json`. The normal user profile was not changed.
+- Artifact SHA-256: `1cf47986caefedccc1242a00ceb75a6094bc5fbe9e3b3cf22b9f6ba5a62865ec`.
 
 This record is excluded from the VSIX so recording its checksum does not change the tested artifact. Detailed historical evidence remains in [the verification report](../devpost/verification.md) and [changelog](../CHANGELOG.md).
 
