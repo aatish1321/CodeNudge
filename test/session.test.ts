@@ -178,6 +178,8 @@ test('success drops irrelevant model edit fields and never replays a syntax clue
   assert.equal(stale.status, 'needs_clarification');
   assert.equal(stale.category, 'unknown');
   assert.match(stale.message, /Your code runs now/);
+  assert.doesNotMatch(stale.message, /what you expected|expected (?:answer|output|result)/i);
+  assert.match(stale.message, /without knowing the answer/);
   assert.equal(stale.inlineHint, null);
   const solved = validateReply({ ...clue, status: 'solved', relationship: 'same', level: 'inline',
     line: 2, inlineHint: 'outdated hint', replacement: 'unsolicited code', explanation: 'irrelevant' }, current, 'clue');

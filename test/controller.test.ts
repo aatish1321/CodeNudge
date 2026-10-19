@@ -447,6 +447,49 @@ test('correct output replaces old error clues, celebrates once, and unchanged su
   assert.equal(fixture.state().celebration, 1);
 });
 
+test('a behavioral goal supports checking a computed answer without a learner-supplied result', async t => {
+  const fixture = await controllerFixture(t);
+  const source = '# Find the largest number in a list of numbers.\ndef find_maximum(numbers):\n    max_val = 0\n    for num in numbers:\n        if num > max_val:\n            max_val = num\n    return max_val\n\nprint(find_maximum([-10, -5, -3]))\n';
+  const document = await fixture.add('maximum.py', source);
+  fixture.respond(input => input.output.trim() === '-3'
+    ? reply(input, { status: 'solved', relationship: 'same', level: 'none', category: 'unknown', line: null,
+      expectedOutcome: 'Find the largest member of the supplied list.',
+      message: 'For this list, -3 is greater than -10 and -5. This run matches the goal.' })
+    : reply(input, { category: 'logic', line: 3, expectedOutcome: 'Find the largest member of the supplied list.',
+      message: 'How does your starting candidate compare with the negative values in this list?' }));
+  await fixture.select(document); await fixture.run(document, false, true, '0\n', 0);
+  assert.equal(fixture.state().hasIssue, true);
+  assert.equal(fixture.state().celebration, 0);
+  await fixture.change(document, source.replace('max_val = 0', 'max_val = numbers[0]'));
+  await fixture.run(document, false, true, '-3\n', 0);
+  assert.equal(fixture.state().hasIssue, false);
+  assert.equal(fixture.state().celebration, 1);
+  assert.match(fixture.state().status, /matches the stated goal/);
+  assert.equal(fixture.requests.length, 2);
+  assert.ok(fixture.requests.every(request => request.input.clarification === ''));
+  assert.ok(fixture.state().messages.every(message => message.role === 'buddy'));
+  assert.match(fixture.state().messages.at(-1)!.text, /For this list/);
+});
+
+test('ambiguous tasks ask for a goal and accept not knowing the answer without another code attempt', async t => {
+  const fixture = await controllerFixture(t);
+  const document = await fixture.add('numbers.py', '# Process these numbers.\nprint(max([-10, -5, -3]))\n');
+  fixture.respond(input => input.clarification
+    ? reply(input, { status: 'solved', relationship: 'none', category: 'unknown', intentSource: 'clarified',
+      expectedOutcome: 'Find the largest member of the list.', level: 'none', line: null,
+      message: 'For this input, -3 is the largest member. This run matches your goal.' })
+    : reply(input, { status: 'needs_clarification', relationship: 'unknown', category: 'unknown', intentSource: 'unknown',
+      expectedOutcome: null, level: 'none', line: null, message: 'Are you practising finding the largest number or adding the numbers?' }));
+  await fixture.select(document); await fixture.run(document, false, true, '-3\n', 0);
+  assert.match(fixture.state().status, /task or concept/);
+  assert.doesNotMatch(fixture.state().status, /what you expected/);
+  await fixture.action('clarify', 'I want to find the largest number. I do not know the correct answer.');
+  assert.equal(fixture.requests.length, 2);
+  assert.equal(fixture.state().retries, 0);
+  assert.equal(fixture.state().celebration, 0, 'checking an initially correct run is not a resolved tracked issue');
+  assert.match(fixture.state().status, /matches the stated goal/);
+});
+
 test('animation preferences refresh without cancelling guidance, while a combined provider change still cancels it', async t => {
   const fixture = await controllerFixture(t);
   const document = await fixture.add('main.py', '# Print the value.\nx = None\nprint(x.value)\n');

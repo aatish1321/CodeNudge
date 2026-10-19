@@ -2,6 +2,12 @@
 
 Release changes are listed below. The [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) shows the currently published version; preparing a package does not publish it.
 
+## 0.0.23
+
+- Made Debug guidance goal-based: a comment describing the task can establish intent without the learner knowing the exact answer.
+- Instructed the model to compare the supplied input/output with the task independently, and ask about the task/concept only when the goal is ambiguous.
+- Reworded clarification and verification messages so they do not require the correct result; preserved evidence, stage and inferred-intent safeguards.
+
 ## 0.0.22
 
 - Removed the manifest Preview flag so the next Marketplace update can remove the Preview label.

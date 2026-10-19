@@ -96,6 +96,8 @@ Activity mode: Reference map and factual verification recap; no interactive tour
 
 ## Revisions
 
+- Goal-based feedback (0.0.23): learner testing showed that requesting the correct answer blocks someone learning a concept. Treat a behavioral goal comment as sufficient intent; instruct the selected model to compare supplied input/output independently against that task. Ask about the task/concept only when goals are ambiguous, and allow the learner to say they do not know the answer. Preserve staged help, bounded context, observed-evidence requirements and the rejection of solved claims based only on inferred goals. Controller regressions use fixture responses; new live-provider teaching still needs rehearsal.
+
 - Project mode: the learner explicitly promoted the deferred idea-to-tasks workflow after confirming debugging and UI polish. Add idea → feature choice → reviewable plan → one task at a time, with hint-first coaching, learner-controlled completion and local workspace persistence. Preserve debugging, source/credential exclusions, cancellation and provider choice. Agent verification replaces further approval checkpoints under the standing fast-mode request.
 
 - Character motion (0.0.12): the learner requested animation for the supplied character. Use small transform-only idle/thinking loops and the existing celebration trigger, with room above the cropped artwork. Provide a persistent pause/resume option in the gear and honour reduced motion. Presentation-only preference changes refresh the panel without cancelling active guidance; provider/model/watching changes retain cancellation. Validate state/settings paths and installed behaviour; visual playback remains unreviewed without a computer/browser surface.

@@ -56,7 +56,7 @@ export class LearningSession {
         !reply.expectedOutcome?.trim() || !['comment', 'clarified'].includes(reply.intentSource) ||
         (reply.intentSource === 'clarified' && !this.clarification.trim()) ||
         ['new', 'unknown'].includes(reply.relationship)) {
-        throw new Error('I cannot confirm the result yet. Explain what you expected, then share or run the result again.');
+        throw new Error('I cannot verify this run yet. Describe the task or concept, or share a complete run result. You do not need to know the answer.');
       }
       celebrate = !!this.issue;
       this.issue = ''; this.retries = 0; this.lastSource = this.sourceIdentity(run); this.lastDiagnostic = '';

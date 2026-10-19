@@ -8,7 +8,7 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install [CodeNudge from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge), or run `code --install-extension aatishdev.codenudge`. For a local build, `npm run package` creates `codenudge-0.0.22.vsix`; install it using **Extensions → … → Install from VSIX**.
+Install [CodeNudge from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge), or run `code --install-extension aatishdev.codenudge`. For a local build, `npm run package` creates `codenudge-0.0.23.vsix`; install it using **Extensions → … → Install from VSIX**.
 
 A fresh playground can open in **Restricted Mode**. CodeNudge remains visible with a **Trust this folder…** button that opens VS Code’s trust screen. Choose Trust for the playground, or use the top banner’s **Manage** link. Terminal watching and AI analysis stay disabled until you grant trust. After updating the extension, use **Developer: Reload Window** once.
 
@@ -52,7 +52,7 @@ Automatic observation covers completed commands in integrated terminals with wor
 
 For browser results, Postman responses, long-running servers, or unavailable terminal capture, use **⚙ → Share a run result** and paste the relevant output. Open and save the corresponding code file first. These are treated as results you report, not results the extension automatically observed. Use the reply box to answer a question or explain the expected outcome instead.
 
-The buddy checks the intended behavior in the top comment, tentatively infers intent if it is missing, and asks for clarification if needed. A successful exit alone does not mean a logic problem is solved. Confetti celebrates a resolved issue; disable it with the panel toggle or `codingBuddy.confetti` in settings. Reduced-motion preferences are respected. The robot gently bobs while idle and tilts while thinking; pause or resume this from **⚙ → Pause/Resume character animation**, independently of confetti.
+A task description in the top comment is enough; you do not need to know the exact answer. CodeNudge is instructed to derive expected behavior from that goal and the supplied input, then compare it with the observed result. If different task goals would change the diagnosis, it asks what you are trying to do or learn. Inferred goals remain tentative and cannot support a celebration. A successful exit alone does not mean a logic problem is solved. Confetti celebrates a resolved issue; disable it with the panel toggle or `codingBuddy.confetti` in settings. Reduced-motion preferences are respected. The robot gently bobs while idle and tilts while thinking; pause or resume this from **⚙ → Pause/Resume character animation**, independently of confetti.
 
 ## Providers and privacy
 

@@ -148,7 +148,7 @@ export function activate(context: vscode.ExtensionContext): void {
         if (mine !== requestGeneration) return;
         message('buddy', reply.explanation ?? 'Review the proposed change before deciding.');
       }
-      state.status = reply.status === 'needs_clarification' ? 'Your turn — tell CodeNudge what you expected.'
+      state.status = reply.status === 'needs_clarification' ? 'Tell me the task or concept you’re practising. You don’t need to know the answer.'
         : reply.status === 'solved' ? 'This result matches the stated goal. Nice work!'
         : run.reported ? 'Learner-shared result checked. Try your next change.' : 'Your turn. Try a change, save, and run again.';
     } catch (error) {

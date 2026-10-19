@@ -51,7 +51,7 @@ Use the code being worked on and the relevant run result to provide help automat
 
 Watch completed integrated-terminal runs automatically across the opened folder. Follow the source identified by the command or error, retaining separate progress when switching files or languages. Include relevant helper files and folder structure within documented limits. If the terminal cannot identify the command and the output does not link to a source file, quietly skip analysis instead of asking a yes/no file-confirmation question. Offer Run with Buddy for supported scripts, which launches a known file, or explicit result sharing for other workflows. Do not show command-entry dialogs. Automatic hints can be paused from the settings gear.
 
-Read the top-of-file comment describing what the code should do. If the learner omits it, analyze the code for a tentative interpretation, presented as a guess. If intent is still unclear, ask what the learner expected; their answer in the text area becomes context. Use this same expected-outcome context for diagnosis and recognizing success. Successful execution alone does not prove that the logic is correct.
+Read the top-of-file comment describing what the code should do. If the learner omits it, analyze the code for a tentative interpretation, presented as a guess. If different plausible goals would change the diagnosis, ask what the learner is trying to do or learn; their description becomes context. A behavioral goal is enough: the learner does not need to calculate the correct answer. Derive the expected behavior from that goal and the supplied input, independently of the implementation. Use this same expected-outcome context for diagnosis and recognizing success. Successful execution alone does not prove that the logic is correct.
 
 Source: `scope.md > The Core Loop`.
 
@@ -99,7 +99,7 @@ Source: `scope.md > The POC Boundary`, expanded by the learner's explicit open-s
 - **First use:** quiet panel with the text area and buddy identity; provider setup must be discoverable before help is requested.
 - **No code available:** explain that the learner needs a code file open; do not fabricate a diagnosis.
 - **Working:** show that the buddy is considering the problem. Repeated triggering while the same response is pending must not duplicate requests or counts.
-- **Unclear intent:** ask for the expected outcome rather than confidently labeling an uncertain logic mistake.
+- **Unclear intent:** ask about the task or concept, rather than requiring the correct answer or confidently labeling an uncertain logic mistake.
 - **Connection failure:** preserve the code and existing guidance, explain the failure, and allow retry or settings correction.
 - **Rejected fix:** preserve the learner's code. Do not reapply or repeatedly offer a rejected change just because unchanged code is rerun.
 - **Outdated guidance:** do not present a pointer or proposed fix as if it applies to a newer version of the code when it no longer does.
