@@ -15,11 +15,11 @@ Prepared October 22, 2026 after the learner requested a more deliberate, less de
 
 ## Interface changes
 
-The sidebar now gives the current work priority: a compact animated-character/status row, simple underlined mode tabs, a file-context line and a clear help-stage summary that stays in view while scrolling. Warm accents and native theme surfaces replace decorative gradients, glow, orbit and repeated slogans. Notes have a reading hierarchy instead of large chat cards. Project tasks/checks and primary/secondary actions are distinct; Cancel project remains available while coaching is pending.
+The learner chose an arcade direction after reviewing an earlier minimal pass. The final sidebar uses a larger animated sidekick, pixel accents, chunky mode buttons, outlined speech-note hints and bold mint/gold/coral accents on native-theme surfaces. A three-segment effort meter maps to actual changed attempts; clue/inline/review progress stays in view while scrolling. There are no invented scores or streaks. Project tasks/checks and primary/secondary actions are distinct; Cancel project remains available while coaching is pending.
 
-The progress caption explains remaining changed runs starting at the first clue and distinguishes an unlocked review level from an actual proposal ready to accept. The supplied mascot, optional motion/confetti, reduced-motion handling, keyboard send, focus outlines and light/high-contrast theme rules remain. No AI teaching, provider transport, terminal capture, stage thresholds, source-sharing rules, commands, saved keys or Project storage changed.
+The progress caption explains remaining changed runs starting at the first clue and distinguishes an unlocked review level from a proposal ready to accept. The supplied mascot, optional motion/confetti, reduced-motion handling, keyboard send, focus outlines and light/high-contrast theme rules remain. No AI teaching, provider transport, terminal capture, stage thresholds, source-sharing rules, commands, saved keys or Project storage changed.
 
-The [local sidebar study](../devpost/sidebar-preview.html) includes ten sample states built from the real template and shipped CSS/script/assets: idle, clue, narrow inline, fix, Project idea/task/plan, provider error, Restricted Mode and success. Open it locally with the repository’s media folder alongside it. These are fixtures, not screenshots, and do not call a provider.
+The [local sidebar study](../devpost/sidebar-preview.html) includes ten sample states built from the actual template and shipped CSS/script/assets: idle, clue, narrow inline, fix, Project idea/task/plan, provider error, Restricted Mode and success. Open it locally with the repository’s media folder alongside it. These are fixtures, not screenshots, and do not call a provider.
 
 ## Install or upload
 

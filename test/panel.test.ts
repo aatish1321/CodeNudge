@@ -97,7 +97,7 @@ test('Project tasks and conversation render as literal text and Debug issue cont
   assert.ok(descendants(ui.element('project')).some(child => child.textContent === '<img src=x onerror=alert(1)>' && child.children.length === 0));
   assert.ok(descendants(ui.element('project')).some(child => child.textContent === '<script>literal task</script>' && child.children.length === 0));
   assert.equal(ui.element('messages').children[0].children[1].textContent, '<button>literal message</button>');
-  assert.equal(ui.element('learningTrail').hidden, true); assert.equal(ui.element('fixActions').hidden, true);
+  assert.equal(ui.element('learningTrail').hidden, true); assert.equal(ui.element('learningSummary').hidden, true); assert.equal(ui.element('fixActions').hidden, true);
   assert.equal(ui.element('file').textContent, ''); assert.equal(ui.element('progress').textContent, '');
   assert.equal(ui.element('status').textContent, data.status);
 });
@@ -252,23 +252,32 @@ test('buddy mood and help trail follow actual issue stages and disappear after r
   assert.equal(ui.classes.has('is-working'), false);
 });
 
-test('the compact help trail explains remaining changed runs and never claims a fix exists before review', () => {
+test('the arcade help meter tracks real changed runs and never claims a fix exists before review', () => {
   const ui = panel(); ui.state.hasIssue = true; ui.render();
   assert.equal(ui.element('progress').textContent, '0/3 changed runs to an inline hint');
+  assert.equal(ui.element('learningSummary').hidden, false);
+  assert.equal(ui.element('effortPip1').attributes['data-filled'], 'false');
   ui.state.retries = 2; ui.render();
   assert.equal(ui.element('progress').textContent, '2/3 changed runs to an inline hint');
+  assert.equal(ui.element('effortPip1').attributes['data-filled'], 'true');
+  assert.equal(ui.element('effortPip2').attributes['data-filled'], 'true');
+  assert.equal(ui.element('effortPip3').attributes['data-filled'], 'false');
   ui.state.retries = 3; ui.render();
   assert.equal(ui.element('progress').textContent, '0/3 more changed runs to a reviewed fix');
+  assert.equal(ui.element('effortPip1').attributes['data-filled'], 'false');
+  assert.equal(ui.element('learningSummary').attributes['data-stage'], 'stageInline');
   ui.state.retries = 5; ui.render();
   assert.equal(ui.element('progress').textContent, '2/3 more changed runs to a reviewed fix');
   ui.state.retries = 6; ui.render();
   assert.equal(ui.element('progress').textContent, 'Review unlocked. Checking the current problem.');
+  assert.equal(ui.element('effortPip3').attributes['data-filled'], 'true');
   assert.equal(ui.element('fixActions').hidden, true);
   ui.state.proposalId = 'review'; ui.render();
   assert.equal(ui.element('progress').textContent, 'Your change is ready to review.');
   ui.state.hasIssue = false; ui.state.retries = 0; ui.state.proposalId = ''; ui.render();
   assert.equal(ui.element('progress').textContent, '');
   assert.equal(ui.element('learningTrail').hidden, true);
+  assert.equal(ui.element('learningSummary').hidden, true);
 });
 
 test('character motion can pause while thinking without turning off the separate celebration setting', () => {

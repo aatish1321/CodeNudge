@@ -38,8 +38,12 @@
     document.body.classList.toggle('character-motion-off', state.animateCharacter === false);
     document.getElementById('buddyMood').textContent = !state.trusted ? 'Trust this folder to begin' : working ? 'Thinking it through' : project ? (project.phase === 'done' ? 'Project complete' : 'One task at a time') : state.proposalId ? 'A fix to review' : state.hasIssue ? (state.retries >= 3 ? 'Let’s look closer' : 'A clue to start') : 'Ready when you are';
     document.getElementById('learningTrail').hidden = mode === 'project' || !state.hasIssue;
+    document.getElementById('learningSummary').hidden = mode === 'project' || !state.hasIssue;
     const stage = state.proposalId || state.retries >= 6 ? 'stageFix' : state.retries >= 3 ? 'stageInline' : 'stageClue';
     for (const id of ['stageClue', 'stageInline', 'stageFix']) document.getElementById(id).setAttribute('aria-current', id === stage ? 'step' : 'false');
+    document.getElementById('learningSummary').setAttribute('data-stage', stage);
+    const effort = state.retries >= 6 ? 3 : state.retries % 3;
+    for (let index = 1; index <= 3; index++) document.getElementById(`effortPip${index}`).setAttribute('data-filled', index <= effort ? 'true' : 'false');
     document.getElementById('setup').hidden = state.keyConfigured || !state.trusted;
     document.getElementById('trustPrompt').hidden = state.trusted;
     document.getElementById('file').textContent = project ? '' : state.file || '';
@@ -69,7 +73,7 @@
       const block = document.createElement('article'); block.className = `message ${message.role}`;
       block.dataset.category = message.category || 'unknown';
       const label = document.createElement('div'); label.className = 'message-label';
-      label.textContent = message.role === 'learner' ? 'Your note' : `Nudge${message.category && message.category !== 'unknown' ? ' / ' + message.category : ''}`;
+      label.textContent = message.role === 'learner' ? 'Your note' : `NUDGE${message.category && message.category !== 'unknown' ? ' / ' + message.category.toUpperCase() : ''}`;
       const text = document.createElement('p'); text.textContent = message.text;
       block.append(label, text); return block;
       }));

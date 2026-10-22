@@ -4,10 +4,10 @@ Release changes are listed below. The [Visual Studio Marketplace](https://market
 
 ## 0.0.28
 
-- Reworked the sidebar around the coding task: compact character/status row, plain mode tabs, readable notes and restrained warm accents using native theme surfaces.
-- Removed the oversized hero, decorative gradients, orbit, glow and repeated slogans. Kept the supplied character, optional animation, confetti and reduced-motion support.
-- Made help progress explicit from the first clue and kept it visible while scrolling. Distinguished an unlocked review stage from an actual fix ready to accept.
-- Gave Project mode clearer task/check sections and primary/secondary actions. Teaching, provider, terminal and reviewed-edit behavior are unchanged.
+- Reworked the sidebar as an arcade-inspired coding sidekick: a larger animated robot, pixel accents, chunky controls and bold mint/gold/coral panels.
+- Added a three-segment effort meter tied to actual changed runs, with explicit clue/inline/review progress kept visible while scrolling. An unlocked review stage stays distinct from a fix ready to accept.
+- Gave Project mode clearer task/check sections and primary/secondary actions. Kept the supplied character, optional motion/confetti, reduced-motion support, keyboard send and native-theme surfaces.
+- Teaching, provider, terminal, stage thresholds, source sharing and reviewed-edit behavior are unchanged.
 
 ## 0.0.27
 
