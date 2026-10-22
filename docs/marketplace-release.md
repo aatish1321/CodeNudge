@@ -29,7 +29,9 @@ For Marketplace, open [publisher management](https://marketplace.visualstudio.co
 
 ## Verification
 
-- Source suite and exact-package/native results will be recorded here when complete.
+- All 116 source tests pass on the final chat-bubble source snapshot `01e54d1`; JavaScript syntax and whitespace checks pass. Twelve preview templates retain their required IDs, mascot alt text and nonce/CSP.
+- The full installed-package native workflow suite and the separate actual Restricted Mode suite passed sequentially on arcade snapshot `2fc5c82`. Subsequent changes restore the centered mascot, enlarge type, fix the gear and add reply/chat bubbles. These presentation changes have source/template checks and a normal-profile install; the native suites were not repeated while the learner was using the review window.
+- Final artifact SHA-256: `cb4eb2b039095cd97ce5aa1b5331a906cd7367de4fba7e3bc5fd351c021c632a`. Its 45 entries retain the manifest identity/settings, committed examples, supplied assets and MIT text. Relative to the earlier tested arcade package, only the compiled panel HTML, CSS, browser script and changelog differ. All 43 extension entries in the normal VS Code installation match the final artifact, excluding installer metadata.
 - Twelve preview frames have all script-target IDs exactly once, local resources, image alt text and intact script nonces/CSP.
 - Computer-use inventory has no apps or browsers; an in-app browser open reports unavailable. Pixel-level visual inspection and rendered narrow/light/high-contrast/motion QA are not claimed. The local preview supports human review.
 
