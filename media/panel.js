@@ -73,7 +73,7 @@
       const block = document.createElement('article'); block.className = `message ${message.role}`;
       block.dataset.category = message.category || 'unknown';
       const label = document.createElement('div'); label.className = 'message-label';
-      label.textContent = message.role === 'learner' ? 'Your note' : `NUDGE${message.category && message.category !== 'unknown' ? ' / ' + message.category.toUpperCase() : ''}`;
+      label.textContent = message.role === 'learner' ? 'YOU' : `CODENUDGE${message.category && message.category !== 'unknown' ? ' / ' + message.category.toUpperCase() : ''}`;
       const text = document.createElement('p'); text.textContent = message.text;
       block.append(label, text); return block;
       }));

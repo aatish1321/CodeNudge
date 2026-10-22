@@ -9,6 +9,7 @@ Release changes are listed below. The [Visual Studio Marketplace](https://market
 - Added a three-segment effort meter tied to actual changed runs, with explicit clue/inline/review progress kept visible while scrolling. An unlocked review stage stays distinct from a fix ready to accept.
 - Gave Project mode clearer task/check sections and primary/secondary actions. Kept the supplied character, optional motion/confetti, reduced-motion support, keyboard send and native-theme surfaces.
 - Centered the settings gear and added an animated three-dot speech bubble during replies, respecting character-motion and reduced-motion settings.
+- Styled the conversation as chat bubbles: learner messages on the right, CodeNudge replies on the left, with speech tails and distinct colors in Debug and Project mode.
 - Teaching, provider, terminal, stage thresholds, source sharing and reviewed-edit behavior are unchanged.
 
 ## 0.0.27

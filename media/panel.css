@@ -50,11 +50,16 @@ h1 { margin: 0 0 12px; color: var(--accent-ink); font-size: 1.8rem; font-weight:
 .progress { margin: 7px 0 0; color: var(--hud-ink); font: .875rem/1.6 var(--vscode-editor-font-family, monospace); }
 .progress:empty { display: none; }
 #messages { display: grid; gap: 18px; }
-.message { --note-accent: var(--accent); --note-ink: var(--accent-ink); margin-right: 3px; padding: 13px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); overflow-wrap: anywhere; }
-.message.buddy:last-child { border: 2px solid var(--note-accent); padding: 12px; box-shadow: 3px 3px 0 color-mix(in srgb, var(--note-accent) 30%, var(--base)); }
-.message.learner { margin-left: 16px; background: transparent; border-style: dashed; }
+.message { --note-accent: var(--accent); --note-ink: var(--accent-ink); --bubble-border: color-mix(in srgb, var(--note-accent) 55%, var(--line)); --bubble-bg: var(--surface); position: relative; justify-self: start; width: fit-content; max-width: 92%; min-width: 0; margin: 0 3px; padding: 12px 14px; border: 2px solid var(--bubble-border); border-radius: 12px; background: var(--bubble-bg); overflow-wrap: anywhere; }
+.message.buddy:last-child { --bubble-border: var(--note-accent); box-shadow: 3px 3px 0 color-mix(in srgb, var(--note-accent) 30%, var(--base)); }
+.message::before, .message::after { content: ''; position: absolute; top: 16px; left: -14px; border: 6px solid transparent; border-right-color: var(--bubble-border); }
+.message::after { top: 18px; left: -10px; border-width: 4px; border-right-color: var(--bubble-bg); }
+.message.learner { --bubble-border: var(--mint-ink); --bubble-bg: color-mix(in srgb, var(--mint) 12%, var(--base)); justify-self: end; max-width: 88%; }
+.message.learner::before { left: auto; right: -14px; border-right-color: transparent; border-left-color: var(--bubble-border); }
+.message.learner::after { left: auto; right: -10px; border-right-color: transparent; border-left-color: var(--bubble-bg); }
+.message.learner .message-label { color: var(--mint-ink); }
 .message-label { margin-bottom: 7px; font: 600 .8125rem/1.5 var(--vscode-editor-font-family, monospace); letter-spacing: .3px; color: var(--muted); }
-.message.buddy:last-child .message-label { color: var(--note-ink); }
+.message.buddy .message-label { color: var(--note-ink); }
 .message p { margin: 0; color: var(--ink); white-space: pre-wrap; font-size: 1em; line-height: 1.7; }
 .working { display: flex; align-items: center; gap: 8px; margin-top: 20px; color: var(--muted); font-size: 1rem; }
 .thinking-dot { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; animation: pulse 1s infinite alternate; }
