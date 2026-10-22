@@ -34,22 +34,21 @@
     const working = project ? project.working : state.working;
     document.getElementById('modeDebug').setAttribute('aria-pressed', mode === 'debug' ? 'true' : 'false');
     document.getElementById('modeProject').setAttribute('aria-pressed', mode === 'project' ? 'true' : 'false');
-    document.body.classList.toggle('has-messages', messages.length > 0 || (project ? !!project.idea : !!state.file));
     document.body.classList.toggle('is-working', working);
     document.body.classList.toggle('character-motion-off', state.animateCharacter === false);
-    document.getElementById('buddyMood').textContent = !state.trusted ? 'Let’s get set up' : working ? 'Thinking with you…' : project ? (project.phase === 'done' ? 'Look what you built!' : 'One small step together') : state.proposalId ? 'A little backup, if you need it' : 'Right here with you';
-    document.getElementById('eyebrow').textContent = project ? 'YOUR IDEA. YOUR DISCOVERY.' : state.proposalId ? 'YOUR CODE. YOUR CALL.' : state.retries >= 3 ? 'ONE LINE AT A TIME.' : 'SMALL CLUES. BIG DISCOVERIES.';
+    document.getElementById('buddyMood').textContent = !state.trusted ? 'Trust this folder to begin' : working ? 'Thinking it through' : project ? (project.phase === 'done' ? 'Project complete' : 'One task at a time') : state.proposalId ? 'A fix to review' : state.hasIssue ? (state.retries >= 3 ? 'Let’s look closer' : 'A clue to start') : 'Ready when you are';
     document.getElementById('learningTrail').hidden = mode === 'project' || !state.hasIssue;
     const stage = state.proposalId || state.retries >= 6 ? 'stageFix' : state.retries >= 3 ? 'stageInline' : 'stageClue';
     for (const id of ['stageClue', 'stageInline', 'stageFix']) document.getElementById(id).setAttribute('aria-current', id === stage ? 'step' : 'false');
     document.getElementById('setup').hidden = state.keyConfigured || !state.trusted;
     document.getElementById('trustPrompt').hidden = state.trusted;
     document.getElementById('file').textContent = project ? '' : state.file || '';
+    document.getElementById('file').setAttribute('title', project ? '' : state.file || '');
     document.getElementById('status').textContent = project ? (!state.trusted ? 'Trust this folder to plan and build with CodeNudge.' : project.status) : state.status;
     document.getElementById('working').hidden = !working;
     document.getElementById('send').disabled = working || !state.trusted || (!!project && project.phase === 'done');
     input.disabled = !state.trusted || (!!project && (working || project.phase === 'done'));
-    input.placeholder = !project ? 'What are you thinking?' : ({ idea: 'What would you like to build?', choice: 'Tell me the features you have in mind…', features: 'Add a little more detail…', plan: 'What would you change about this plan?', building: 'Share your thinking, a question or a run result…', done: 'Ready for another idea?' }[project.phase]);
+    input.placeholder = !project ? 'A question, or what you’ve tried…' : ({ idea: 'What would you like to build?', choice: 'Tell me the features you have in mind…', features: 'Add a little more detail…', plan: 'What would you change about this plan?', building: 'Share your thinking, a question or a run result…', done: 'Ready for another idea?' }[project.phase]);
     renderProject(project, state.trusted);
     if (seenCelebration !== null && state.celebration > seenCelebration && state.confetti && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       document.body.classList.toggle('is-celebrating', true);
@@ -62,7 +61,7 @@
     seenCelebration = state.celebration;
     proposalId = state.proposalId;
     document.getElementById('fixActions').hidden = mode === 'project' || !proposalId;
-    document.getElementById('progress').textContent = mode === 'project' ? '' : proposalId ? 'A fix is ready for you to review.' : state.retries >= 3 ? `${state.retries} attempts. Let’s narrow this down.` : '';
+    document.getElementById('progress').textContent = mode === 'project' || !state.hasIssue ? '' : proposalId ? 'Your change is ready to review.' : state.retries >= 6 ? 'Review unlocked. Checking the current problem.' : state.retries >= 3 ? `${state.retries - 3}/3 more changed runs to a reviewed fix` : `${state.retries}/3 changed runs to an inline hint`;
     const messageSignature = mode + JSON.stringify(messages);
     if (messageSignature !== previousMessages) {
       previousMessages = messageSignature;
@@ -70,7 +69,7 @@
       const block = document.createElement('article'); block.className = `message ${message.role}`;
       block.dataset.category = message.category || 'unknown';
       const label = document.createElement('div'); label.className = 'message-label';
-      label.textContent = message.role === 'learner' ? 'YOUR THINKING' : `✦ CODENUDGE${message.category && message.category !== 'unknown' ? ' · ' + message.category.toUpperCase() : ''}`;
+      label.textContent = message.role === 'learner' ? 'Your note' : `Nudge${message.category && message.category !== 'unknown' ? ' / ' + message.category : ''}`;
       const text = document.createElement('p'); text.textContent = message.text;
       block.append(label, text); return block;
       }));
@@ -91,20 +90,20 @@
     };
     const actions = document.createElement('div'); actions.className = 'project-actions';
     const button = (action, label) => {
-      const node = text('button', label, actions, 'primary'); node.dataset.action = action;
+      const node = text('button', label, actions, ['projectSuggest', 'projectStart', 'projectHint', 'projectReset'].includes(action) ? 'primary' : 'secondary'); node.dataset.action = action;
       node.disabled = !trusted || project.working; return node;
     };
     if (project.phase === 'idea') {
       text('h2', 'What would you like to build?');
-      text('p', 'A tiny tool, a game, your first app? Tell me your idea below. We’ll break it into steps you can figure out.');
+      text('p', 'Describe your idea below. We’ll work out a small plan, then you’ll build it one task at a time.');
     } else if (project.phase === 'choice') {
-      text('h2', 'How shall we shape it?'); text('p', project.idea);
+      text('h2', 'Choose a starting point'); text('p', project.idea);
       button('projectFeatures', 'I have features in mind'); button('projectSuggest', 'Suggest a plan');
     } else if (project.phase === 'features') {
-      text('h2', 'A little more detail');
-      text('p', 'Reply to CodeNudge below. Share your must-haves, or answer the question so we can shape your plan.');
+      text('h2', 'What should it do?');
+      text('p', 'Share the features you want in your note below, or answer the question to refine the plan.');
     } else if (project.phase === 'plan' && project.plan) {
-      text('span', 'YOUR BUILDING BLOCKS', section, 'eyebrow'); text('h2', project.plan.title);
+      text('span', 'PROPOSED PLAN', section, 'eyebrow'); text('h2', project.plan.title);
       const list = document.createElement('ol'); list.className = 'project-plan';
       for (const task of project.plan.tasks) {
         const item = document.createElement('li'); text('h3', task.title, item); text('p', task.prompt, item);
@@ -128,8 +127,8 @@
         details.append(list); section.append(details);
       }
     } else if (project.phase === 'done') {
-      text('span', '✦ YOU BUILT THAT', section, 'eyebrow'); text('h2', 'From idea to something real.');
-      text('p', project.plan ? project.plan.title : project.idea); text('p', 'You did the thinking and the building. Take a moment to enjoy it!');
+      text('span', 'PROJECT COMPLETE', section, 'eyebrow'); text('h2', 'You built it.');
+      text('p', project.plan ? project.plan.title : project.idea); text('p', 'Your tasks are complete. Run through the finished project and see how far you’ve come.');
       button('projectReset', 'New idea');
     }
     if (project.error) { text('p', project.error, section, 'project-error').setAttribute('role', 'alert'); button('projectRetry', 'Try again'); }

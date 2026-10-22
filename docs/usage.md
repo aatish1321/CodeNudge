@@ -8,7 +8,7 @@ A VS Code learning companion that helps you think through a problem before showi
 
 ## Try it
 
-Install [CodeNudge from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge), or run `code --install-extension aatishdev.codenudge`. For a local build, `npm run package` creates `codenudge-0.0.27.vsix`; install it using **Extensions → … → Install from VSIX**.
+Install [CodeNudge from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge), or run `code --install-extension aatishdev.codenudge`. For a local build, `npm run package` creates `codenudge-0.0.28.vsix`; install it using **Extensions → … → Install from VSIX**.
 
 A fresh playground can open in **Restricted Mode**. CodeNudge remains visible with a **Trust this folder…** button that opens VS Code’s trust screen. Choose Trust for the playground, or use the top banner’s **Manage** link. Terminal watching and AI analysis stay disabled until you grant trust. After updating the extension, use **Developer: Reload Window** once.
 

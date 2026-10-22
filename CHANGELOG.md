@@ -2,6 +2,13 @@
 
 Release changes are listed below. The [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) shows the currently published version; preparing a package does not publish it.
 
+## 0.0.28
+
+- Reworked the sidebar around the coding task: compact character/status row, plain mode tabs, readable notes and restrained warm accents using native theme surfaces.
+- Removed the oversized hero, decorative gradients, orbit, glow and repeated slogans. Kept the supplied character, optional animation, confetti and reduced-motion support.
+- Made help progress explicit from the first clue and kept it visible while scrolling. Distinguished an unlocked review stage from an actual fix ready to accept.
+- Gave Project mode clearer task/check sections and primary/secondary actions. Teaching, provider, terminal and reviewed-edit behavior are unchanged.
+
 ## 0.0.27
 
 - Distinguished rejected analysis requests, malformed model generations, unavailable models and rate limits instead of blaming model support for every HTTP 400.
