@@ -36,7 +36,7 @@
     document.getElementById('modeProject').setAttribute('aria-pressed', mode === 'project' ? 'true' : 'false');
     document.body.classList.toggle('is-working', working);
     document.body.classList.toggle('character-motion-off', state.animateCharacter === false);
-    document.getElementById('buddyMood').textContent = !state.trusted ? 'Trust this folder to begin' : working ? 'Thinking it through' : project ? (project.phase === 'done' ? 'Project complete' : 'One task at a time') : state.proposalId ? 'A fix to review' : state.hasIssue ? (state.retries >= 3 ? 'Let’s look closer' : 'A clue to start') : 'Ready when you are';
+    document.getElementById('buddyMood').textContent = !state.trusted ? 'Trust this folder to begin' : working ? 'Thinking it through' : project ? (project.phase === 'done' ? 'Project complete' : 'One task at a time') : state.proposalId ? 'A fix to review' : state.hasIssue ? (state.retries >= 3 ? 'Let’s look closer' : 'A clue to start') : 'You’ve got this.';
     document.getElementById('learningTrail').hidden = mode === 'project' || !state.hasIssue;
     document.getElementById('learningSummary').hidden = mode === 'project' || !state.hasIssue;
     const stage = state.proposalId || state.retries >= 6 ? 'stageFix' : state.retries >= 3 ? 'stageInline' : 'stageClue';

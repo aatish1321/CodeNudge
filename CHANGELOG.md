@@ -4,7 +4,8 @@ Release changes are listed below. The [Visual Studio Marketplace](https://market
 
 ## 0.0.28
 
-- Reworked the sidebar as an arcade-inspired coding sidekick: a larger animated robot, pixel accents, chunky controls and bold mint/gold/coral panels.
+- Reworked the sidebar as an arcade-inspired coding sidekick: the large centered animated robot and circular backdrop, pixel accents, chunky controls and bold mint/gold/coral panels.
+- Increased body, hint, button, progress and input text sizes; text follows the VS Code font preference with a 15px minimum body size.
 - Added a three-segment effort meter tied to actual changed runs, with explicit clue/inline/review progress kept visible while scrolling. An unlocked review stage stays distinct from a fix ready to accept.
 - Gave Project mode clearer task/check sections and primary/secondary actions. Kept the supplied character, optional motion/confetti, reduced-motion support, keyboard send and native-theme surfaces.
 - Teaching, provider, terminal, stage thresholds, source sharing and reviewed-edit behavior are unchanged.
