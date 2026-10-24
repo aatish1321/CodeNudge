@@ -66,8 +66,8 @@ test('Project mode asks for an idea, offers features or generated plan, and star
   }
   ui.state.project.phase = 'features'; ui.render();
   assert.equal(ui.element('clarification').disabled, false);
-  assert.ok(descendants(ui.element('project')).some(child => child.textContent === 'A little more detail'));
-  assert.ok(descendants(ui.element('project')).some(child => child.textContent.startsWith('Reply to CodeNudge below.')));
+  assert.ok(descendants(ui.element('project')).some(child => child.textContent === 'What should it do?'));
+  assert.ok(descendants(ui.element('project')).some(child => child.textContent.startsWith('Share the features you want')));
   ui.state.project = project('plan'); ui.render();
   assert.equal(action(ui, 'projectStart').disabled, false);
   assert.ok(descendants(ui.element('project')).some(child => child.className === 'project-plan' && child.children.length === 2));
@@ -97,7 +97,7 @@ test('Project tasks and conversation render as literal text and Debug issue cont
   assert.ok(descendants(ui.element('project')).some(child => child.textContent === '<img src=x onerror=alert(1)>' && child.children.length === 0));
   assert.ok(descendants(ui.element('project')).some(child => child.textContent === '<script>literal task</script>' && child.children.length === 0));
   assert.equal(ui.element('messages').children[0].children[1].textContent, '<button>literal message</button>');
-  assert.equal(ui.element('learningTrail').hidden, true); assert.equal(ui.element('fixActions').hidden, true);
+  assert.equal(ui.element('learningTrail').hidden, true); assert.equal(ui.element('learningSummary').hidden, true); assert.equal(ui.element('fixActions').hidden, true);
   assert.equal(ui.element('file').textContent, ''); assert.equal(ui.element('progress').textContent, '');
   assert.equal(ui.element('status').textContent, data.status);
 });
@@ -112,7 +112,7 @@ test('Project building exposes learner-led help, checks and completion without r
   ui.state.project.phase = 'done'; ui.render();
   assert.equal(action(ui, 'projectReset').disabled, false);
   assert.equal(ui.element('clarification').disabled, true); assert.equal(ui.element('send').disabled, true);
-  assert.equal(ui.element('buddyMood').textContent, 'Look what you built!');
+  assert.equal(ui.element('buddyMood').textContent, 'Project complete');
 });
 
 test('Project work and Restricted Mode disable actions while mode switches remain available', () => {
@@ -239,17 +239,45 @@ test('buddy mood and help trail follow actual issue stages and disappear after r
   assert.equal(ui.element('stageClue').attributes['aria-current'], 'step');
   assert.equal(ui.element('messages').children[0].dataset.category, 'runtime');
   ui.state.working = true; ui.render();
-  assert.equal(ui.element('buddyMood').textContent, 'Thinking with you…');
+  assert.equal(ui.element('buddyMood').textContent, 'Thinking it through');
   assert.equal(ui.classes.has('is-working'), true);
   ui.state.working = false; ui.state.retries = 3; ui.render();
   assert.equal(ui.element('stageInline').attributes['aria-current'], 'step');
   assert.equal(ui.element('stageClue').attributes['aria-current'], 'false');
   ui.state.retries = 6; ui.state.proposalId = 'review'; ui.render();
   assert.equal(ui.element('stageFix').attributes['aria-current'], 'step');
-  assert.equal(ui.element('eyebrow').textContent, 'YOUR CODE. YOUR CALL.');
+  assert.equal(ui.element('buddyMood').textContent, 'A fix to review');
   ui.state.hasIssue = false; ui.state.retries = 0; ui.state.proposalId = ''; ui.render();
   assert.equal(ui.element('learningTrail').hidden, true);
   assert.equal(ui.classes.has('is-working'), false);
+});
+
+test('the arcade help meter tracks real changed runs and never claims a fix exists before review', () => {
+  const ui = panel(); ui.state.hasIssue = true; ui.render();
+  assert.equal(ui.element('progress').textContent, '0/3 changed runs to an inline hint');
+  assert.equal(ui.element('learningSummary').hidden, false);
+  assert.equal(ui.element('effortPip1').attributes['data-filled'], 'false');
+  ui.state.retries = 2; ui.render();
+  assert.equal(ui.element('progress').textContent, '2/3 changed runs to an inline hint');
+  assert.equal(ui.element('effortPip1').attributes['data-filled'], 'true');
+  assert.equal(ui.element('effortPip2').attributes['data-filled'], 'true');
+  assert.equal(ui.element('effortPip3').attributes['data-filled'], 'false');
+  ui.state.retries = 3; ui.render();
+  assert.equal(ui.element('progress').textContent, '0/3 more changed runs to a reviewed fix');
+  assert.equal(ui.element('effortPip1').attributes['data-filled'], 'false');
+  assert.equal(ui.element('learningSummary').attributes['data-stage'], 'stageInline');
+  ui.state.retries = 5; ui.render();
+  assert.equal(ui.element('progress').textContent, '2/3 more changed runs to a reviewed fix');
+  ui.state.retries = 6; ui.render();
+  assert.equal(ui.element('progress').textContent, 'Review unlocked. Checking the current problem.');
+  assert.equal(ui.element('effortPip3').attributes['data-filled'], 'true');
+  assert.equal(ui.element('fixActions').hidden, true);
+  ui.state.proposalId = 'review'; ui.render();
+  assert.equal(ui.element('progress').textContent, 'Your change is ready to review.');
+  ui.state.hasIssue = false; ui.state.retries = 0; ui.state.proposalId = ''; ui.render();
+  assert.equal(ui.element('progress').textContent, '');
+  assert.equal(ui.element('learningTrail').hidden, true);
+  assert.equal(ui.element('learningSummary').hidden, true);
 });
 
 test('character motion can pause while thinking without turning off the separate celebration setting', () => {

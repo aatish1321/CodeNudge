@@ -1,40 +1,38 @@
 # CodeNudge Marketplace release
 
-## Upload candidate: 0.0.27
+## Upload candidate: 0.0.28
 
-Prepared October 19, 2026. Use **codenudge-0.0.27.vsix** instead of earlier local packages. This candidate has not been uploaded by the agent.
+Prepared October 22, 2026 after the learner requested a more deliberate, less decorative interface. This candidate has not been published by the agent.
 
 | Item | Value |
 | --- | --- |
-| Name / version | CodeNudge **0.0.27** |
-| Artifact | `codenudge-0.0.27.vsix` in the repository root |
+| Name / version | CodeNudge **0.0.28** |
+| Artifact | `codenudge-0.0.28.vsix` in the repository root |
 | Publisher / ID | `aatishdev` / `aatishdev.codenudge` |
 | Gallery flags | Public; Preview remains off |
 | Repository | [aatish1321/CodeNudge](https://github.com/aatish1321/CodeNudge) |
 | License | [MIT](../LICENSE) |
 
-## Changes and live evidence
+## Interface changes
 
-A learner’s maximum-number exercise showed the generic “model available and supports structured output” error before assessment. The earlier implementation mapped every HTTP 400 to that message and discarded the provider’s error. The original request’s exact error code was not retained, so it cannot be reconstructed. Fresh live requests using the saved Groq connection and `openai/gpt-oss-120b` correctly identified the all-negative maximum bug, targeted line 5 at inline level, supplied a reviewed fix and marked the corrected -3 result solved. Intermediate checks encountered an actual HTTP 429 token rate limit; checks resumed individually after the limit window reset. This is bounded live evidence, not a guarantee of future API availability or a complete recorded demo.
+The learner chose an arcade direction after reviewing an earlier minimal pass. After the learner compared both designs, the final sidebar restores the large centered animated sidekick, circular backdrop and message beneath it. Arcade pixel accents, chunky mode buttons, outlined hints and bold mint/gold/coral accents stay on native-theme surfaces. Body, hint, input and button text use an enlarged scale with a 15px minimum body size that follows the VS Code font preference. A three-segment effort meter maps to actual changed attempts; clue/inline/review progress stays in view while scrolling. There are no invented scores or streaks. Project tasks/checks and primary/secondary actions are distinct; Cancel project remains available while coaching is pending.
 
-Provider error bodies are now read with a 64,000-character limit. Errors are classified using allowlisted codes; logs contain only status/code/provider. For Groq HTTP 400 `json_validate_failed`, complete JSON in `failed_generation` can reach the normal caller validation without a new API request. Early fixes, invalid targets/fields, stale code and known-key leaks remain blocked by existing boundaries. Incomplete JSON, quota/auth/model/unknown errors remain failures with specific messages. The recovery branch is verified with fixtures; it was not observed as a fresh live 400 during these checks. No automatic retry/provider fallback was introduced.
+The progress caption explains remaining changed runs starting at the first clue and distinguishes an unlocked review level from a proposal ready to accept. The supplied mascot, optional motion/confetti, reduced-motion handling, keyboard send, focus outlines and light/high-contrast theme rules remain. Learner messages use right-aligned mint-tinted speech bubbles; CodeNudge replies use left-aligned category-colored speech bubbles in both modes. The settings gear is centered, and a three-dot speech bubble appears during replies with motion preferences respected. No AI teaching, provider transport, terminal capture, stage thresholds, source-sharing rules, commands, saved keys or Project storage changed.
 
-The 0.0.26 effort fix remains: after the initial clue, three changed retries across the unresolved task unlock inline guidance, then three more unlock a reviewed fix. Changing error types does not reset effort. Verified success or **Start a new issue** clears it; use that reset for a different exercise in the same file. Identical reruns and clarification do not count. Identity, keys, settings and Project progress remain unchanged.
+The [local sidebar study](../devpost/sidebar-preview.html) includes twelve sample states built from the actual template and shipped CSS/script/assets: idle, clue, narrow inline, fix, Project idea/task/plan, provider error, Restricted Mode, reply animation, chat conversation and success. Open it locally with the repository’s media folder alongside it. These are fixtures, not screenshots, and do not call a provider.
 
 ## Install or upload
 
-For a local install, use **Extensions → … → Install from VSIX**, then **Developer: Reload Window**. If already installed by the agent, only reload. Debug progress remains in memory and starts fresh after reload.
+Install the VSIX through **Extensions → … → Install from VSIX**, then run **Developer: Reload Window**. If installed by the agent, only reload. Debug progress is held in memory and starts fresh after reload.
 
-For publishing, open [Marketplace publisher management](https://marketplace.visualstudio.com/manage/publishers/), choose the existing CodeNudge extension under **aatishdev**, and upload **codenudge-0.0.27.vsix**. Confirm the [public listing](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) shows 0.0.27 after processing. Older local `coding-buddy` identities do not migrate keys/progress; existing `aatishdev.codenudge` identity is preserved.
+For Marketplace, open [publisher management](https://marketplace.visualstudio.com/manage/publishers/), choose the existing CodeNudge extension under **aatishdev**, and upload **codenudge-0.0.28.vsix**. Confirm the [public listing](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) after processing. Existing `aatishdev.codenudge` identity is preserved; old local `coding-buddy` identities do not migrate automatically.
 
 ## Verification
 
-- **115/115 source tests pass**, including complete-error-generation recovery, no added request, unchanged failure caching, explicit retry, locked-stage/target rejection and bounded/redacted error diagnostics.
-- Fresh live Groq clue/inline/fix/solved checks pass on the synthetic negative-number exercise. Other provider/model teaching quality is not established by these checks.
-- Clean committed source **7b83e1d** builds a **45-entry VSIX**. Only compiled `providers.js` and `extension.js` differ from 0.0.26. Identity/settings/Public metadata, committed exercises/assets, MIT and private/development-file exclusions pass assertions. The scoped packaged-text credential-pattern scan found no matches; it is not a universal secret detector.
-- `npm run test:package`: **passed**, covering native terminal/direct Python/JavaScript runs, multiple files, inline guidance, diff accept/reject/undo, freshness, settings and Project coordination with fixtures.
-- `node scripts/test-host.cjs --package --restricted`: **passed**, including actual pre-trust activation/view access and trust management without auto-trusting.
-- Both test installations and the normal user installation match all **43 extension entries**, ignoring installer-added package metadata. Reload the normal window to activate 0.0.27.
-- Artifact SHA-256: `231117456f4eb6e06a624d6c006d799b47f4fa9f171f976ef935090f77abc624`.
+- All 116 source tests pass on the final chat-bubble source snapshot `01e54d1`; JavaScript syntax and whitespace checks pass. Twelve preview templates retain their required IDs, mascot alt text and nonce/CSP.
+- The full installed-package native workflow suite and the separate actual Restricted Mode suite passed sequentially on arcade snapshot `2fc5c82`. Subsequent changes restore the centered mascot, enlarge type, fix the gear and add reply/chat bubbles. These presentation changes have source/template checks and a normal-profile install; the native suites were not repeated while the learner was using the review window.
+- Final artifact SHA-256: `cb4eb2b039095cd97ce5aa1b5331a906cd7367de4fba7e3bc5fd351c021c632a`. Its 45 entries retain the manifest identity/settings, committed examples, supplied assets and MIT text. Relative to the earlier tested arcade package, only the compiled panel HTML, CSS, browser script and changelog differ. All 43 extension entries in the normal VS Code installation match the final artifact, excluding installer metadata.
+- Twelve preview frames have all script-target IDs exactly once, local resources, image alt text and intact script nonces/CSP.
+- Computer-use inventory has no apps or browsers; an in-app browser open reports unavailable. Pixel-level visual inspection and rendered narrow/light/high-contrast/motion QA are not claimed. The local preview supports human review.
 
-Clean committed-source packaging excludes user practice edits and local/private setup files. Required planning files remain public in the repository. This record and [the historical verification report](../devpost/verification.md) are excluded from the artifact, so checksum/evidence updates do not change it. Windows/macOS, minimum-version VS Code and pixel-level visual QA have not been newly verified. Provider rate limits and intermittent failures can still interrupt a demo.
+Clean committed-source packaging excludes user practice edits and local/private/setup files. Required planning documents remain public in the repository. This record and [the historical verification report](../devpost/verification.md) are excluded from the VSIX, so checksum/evidence updates do not alter it. No fresh provider calls are required for this presentation change; the earlier live Groq evidence remains scoped to its recorded cases. Other platforms, minimum-version VS Code and provider availability remain limited as described in that report.

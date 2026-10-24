@@ -2,6 +2,16 @@
 
 Release changes are listed below. The [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=aatishdev.codenudge) shows the currently published version; preparing a package does not publish it.
 
+## 0.0.28
+
+- Reworked the sidebar as an arcade-inspired coding sidekick: the large centered animated robot and circular backdrop, pixel accents, chunky controls and bold mint/gold/coral panels.
+- Increased body, hint, button, progress and input text sizes; text follows the VS Code font preference with a 15px minimum body size.
+- Added a three-segment effort meter tied to actual changed runs, with explicit clue/inline/review progress kept visible while scrolling. An unlocked review stage stays distinct from a fix ready to accept.
+- Gave Project mode clearer task/check sections and primary/secondary actions. Kept the supplied character, optional motion/confetti, reduced-motion support, keyboard send and native-theme surfaces.
+- Centered the settings gear and added an animated three-dot speech bubble during replies, respecting character-motion and reduced-motion settings.
+- Styled the conversation as chat bubbles: learner messages on the right, CodeNudge replies on the left, with speech tails and distinct colors in Debug and Project mode.
+- Teaching, provider, terminal, stage thresholds, source sharing and reviewed-edit behavior are unchanged.
+
 ## 0.0.27
 
 - Distinguished rejected analysis requests, malformed model generations, unavailable models and rate limits instead of blaming model support for every HTTP 400.
